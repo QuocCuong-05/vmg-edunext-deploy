@@ -36,7 +36,7 @@ export default function Login() {
     <div className="auth-page">
       <div className="auth-hero">
         <div className="auth-hero-top">
-          <img src="/vmg.png" alt="VMG" style={{ height: 28, background: '#fff', borderRadius: 8, padding: 6 }} />
+          <img src="/vmg_white.svg" alt="VMG" style={{ height: 28 }} />
           <h1 className="hero-title">VMG EduNext</h1>
         </div>
         <div className="hero-middle">
