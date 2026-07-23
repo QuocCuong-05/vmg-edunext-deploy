@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Icon } from '../../lib/icons';
 import { useSpeechRecognition } from '../../lib/useSpeechRecognition';
 import { useStreamChat } from '../../lib/useStreamChat';
+import { API_BASE } from '../../lib/api';
 
 function renderInline(text) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -20,7 +21,7 @@ export default function ViMiChat() {
   const { isRecording, transcript, startRecording, stopRecording, clearTranscript } = useSpeechRecognition();
 
   const { messages, append, isLoading } = useStreamChat({
-    api: '/api/vimi-ai/chat',
+    api: `${API_BASE}/vimi-ai/chat`,
     initialMessages: [{
       role: 'assistant',
       content: 'Xin chào! Tôi là **ViMi** - trợ lý AI của VMG EduNext. Hãy hỏi tôi về Classroom English, CLIL, đánh giá, từ vựng, hoặc gợi ý hoạt động dạy học!',

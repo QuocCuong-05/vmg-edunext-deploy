@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 async function request(url, options = {}) {
   const token = localStorage.getItem('vmg_token');
@@ -13,6 +13,7 @@ async function request(url, options = {}) {
   return res.json();
 }
 
+export { API_BASE };
 export const api = {
   auth: {
     login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),

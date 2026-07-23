@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Icon } from '../../lib/icons';
 import { useSpeechRecognition } from '../../lib/useSpeechRecognition';
 import { useStreamChat } from '../../lib/useStreamChat';
+import { API_BASE } from '../../lib/api';
 
 const SUGGESTIONS = [
   'Classroom English là gì?',
@@ -167,7 +168,7 @@ export default function VimiPage() {
 
   const [input, setInput] = useState('');
   const { messages, append, isLoading, error } = useStreamChat({
-    api: '/api/vimi-ai/chat',
+    api: `${API_BASE}/vimi-ai/chat`,
     initialMessages: [{
       role: 'assistant',
       content: 'Xin chào! Tôi là **ViMi** - trợ lý AI của VMG EduNext. Tôi có thể giúp bạn về Classroom English, CLIL, đánh giá, từ vựng và hoạt động dạy học. Bạn muốn bắt đầu với chủ đề nào?',
