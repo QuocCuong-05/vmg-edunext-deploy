@@ -1,0 +1,76 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MOCK_COURSES, MOCK_ENROLLMENTS } from '../../mock/data';
+import { Icon } from '../../lib/icons';
+import Card from '../../components/ui/Card';
+
+const LEVELS = ['All', 'A2', 'B1', 'B2', 'C1'];
+const CATEGORIES = ['All', 'classroom_english', 'clil_stem', 'assessment', 'vocabulary', 'learning_science'];
+
+const COVER_ICONS = { red: Icon.Courses, blue: Icon.Brain, gold: Icon.Pen, green: Icon.BookOpen, purple: Icon.Microscope };
+
+export default function Courses() {
+  const [level, setLevel] = useState('All');
+  const [category, setCategory] = useState('All');
+  const navigate = useNavigate();
+
+  const filtered = MOCK_COURSES.filter(c => {
+    if (level !== 'All' && c.level !== level) return false;
+    if (category !== 'All' && c.category !== category) return false;
+    return true;
+  });
+
+  return (
+    <div className="page-enter">
+      <div className="page-title">
+        <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icon.Courses size={24} /> Khóa học</h1>
+        <p>Khám phá {MOCK_COURSES.length} khóa học chuyên sâu cho giáo viên song ngữ</p>
+      </div>
+
+      <div className="filter-bar">
+        <select value={level} onChange={e => setLevel(e.target.value)}>
+          {LEVELS.map(l => <option key={l} value={l}>{l === 'All' ? 'Tất cả trình độ' : l}</option>)}
+        </select>
+        <select value={category} onChange={e => setCategory(e.target.value)}>
+          {CATEGORIES.map(c => (
+            <option key={c} value={c}>
+              {c === 'All' ? 'Tất cả danh mục' : c === 'classroom_english' ? 'Classroom English' : c === 'clil_stem' ? 'CLIL/STEM' : c === 'assessment' ? 'Assessment' : c === 'vocabulary' ? 'Vocabulary' : 'Learning Science'}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="empty"><h3>Không tìm thấy khóa học</h3></div>
+      ) : (
+        <div style={{ display: 'grid', gap: 14 }}>
+          {filtered.map(course => {
+            const enroll = MOCK_ENROLLMENTS[course.id];
+            return (
+              <Card key={course.id} className="course-card" onClick={() => navigate(`/courses/${course.slug}`)}>
+                <div className={`course-cover ${course.cover}`}>
+                  {(() => { const C = COVER_ICONS[course.cover] || Icon.Courses; return <C size={32} />; })()}
+                </div>
+                <div className="course-info">
+                  <h3>{course.title}</h3>
+                  <p>{course.description}</p>
+                  <div className="course-meta">
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon.Stats size={14} /> {course.level}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon.BookOpen size={14} /> {course.lesson_count} bài học</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon.Target size={14} /> {course.duration_hours} giờ</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>{course.instructor}</span>
+                    {enroll?.enrolled && (
+                      <span className="pill" style={{ color: 'var(--green)', background: 'var(--green-bg)' }}>
+                        Đang học • {enroll.progress_pct}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

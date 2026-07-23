@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+backend/.env
+*.local
+package-lock.json
+*.log
+ngrok.log
+.opencode/
+.DS_Store
+Thumbs.db
