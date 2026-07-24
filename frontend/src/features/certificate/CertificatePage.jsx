@@ -1,6 +1,7 @@
 import { useAuth } from '../auth/AuthContext';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
+import SignatureImage from './SignatureImage';
 
 const COURSE_NAME = 'TIẾNG ANH CHUYÊN MÔN DÀNH CHO GIÁO VIÊN';
 
@@ -49,7 +50,7 @@ export default function CertificatePage() {
           <p className="cert-meta">Trình độ đạt được: <b>B2</b> · 60 giờ học · Hoàn thành ngày {today}</p>
           <div className="cert-bottom">
             <div className="cert-sign">
-              <div style={{ width: 180, height: 45, background: '#1a1a1a', WebkitMaskImage: 'url(/chuki.png)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', maskImage: 'url(/chuki.png)', maskSize: 'contain', maskRepeat: 'no-repeat', marginBottom: 4 }} />
+              <SignatureImage src="/chuki.png" height={45} style={{ marginBottom: 4 }} />
               <div className="signature">Phạm Thị Bảo Minh</div>
               <span>Đại diện học thuật</span>
             </div>
