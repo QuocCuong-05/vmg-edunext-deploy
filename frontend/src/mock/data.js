@@ -1,7 +1,7 @@
 export const MOCK_USER = {
   id: 'user-001',
   email: 'teacher@vmg-edunext.com',
-  full_name: 'Nguyễn Thị Minh',
+  full_name: 'Nguyễn Văn Mười',
   role: 'learner',
   xp: 2450,
   streak_days: 7,
