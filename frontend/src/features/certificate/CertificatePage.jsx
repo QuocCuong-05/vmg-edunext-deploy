@@ -43,13 +43,14 @@ export default function CertificatePage() {
           <div className="cert-kicker">VMG EDUNEXT · CHỨNG NHẬN ĐIỆN TỬ</div>
           <h2>CHỨNG NHẬN HOÀN THÀNH</h2>
           <p>Chứng nhận rằng</p>
-          <div className="cert-name">{user?.full_name?.toUpperCase() || 'NGUYỄN THỊ MINH'}</div>
+          <div className="cert-name">{user?.full_name?.toUpperCase() || 'NGUYỄN VĂN MƯỜI'}</div>
           <p>đã hoàn thành chương trình</p>
           <h3>{COURSE_NAME}</h3>
           <p className="cert-meta">Trình độ đạt được: <b>B2</b> · 60 giờ học · Hoàn thành ngày {today}</p>
           <div className="cert-bottom">
             <div className="cert-sign">
-              <div className="signature">VMG Academic Board</div>
+              <img src="/chuki.jpg" alt="Chữ ký" style={{ height: 45, marginBottom: 4 }} />
+              <div className="signature">Nguyễn Thị Minh</div>
               <span>Đại diện học thuật</span>
             </div>
             <div className="cert-seal">
