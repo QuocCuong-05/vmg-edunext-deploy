@@ -49,7 +49,7 @@ export default function CertificatePage() {
           <p className="cert-meta">Trình độ đạt được: <b>B2</b> · 60 giờ học · Hoàn thành ngày {today}</p>
           <div className="cert-bottom">
             <div className="cert-sign">
-              <img src="/chuki.png" alt="Chữ ký" style={{ height: 45, marginBottom: 4 }} />
+              <img src="/chuki.png" alt="Chữ ký" style={{ height: 45, marginBottom: 4, mixBlendMode: 'multiply' }} />
               <div className="signature">Nguyễn Thị Minh</div>
               <span>Đại diện học thuật</span>
             </div>
