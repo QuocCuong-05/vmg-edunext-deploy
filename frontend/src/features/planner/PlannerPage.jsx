@@ -2,33 +2,39 @@ import { useState } from 'react';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-
-const PLACEHOLDER = {
-  title: 'Sample Lesson Plan',
-  objectives: [
-    'Students will be able to identify key vocabulary related to the topic.',
-    'Students will practice target language through guided activities.',
-  ],
-  stages: [
-    { stage: 'Warm-Up', time: '5 min', activity: 'Engage students with a picture prompt related to the topic.' },
-    { stage: 'Presentation', time: '10 min', activity: 'Introduce target language and key concepts using visuals.' },
-    { stage: 'Practice', time: '15 min', activity: 'Pair work using sentence frames and structured tasks.' },
-    { stage: 'Production', time: '10 min', activity: 'Students create a short dialogue or written response.' },
-    { stage: 'Wrap-Up', time: '5 min', activity: 'Exit ticket: one thing learned and one question.' },
-  ],
-  assessment: 'Formative observation during pair work; exit ticket for individual understanding.',
-};
+import { API_BASE } from '../../lib/api';
 
 export default function PlannerPage() {
   const [topic, setTopic] = useState('');
   const [grade, setGrade] = useState('B1');
   const [duration, setDuration] = useState('45');
   const [focus, setFocus] = useState('CLIL');
-  const [generated, setGenerated] = useState(false);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleGenerate = () => {
-    if (!topic.trim()) return;
-    setGenerated(true);
+  const handleGenerate = async () => {
+    if (!topic.trim() || loading) return;
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/vimi-ai/lesson-plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic: topic.trim(), level: grade, duration, focus }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Request failed' }));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -78,17 +84,35 @@ export default function PlannerPage() {
         <Button
           variant="primary"
           onClick={handleGenerate}
-          isDisabled={!topic.trim()}
+          isDisabled={!topic.trim() || loading}
         >
-          <Icon.Sparkles size={16} /> Generate Lesson Plan
+          {loading ? 'Generating...' : <><Icon.Sparkles size={16} /> Generate Lesson Plan</>}
         </Button>
       </Card>
 
-      {generated && (
+      {loading && (
+        <Card style={{ maxWidth: 700, padding: 24, display: 'flex', gap: 12, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <span className="typing-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--muted)', animation: 'typingBounce 1.2s ease infinite' }} />
+            <span className="typing-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--muted)', animation: 'typingBounce 1.2s ease infinite .15s' }} />
+            <span className="typing-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--muted)', animation: 'typingBounce 1.2s ease infinite .3s' }} />
+          </div>
+          <span style={{ fontSize: 13, color: 'var(--muted)' }}>AI is generating your lesson plan...</span>
+        </Card>
+      )}
+
+      {error && (
+        <Card style={{ maxWidth: 700, padding: 24, background: 'rgba(189,23,48,0.06)', borderColor: 'var(--red)' }}>
+          <p style={{ fontSize: 13, color: 'var(--red)' }}>Error: {error}</p>
+          <Button variant="ghost" size="sm" onClick={handleGenerate} style={{ marginTop: 8 }}>Try again</Button>
+        </Card>
+      )}
+
+      {result && (
         <Card style={{ maxWidth: 700, padding: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
             <Icon.Brain size={22} />
-            <h2 style={{ fontSize: 20, fontWeight: 800 }}>{PLACEHOLDER.title}</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 800 }}>{result.title}</h2>
           </div>
           <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>
             Topic: <strong>{topic}</strong> | Level: <strong>{grade}</strong> | Duration: <strong>{duration} min</strong> | Focus: <strong>{focus}</strong>
@@ -96,17 +120,17 @@ export default function PlannerPage() {
 
           <div style={{ marginBottom: 16 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Objectives</h3>
-            {PLACEHOLDER.objectives.map((obj, i) => (
+            {result.objectives?.map((obj, i) => (
               <div key={i} style={{ fontSize: 13, padding: '4px 0' }}>- {obj}</div>
             ))}
           </div>
 
           <div style={{ marginBottom: 16 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Lesson Stages</h3>
-            {PLACEHOLDER.stages.map((s, i) => (
+            {result.stages?.map((s, i) => (
               <div key={i} style={{
                 display: 'flex', gap: 12, flexWrap: 'wrap', padding: '10px 0',
-                borderBottom: i < PLACEHOLDER.stages.length - 1 ? '1px solid var(--line)' : 'none'
+                borderBottom: i < result.stages.length - 1 ? '1px solid var(--line)' : 'none'
               }}>
                 <span className="pill" style={{ minWidth: 90, justifyContent: 'center' }}>{s.stage}</span>
                 <span className="pill" style={{ minWidth: 60, justifyContent: 'center', background: 'var(--red-bg)', color: 'var(--red)' }}>{s.time}</span>
@@ -115,10 +139,19 @@ export default function PlannerPage() {
             ))}
           </div>
 
-          <div>
+          <div style={{ marginBottom: 16 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Assessment</h3>
-            <p style={{ fontSize: 13, color: 'var(--muted)' }}>{PLACEHOLDER.assessment}</p>
+            <p style={{ fontSize: 13, color: 'var(--muted)' }}>{result.assessment}</p>
           </div>
+
+          {result.materials?.length > 0 && (
+            <div>
+              <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Materials</h3>
+              {result.materials.map((m, i) => (
+                <div key={i} style={{ fontSize: 13, padding: '4px 0' }}>- {m}</div>
+              ))}
+            </div>
+          )}
         </Card>
       )}
     </div>

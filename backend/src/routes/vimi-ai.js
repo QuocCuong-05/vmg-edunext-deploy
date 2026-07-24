@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { VMG_SYSTEM_PROMPT, SPEAKING_SYSTEM_PROMPT } from '../lib/vmg-prompts.js';
+import { VMG_SYSTEM_PROMPT, SPEAKING_SYSTEM_PROMPT, LESSON_PLAN_SYSTEM_PROMPT } from '../lib/vmg-prompts.js';
 
 const router = Router();
 
@@ -77,6 +77,76 @@ router.post('/chat', async (req, res) => {
     res.status(503).json({ error: 'FPT_API_KEY not configured. Set it in .env to use ViMi AI.' });
   } catch (err) {
     console.error('[ViMi-AI] Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/lesson-plan', async (req, res) => {
+  try {
+    const { topic, level, duration, focus } = req.body;
+    console.log('[ViMi-AI] POST /lesson-plan topic=%s level=%s duration=%s focus=%s key_present=%s',
+      topic, level, duration, focus, !!process.env.FPT_API_KEY);
+    if (!topic) {
+      return res.status(400).json({ error: 'Topic is required' });
+    }
+
+    if (process.env.FPT_API_KEY) {
+      try {
+        const { createOpenAI } = await import('@ai-sdk/openai');
+        const { generateText } = await import('ai');
+
+        const provider = createOpenAI({
+          baseURL: 'https://mkp-api.fptcloud.com',
+          apiKey: process.env.FPT_API_KEY,
+        });
+
+        const prompt = `Generate a ${duration}-minute lesson plan for level ${level} with focus on ${focus}.
+Topic: ${topic}
+
+Return ONLY valid JSON obeying the output format specified in the system prompt.`;
+
+        console.log('[ViMi-AI] Calling generateText for lesson plan...');
+        const result = await generateText({
+          model: provider.chat('DeepSeek-V4-Flash'),
+          system: LESSON_PLAN_SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: prompt }],
+        });
+
+        const text = result.text.trim();
+        const braceStart = text.indexOf('{');
+        const braceEnd = text.lastIndexOf('}');
+        if (braceStart === -1 || braceEnd <= braceStart) {
+          console.error('[ViMi-AI] No JSON found in response:', text.slice(0, 200));
+          return res.status(500).json({ error: 'AI returned invalid response format' });
+        }
+
+        const json = JSON.parse(text.slice(braceStart, braceEnd + 1));
+        res.json(json);
+      } catch (err) {
+        console.error('[ViMi-AI] Lesson plan AI call failed:', err.message);
+        res.status(500).json({ error: 'AI service unavailable' });
+      }
+    } else {
+      console.log('[ViMi-AI] FPT_API_KEY missing, returning fallback lesson plan');
+      res.json({
+        title: `${topic} Lesson Plan (${level})`,
+        objectives: [
+          `Students will be able to explain key concepts related to ${topic} using target vocabulary.`,
+          `Students will practice ${focus} strategies through structured activities.`,
+        ],
+        stages: [
+          { stage: 'Warm-Up', time: '5 min', activity: `Engage students with a question or image related to ${topic}.` },
+          { stage: 'Presentation', time: '10 min', activity: `Introduce key vocabulary and concepts for ${topic} using visuals.` },
+          { stage: 'Practice', time: '15 min', activity: `Pair work: students complete structured tasks using sentence frames.` },
+          { stage: 'Production', time: '10 min', activity: `Students create a short presentation or written response about ${topic}.` },
+          { stage: 'Wrap-Up', time: '5 min', activity: `Exit ticket: one thing learned and one question about ${topic}.` },
+        ],
+        assessment: `Formative observation during pair work; exit ticket rubric for content and language.`,
+        materials: [`Visuals for ${topic}`, `Sentence frames handout`, `Exit ticket template`],
+      });
+    }
+  } catch (err) {
+    console.error('[ViMi-AI] Lesson plan error:', err);
     res.status(500).json({ error: err.message });
   }
 });
