@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
     const mockUser = {
       ...MOCK_USER,
       email,
-      full_name: email.includes('teacher') ? 'Nguyễn Thị Minh' : email.split('@')[0],
+      full_name: email.includes('teacher') ? 'Nguyễn Văn Mười' : email.split('@')[0],
     };
     localStorage.setItem('vmg_user', JSON.stringify(mockUser));
     localStorage.setItem('vmg_token', 'mock-token-' + Date.now());

@@ -50,7 +50,7 @@ export default function CertificatePage() {
           <div className="cert-bottom">
             <div className="cert-sign">
               <img src="/chuki.png" alt="Chữ ký" style={{ height: 45, marginBottom: 4, mixBlendMode: 'multiply' }} />
-              <div className="signature">Nguyễn Thị Minh</div>
+              <div className="signature">Phạm Thị Bảo Minh</div>
               <span>Đại diện học thuật</span>
             </div>
             <div className="cert-seal">
