@@ -278,7 +278,17 @@ export default function CommunityPage() {
     if (!currentlyExpanded && !postComments[postId]) {
       fetch(`${API_BASE}/community/${postId}/comments`, { headers: apiHeaders() })
         .then(res => res.ok && res.json())
-        .then(data => data && setPostComments(prev => ({ ...prev, [postId]: data })))
+        .then(data => {
+          if (data) {
+            setPostComments(prev => {
+              const existing = prev[postId] || [];
+              if (existing.length === 0) return { ...prev, [postId]: data };
+              const fetchedIds = new Set(data.map(c => c.id));
+              const extras = existing.filter(c => !fetchedIds.has(c.id));
+              return extras.length ? { ...prev, [postId]: [...extras, ...data] } : prev;
+            });
+          }
+        })
         .catch(() => {});
     }
   };
