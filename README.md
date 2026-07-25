@@ -48,8 +48,8 @@ pnpm start          # → http://localhost:3001
 - **Quiz** — Trắc nghiệm ngẫu nhiên, +50 XP
 - **ViMi AI** — Chat streaming + luyện nói (phản hồi JSON) + sinh giáo án AI
 - **Bảng xếp hạng** — Top 8 giáo viên
-- **Cộng đồng** — Feed bài viết, nhóm, chủ đề trending
-- **Cửa hàng phần thưởng** — Đổi vật phẩm bằng XP
+- **Cộng đồng** — Feed bài viết, tương tác (like/comment/share Facebook), ⋮ menu edit/delete/report, nhóm, chủ đề trending
+- **Cửa hàng phần thưởng** — 19 vật phẩm (3 danh mục), đổi bằng XP
 - **Chứng nhận** — Certificate hoàn thành
 - **Đặt lịch** — Booking chuyên gia
 - **Dark mode** — Theme toggle
@@ -126,4 +126,32 @@ mock/data.js → Course > Lesson[]
 CourseDetail: GET /api/courses/:slug → render lesson list
 LessonView: GET /api/lessons/:id → render video + nội dung
 Hiện tại dùng mock data, backend API sẵn sàng khi cần switch
+```
+
+### Community data flow
+
+```
+Client → GET /api/community → danh sách bài viết (kèm likes, comments, shares_count, user_has_reported)
+  → Backend query Supabase: community_posts LEFT JOIN profiles, likes, comments, shares, reports
+  → Client merge với local state (giữ extras không có trong response) tránh race condition
+
+Like:   POST /api/community/:id/like     → Optimistic UI toggle → INSERT/DELETE community_likes
+Share:  POST /api/community/:id/share    → UPDATE shares_count +1 → mở Facebook dialog
+Comment: POST /api/community/:id/comments → INSERT community_comments → trả về comment + profile
+
+⋮ menu bài viết:
+  - Edit:   PUT    /api/community/:id                → cập nhật nội dung (chỉ author)
+  - Delete: DELETE /api/community/:id                → xoá bài (chỉ author)
+  - Report: POST   /api/community/:id/report         → INSERT community_reports
+
+⋮ menu comment:
+  - Edit:   PUT    /api/community/:id/comments/:commentId
+  - Delete: DELETE /api/community/:id/comments/:commentId
+  - Report: POST   /api/community/:id/comments/:commentId/report → INSERT community_comment_reports
+
+GET /api/community/reported        → trả về [post_id] đã report
+GET /api/community/comments/reported → trả về [comment_id] đã report
+
+Fallback: MOCK_POSTS trong frontend/src/mock/ dùng khi backend offline
+```
 ```
