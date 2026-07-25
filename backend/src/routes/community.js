@@ -15,10 +15,10 @@ const MOCK_USERS = {
 };
 
 const MOCK_POSTS = [
-  { id: 'p1', user_id: MOCK_USER_ID, content: 'Just finished the CLIL lesson planning module. The 4Cs framework is a game-changer for my science classes!', created_at: '2026-07-24T08:00:00Z', likes_count: 24, comments_count: 8, user_has_liked: false, author_name: 'Tran Van An', author_avatar: 'TA' },
-  { id: 'p2', user_id: MOCK_USER_ID, content: 'Anyone using exit tickets regularly? I found that asking "What is one thing you understood better today?" works really well with my 6th graders.', created_at: '2026-07-24T05:00:00Z', likes_count: 18, comments_count: 12, user_has_liked: false, author_name: 'Le Thi Hoa', author_avatar: 'LH' },
-  { id: 'p3', user_id: MOCK_USER_ID, content: 'Tip for new teachers: wait time is your best friend. Count to five silently after asking a question. The quality of answers improves dramatically.', created_at: '2026-07-23T10:00:00Z', likes_count: 42, comments_count: 15, user_has_liked: false, author_name: 'Pham Minh Duc', author_avatar: 'PD' },
-  { id: 'p4', user_id: MOCK_USER_ID, content: 'Our school just adopted VMG EduNext for our bilingual program. The teachers are loving the practical phrases for classroom management!', created_at: '2026-07-22T14:00:00Z', likes_count: 31, comments_count: 6, user_has_liked: false, author_name: 'Hoang Ngoc Lan', author_avatar: 'HL' },
+  { id: 'p1', user_id: MOCK_USER_ID, content: 'Just finished the CLIL lesson planning module. The 4Cs framework is a game-changer for my science classes!', created_at: '2026-07-24T08:00:00Z', likes_count: 24, comments_count: 8, shares_count: 5, user_has_liked: false, user_has_reported: false, author_name: 'Tran Van An', author_avatar: 'TA' },
+  { id: 'p2', user_id: 'u2', content: 'Anyone using exit tickets regularly? I found that asking "What is one thing you understood better today?" works really well with my 6th graders.', created_at: '2026-07-24T05:00:00Z', likes_count: 18, comments_count: 12, shares_count: 3, user_has_liked: false, user_has_reported: false, author_name: 'Le Thi Hoa', author_avatar: 'LH' },
+  { id: 'p3', user_id: 'u3', content: 'Tip for new teachers: wait time is your best friend. Count to five silently after asking a question. The quality of answers improves dramatically.', created_at: '2026-07-23T10:00:00Z', likes_count: 42, comments_count: 15, shares_count: 12, user_has_liked: false, user_has_reported: false, author_name: 'Pham Minh Duc', author_avatar: 'PD' },
+  { id: 'p4', user_id: 'u4', content: 'Our school just adopted VMG EduNext for our bilingual program. The teachers are loving the practical phrases for classroom management!', created_at: '2026-07-22T14:00:00Z', likes_count: 31, comments_count: 6, shares_count: 7, user_has_liked: false, user_has_reported: false, author_name: 'Hoang Ngoc Lan', author_avatar: 'HL' },
 ];
 
 const MOCK_GROUPS = [
@@ -45,14 +45,15 @@ router.get('/', optionalAuth, async (req, res) => {
       return res.json(MOCK_POSTS);
     }
 
-    // Lấy danh sách like của user hiện tại (nếu đã login)
     let likedPostIds = [];
+    let reportedPostIds = [];
     if (req.user) {
-      const { data: likes } = await supabase
-        .from('community_likes')
-        .select('post_id')
-        .eq('user_id', req.user.id);
-      likedPostIds = (likes || []).map(l => l.post_id);
+      const [likesResult, reportsResult] = await Promise.all([
+        supabase.from('community_likes').select('post_id').eq('user_id', req.user.id),
+        supabase.from('community_reports').select('post_id').eq('user_id', req.user.id),
+      ]);
+      likedPostIds = (likesResult.data || []).map(l => l.post_id);
+      reportedPostIds = (reportsResult.data || []).map(r => r.post_id);
     }
 
     const result = posts.map(p => ({
@@ -64,7 +65,9 @@ router.get('/', optionalAuth, async (req, res) => {
       author_avatar: (p.profiles?.full_name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
       likes_count: p.likes?.[0]?.count || 0,
       comments_count: p.comments?.[0]?.count || 0,
+      shares_count: 0,
       user_has_liked: likedPostIds.includes(p.id),
+      user_has_reported: reportedPostIds.includes(p.id),
     }));
 
     res.json(result);
@@ -108,7 +111,9 @@ router.post('/', optionalAuth, async (req, res) => {
       author_avatar: (profile?.full_name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
       likes_count: 0,
       comments_count: 0,
+      shares_count: 0,
       user_has_liked: false,
+      user_has_reported: false,
     });
   } catch (err) {
     console.error('[Community] POST / error:', err.message);
@@ -122,7 +127,9 @@ router.post('/', optionalAuth, async (req, res) => {
       author_avatar: 'YO',
       likes_count: 0,
       comments_count: 0,
+      shares_count: 0,
       user_has_liked: false,
+      user_has_reported: false,
     });
   }
 });
@@ -237,6 +244,121 @@ router.post('/:id/comments', optionalAuth, async (req, res) => {
       author_name: 'You',
       author_avatar: 'YO',
     });
+  }
+});
+
+// PUT /:id — sửa bài viết (chỉ author)
+router.put('/:id', optionalAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id || MOCK_USER_ID;
+    const postId = req.params.id;
+    const { content } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: 'Content is required' });
+    }
+
+    const { data: post, error: fetchError } = await supabase
+      .from('community_posts')
+      .select('user_id')
+      .eq('id', postId)
+      .single();
+
+    if (fetchError || !post) {
+      return res.json({ id: postId, content: content.trim() });
+    }
+
+    if (post.user_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const { data: updated, error } = await supabase
+      .from('community_posts')
+      .update({ content: content.trim(), updated_at: new Date().toISOString() })
+      .eq('id', postId)
+      .select('id, content')
+      .single();
+
+    if (error) throw error;
+    res.json({ id: updated.id, content: updated.content });
+  } catch (err) {
+    console.error('[Community] PUT /:id error:', err.message);
+    res.json({ id: req.params.id, content: req.body.content });
+  }
+});
+
+// DELETE /:id — xoá bài viết (chỉ author)
+router.delete('/:id', optionalAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id || MOCK_USER_ID;
+    const postId = req.params.id;
+
+    const { data: post, error: fetchError } = await supabase
+      .from('community_posts')
+      .select('user_id')
+      .eq('id', postId)
+      .single();
+
+    if (fetchError || !post) {
+      return res.json({ deleted: true });
+    }
+
+    if (post.user_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    await supabase.from('community_posts').delete().eq('id', postId);
+    res.json({ deleted: true });
+  } catch (err) {
+    console.error('[Community] DELETE /:id error:', err.message);
+    res.json({ deleted: true });
+  }
+});
+
+// POST /:id/report — báo cáo bài viết
+router.post('/:id/report', optionalAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id || MOCK_USER_ID;
+    const postId = req.params.id;
+    const { reason } = req.body;
+
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ error: 'Reason is required' });
+    }
+
+    const { error } = await supabase
+      .from('community_reports')
+      .insert({ post_id: postId, user_id: userId, reason: reason.trim() });
+
+    if (error) {
+      if (error.code === '23505') {
+        return res.json({ reported: true, already: true });
+      }
+      throw error;
+    }
+
+    res.json({ reported: true, already: false });
+  } catch (err) {
+    console.error('[Community] POST /:id/report error:', err.message);
+    res.json({ reported: true });
+  }
+});
+
+// GET /reported — danh sách post_id user đã report
+router.get('/reported', optionalAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.json([]);
+
+    const { data: reports } = await supabase
+      .from('community_reports')
+      .select('post_id')
+      .eq('user_id', userId);
+
+    res.json((reports || []).map(r => r.post_id));
+  } catch (err) {
+    console.error('[Community] GET /reported error:', err.message);
+    res.json([]);
   }
 });
 

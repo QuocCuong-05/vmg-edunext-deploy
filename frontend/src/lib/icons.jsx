@@ -7,6 +7,7 @@ import {
   BiVolumeFull, BiPause, BiLoaderCircle, BiCalendar,
   BiDownload, BiPrinter, BiShareAlt, BiCartAlt, BiTime,
   BiUser, BiMoon, BiSun, BiGlobe, BiCog, BiLogOut, BiHeart,
+  BiDotsVerticalRounded, BiFlag, BiTrash,
 } from 'react-icons/bi';
 
 export const Icon = {
@@ -51,4 +52,7 @@ export const Icon = {
   Cog: ({ size }) => <BiCog size={size || 20} />,
   LogOut: ({ size }) => <BiLogOut size={size || 20} />,
   Heart: ({ size }) => <BiHeart size={size || 20} />,
+  Dots: ({ size }) => <BiDotsVerticalRounded size={size || 20} />,
+  Flag: ({ size }) => <BiFlag size={size || 20} />,
+  Trash: ({ size }) => <BiTrash size={size || 20} />,
 };

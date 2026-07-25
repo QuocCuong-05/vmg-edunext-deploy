@@ -589,6 +589,18 @@ create index idx_community_comments_post on public.community_comments(post_id);
 create index idx_community_group_members_group on public.community_group_members(group_id);
 create index idx_community_group_members_user on public.community_group_members(user_id);
 
+-- community_reports
+create table public.community_reports (
+  id uuid default gen_random_uuid() primary key,
+  post_id uuid references public.community_posts(id) on delete cascade,
+  user_id uuid references public.profiles(id) not null,
+  reason text not null,
+  created_at timestamptz default now(),
+  unique(post_id, user_id)
+);
+
+create index idx_community_reports_post on public.community_reports(post_id);
+
 -- ################################################################
 -- PHẦN 5: TRIGGERS
 -- ################################################################
@@ -719,7 +731,7 @@ create trigger trg_quiz_question_count
 -- ============================================================
 -- KẾT THÚC full_schema.sql
 -- ============================================================
--- Tổng số tables: 23
+-- Tổng số tables: 24
 --   1. profiles          10. classroom_phrases
 --   2. courses           11. quiz_sets
 --   3. lessons           12. quiz_questions
@@ -735,5 +747,6 @@ create trigger trg_quiz_question_count
 --                        22. community_comments
 --                        23. community_groups
 --                         + community_group_members
--- Tổng: 23 tables
+--                        + community_reports
+-- Tổng: 24 tables
 -- ============================================================

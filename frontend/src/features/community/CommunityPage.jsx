@@ -6,10 +6,10 @@ import { API_BASE } from '../../lib/api';
 import { useAuth } from '../auth/AuthContext';
 
 const MOCK_POSTS = [
-  { id: 'p1', author_name: 'Tran Van An', author_avatar: 'TA', created_at: '2 hours ago', content: 'Just finished the CLIL lesson planning module. The 4Cs framework is a game-changer for my science classes!', likes_count: 24, comments_count: 8, shares_count: 5, user_has_liked: false },
-  { id: 'p2', author_name: 'Le Thi Hoa', author_avatar: 'LH', created_at: '5 hours ago', content: 'Anyone using exit tickets regularly? I found that asking "What is one thing you understood better today?" works really well with my 6th graders.', likes_count: 18, comments_count: 12, shares_count: 3, user_has_liked: false },
-  { id: 'p3', author_name: 'Pham Minh Duc', author_avatar: 'PD', created_at: '1 day ago', content: 'Tip for new teachers: wait time is your best friend. Count to five silently after asking a question. The quality of answers improves dramatically.', likes_count: 42, comments_count: 15, shares_count: 12, user_has_liked: false },
-  { id: 'p4', author_name: 'Hoang Ngoc Lan', author_avatar: 'HL', created_at: '2 days ago', content: 'Our school just adopted VMG EduNext for our bilingual program. The teachers are loving the practical phrases for classroom management!', likes_count: 31, comments_count: 6, shares_count: 7, user_has_liked: false },
+  { id: 'p1', user_id: 'u1', author_name: 'Tran Van An', author_avatar: 'TA', created_at: '2 hours ago', content: 'Just finished the CLIL lesson planning module. The 4Cs framework is a game-changer for my science classes!', likes_count: 24, comments_count: 8, shares_count: 5, user_has_liked: false, user_has_reported: false },
+  { id: 'p2', user_id: 'u2', author_name: 'Le Thi Hoa', author_avatar: 'LH', created_at: '5 hours ago', content: 'Anyone using exit tickets regularly? I found that asking "What is one thing you understood better today?" works really well with my 6th graders.', likes_count: 18, comments_count: 12, shares_count: 3, user_has_liked: false, user_has_reported: false },
+  { id: 'p3', user_id: 'u3', author_name: 'Pham Minh Duc', author_avatar: 'PD', created_at: '1 day ago', content: 'Tip for new teachers: wait time is your best friend. Count to five silently after asking a question. The quality of answers improves dramatically.', likes_count: 42, comments_count: 15, shares_count: 12, user_has_liked: false, user_has_reported: false },
+  { id: 'p4', user_id: 'u4', author_name: 'Hoang Ngoc Lan', author_avatar: 'HL', created_at: '2 days ago', content: 'Our school just adopted VMG EduNext for our bilingual program. The teachers are loving the practical phrases for classroom management!', likes_count: 31, comments_count: 6, shares_count: 7, user_has_liked: false, user_has_reported: false },
 ];
 
 const MOCK_GROUPS = [
@@ -49,7 +49,10 @@ function shareToFacebook(content) {
   );
 }
 
-function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comments, savingComment, newComment, onCommentChange, onShare }) {
+function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comments, savingComment, newComment, onCommentChange, onShare, onEdit, onDelete, onReport, currentUserId, openMenu, onToggleMenu, editing, editContent, onEditContentChange, onSaveEdit, onCancelEdit }) {
+  const isOwner = currentUserId && post.user_id === currentUserId;
+  const canReport = currentUserId && !isOwner && !post.user_has_reported;
+
   return (
     <Card style={{ padding: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
@@ -65,10 +68,54 @@ function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comm
           <div style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.author_name}</div>
           <div style={{ fontSize: 11, color: 'var(--muted)' }}>{timeAgo(post.created_at)}</div>
         </div>
+        {(isOwner || canReport) && (
+          <div style={{ position: 'relative' }}>
+            <span onClick={() => onToggleMenu(post.id)} style={{ cursor: 'pointer', padding: 4, display: 'flex', borderRadius: 4, background: openMenu === post.id ? 'var(--bg)' : 'transparent' }}>
+              <Icon.Dots size={16} />
+            </span>
+            {openMenu === post.id && (
+              <div style={{
+                position: 'absolute', right: 0, top: '100%', zIndex: 10,
+                background: '#fff', border: '1px solid var(--line)', borderRadius: 8,
+                boxShadow: '0 4px 12px rgba(0,0,0,.1)', minWidth: 140, padding: 4,
+              }}>
+                {isOwner && (
+                  <>
+                    <div onClick={() => { onEdit(post.id, post.content); onToggleMenu(null); }} style={{ padding: '8px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 4 }} onMouseEnter={e => e.target.style.background = 'var(--bg)'} onMouseLeave={e => e.target.style.background = 'transparent'}>
+                      <Icon.Pen size={14} /> Edit
+                    </div>
+                    <div onClick={() => { onDelete(post.id); onToggleMenu(null); }} style={{ padding: '8px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 4, color: 'var(--red)' }} onMouseEnter={e => e.target.style.background = 'var(--bg)'} onMouseLeave={e => e.target.style.background = 'transparent'}>
+                      <Icon.Trash size={14} /> Delete
+                    </div>
+                  </>
+                )}
+                {canReport && (
+                  <div onClick={() => { onReport(post.id); onToggleMenu(null); }} style={{ padding: '8px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 4 }} onMouseEnter={e => e.target.style.background = 'var(--bg)'} onMouseLeave={e => e.target.style.background = 'transparent'}>
+                    <Icon.Flag size={14} /> Report
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      <p style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--ink)', marginBottom: 14, whiteSpace: 'pre-wrap' }}>
-        {post.content}
-      </p>
+      {editing ? (
+        <div style={{ marginBottom: 14 }}>
+          <textarea
+            value={editContent}
+            onChange={e => onEditContentChange(e.target.value)}
+            style={{ width: '100%', border: '1px solid var(--line)', borderRadius: 8, padding: 10, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', minHeight: 80 }}
+          />
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <Button variant="primary" size="sm" onClick={() => onSaveEdit(post.id)} isDisabled={!editContent.trim()}>Save</Button>
+            <Button variant="ghost" size="sm" onClick={() => onCancelEdit(post.id)}>Cancel</Button>
+          </div>
+        </div>
+      ) : (
+        <p style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--ink)', marginBottom: 14, whiteSpace: 'pre-wrap' }}>
+          {post.content}
+        </p>
+      )}
       <div style={{ display: 'flex', gap: 20, fontSize: 12, color: 'var(--muted)' }}>
         <span onClick={() => onLike(post.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, color: post.user_has_liked ? 'var(--red)' : 'inherit' }}>
           <Icon.Heart size={14} /> {post.likes_count}
@@ -132,25 +179,38 @@ export default function CommunityPage() {
   const [createGroupName, setCreateGroupName] = useState('');
   const [createGroupDesc, setCreateGroupDesc] = useState('');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [editingPostId, setEditingPostId] = useState(null);
+  const [editContent, setEditContent] = useState('');
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportPostId, setReportPostId] = useState(null);
+  const [reportReason, setReportReason] = useState('');
+  const [reportedPostIds, setReportedPostIds] = useState([]);
+  const [openMenuPostId, setOpenMenuPostId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem('vmg_token');
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await fetch(`${API_BASE}/community`, { headers });
+        const res = await fetch(`${API_BASE}/community`, { headers: apiHeaders() });
         if (res.ok) setPosts(await res.json());
       } catch {}
       try {
-        const token = localStorage.getItem('vmg_token');
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await fetch(`${API_BASE}/community/groups`, { headers });
+        const res = await fetch(`${API_BASE}/community/groups`, { headers: apiHeaders() });
         if (res.ok) setGroups(await res.json());
+      } catch {}
+      try {
+        const res = await fetch(`${API_BASE}/community/reported`, { headers: apiHeaders() });
+        if (res.ok) setReportedPostIds(await res.json());
       } catch {}
       setLoading(false);
     };
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setOpenMenuPostId(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
   }, []);
 
   const apiHeaders = () => {
@@ -240,6 +300,60 @@ export default function CommunityPage() {
     ));
   };
 
+  const handleEdit = (postId, content) => {
+    setEditingPostId(postId);
+    setEditContent(content);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPostId(null);
+    setEditContent('');
+  };
+
+  const handleSaveEdit = async (postId) => {
+    if (!editContent.trim()) return;
+    setPosts(prev => prev.map(p =>
+      p.id === postId ? { ...p, content: editContent.trim() } : p
+    ));
+    setEditingPostId(null);
+    setEditContent('');
+    try {
+      await fetch(`${API_BASE}/community/${postId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...apiHeaders() },
+        body: JSON.stringify({ content: editContent.trim() }),
+      });
+    } catch {}
+  };
+
+  const handleDelete = (postId) => {
+    if (!window.confirm('Are you sure you want to delete this post?')) return;
+    setPosts(prev => prev.filter(p => p.id !== postId));
+    fetch(`${API_BASE}/community/${postId}`, {
+      method: 'DELETE',
+      headers: apiHeaders(),
+    }).catch(() => {});
+  };
+
+  const handleReport = (postId) => {
+    setReportPostId(postId);
+    setReportReason('');
+    setShowReportModal(true);
+  };
+
+  const handleSubmitReport = async () => {
+    if (!reportReason || !reportPostId) return;
+    setShowReportModal(false);
+    setReportedPostIds(prev => [...prev, reportPostId]);
+    try {
+      await fetch(`${API_BASE}/community/${reportPostId}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...apiHeaders() },
+        body: JSON.stringify({ reason: reportReason }),
+      });
+    } catch {}
+  };
+
   const handleJoinGroup = async (groupId) => {
     setGroups(prev => prev.map(g =>
       g.id === groupId ? {
@@ -320,11 +434,22 @@ export default function CommunityPage() {
           {posts.map(post => (
             <PostCard
               key={post.id}
-              post={post}
+              post={{ ...post, user_has_reported: reportedPostIds.includes(post.id) }}
               onLike={handleLike}
               onToggleComments={handleToggleComments}
               onAddComment={handleAddComment}
               onShare={handleShare}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onReport={handleReport}
+              currentUserId={user?.id}
+              openMenu={openMenuPostId}
+              onToggleMenu={(id) => setOpenMenuPostId(prev => prev === id ? null : id)}
+              editing={editingPostId === post.id}
+              editContent={editingPostId === post.id ? editContent : ''}
+              onEditContentChange={setEditContent}
+              onSaveEdit={handleSaveEdit}
+              onCancelEdit={handleCancelEdit}
               expanded={expandedComments[post.id]}
               comments={postComments[post.id] || []}
               savingComment={savingComment[post.id]}
@@ -401,6 +526,39 @@ export default function CommunityPage() {
           </Card>
         </div>
       </div>
+
+      {showReportModal && (
+        <div onClick={() => setShowReportModal(false)} style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)',
+          display: 'grid', placeItems: 'center', zIndex: 1000,
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: '#fff', borderRadius: 12, padding: 24, width: 340,
+            boxShadow: '0 8px 30px rgba(0,0,0,.15)',
+          }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Report Post</h3>
+            {['Spam', 'Inappropriate', 'Offensive', 'Other'].map(r => (
+              <label key={r} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0',
+                fontSize: 13, cursor: 'pointer', borderBottom: '1px solid var(--line)',
+              }}>
+                <input
+                  type="radio" name="reason" value={r}
+                  checked={reportReason === r}
+                  onChange={e => setReportReason(e.target.value)}
+                />
+                {r}
+              </label>
+            ))}
+            <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end' }}>
+              <Button variant="ghost" size="sm" onClick={() => setShowReportModal(false)}>Cancel</Button>
+              <Button variant="primary" size="sm" onClick={handleSubmitReport} isDisabled={!reportReason}>
+                Submit Report
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

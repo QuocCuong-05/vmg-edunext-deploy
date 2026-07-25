@@ -421,3 +421,16 @@ Table community_group_members {
 }
 
 // Ghi chú: Thành viên nhóm. Unique(group_id, user_id).
+
+Table community_reports {
+  id         uuid        [pk]
+  post_id    uuid        [ref: > community_posts.id]
+  user_id    uuid        [not null, ref: > auth.users.id]
+  reason     text        [not null]
+  created_at timestamptz [not null, default: `now()`]
+  indexes {
+    (post_id)
+  }
+}
+
+// Ghi chú: Báo cáo bài viết. Unique(post_id, user_id).
