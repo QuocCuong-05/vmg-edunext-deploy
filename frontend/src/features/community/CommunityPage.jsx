@@ -6,7 +6,7 @@ import { API_BASE } from '../../lib/api';
 import { useAuth } from '../auth/AuthContext';
 
 const MOCK_POSTS = [
-  { id: 'p1', user_id: 'u1', author_name: 'Tran Van An', author_avatar: 'TA', created_at: '2 hours ago', content: 'Just finished the CLIL lesson planning module. The 4Cs framework is a game-changer for my science classes!', likes_count: 24, comments_count: 8, shares_count: 5, user_has_liked: false, user_has_reported: false },
+  { id: 'p1', user_id: 'user-001', author_name: 'Tran Van An', author_avatar: 'TA', created_at: '2 hours ago', content: 'Just finished the CLIL lesson planning module. The 4Cs framework is a game-changer for my science classes!', likes_count: 24, comments_count: 8, shares_count: 5, user_has_liked: false, user_has_reported: false },
   { id: 'p2', user_id: 'u2', author_name: 'Le Thi Hoa', author_avatar: 'LH', created_at: '5 hours ago', content: 'Anyone using exit tickets regularly? I found that asking "What is one thing you understood better today?" works really well with my 6th graders.', likes_count: 18, comments_count: 12, shares_count: 3, user_has_liked: false, user_has_reported: false },
   { id: 'p3', user_id: 'u3', author_name: 'Pham Minh Duc', author_avatar: 'PD', created_at: '1 day ago', content: 'Tip for new teachers: wait time is your best friend. Count to five silently after asking a question. The quality of answers improves dramatically.', likes_count: 42, comments_count: 15, shares_count: 12, user_has_liked: false, user_has_reported: false },
   { id: 'p4', user_id: 'u4', author_name: 'Hoang Ngoc Lan', author_avatar: 'HL', created_at: '2 days ago', content: 'Our school just adopted VMG EduNext for our bilingual program. The teachers are loving the practical phrases for classroom management!', likes_count: 31, comments_count: 6, shares_count: 7, user_has_liked: false, user_has_reported: false },
@@ -68,9 +68,9 @@ function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comm
           <div style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.author_name}</div>
           <div style={{ fontSize: 11, color: 'var(--muted)' }}>{timeAgo(post.created_at)}</div>
         </div>
-        {(isOwner || canReport) && (
+          {(isOwner || canReport) && (
           <div style={{ position: 'relative' }}>
-            <span onClick={() => onToggleMenu(post.id)} style={{ cursor: 'pointer', padding: 4, display: 'flex', borderRadius: 4, background: openMenu === post.id ? 'var(--bg)' : 'transparent' }}>
+            <span onClick={e => { e.stopPropagation(); onToggleMenu(post.id); }} style={{ cursor: 'pointer', padding: 4, display: 'flex', borderRadius: 4, background: openMenu === post.id ? 'var(--bg)' : 'transparent' }}>
               <Icon.Dots size={16} />
             </span>
             {openMenu === post.id && (
@@ -81,16 +81,16 @@ function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comm
               }}>
                 {isOwner && (
                   <>
-                    <div onClick={() => { onEdit(post.id, post.content); onToggleMenu(null); }} style={{ padding: '8px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 4 }} onMouseEnter={e => e.target.style.background = 'var(--bg)'} onMouseLeave={e => e.target.style.background = 'transparent'}>
+                    <div onClick={e => { e.stopPropagation(); onEdit(post.id, post.content); onToggleMenu(null); }} style={{ padding: '8px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 4 }} onMouseEnter={e => e.target.style.background = 'var(--bg)'} onMouseLeave={e => e.target.style.background = 'transparent'}>
                       <Icon.Pen size={14} /> Edit
                     </div>
-                    <div onClick={() => { onDelete(post.id); onToggleMenu(null); }} style={{ padding: '8px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 4, color: 'var(--red)' }} onMouseEnter={e => e.target.style.background = 'var(--bg)'} onMouseLeave={e => e.target.style.background = 'transparent'}>
+                    <div onClick={e => { e.stopPropagation(); onDelete(post.id); onToggleMenu(null); }} style={{ padding: '8px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 4, color: 'var(--red)' }} onMouseEnter={e => e.target.style.background = 'var(--bg)'} onMouseLeave={e => e.target.style.background = 'transparent'}>
                       <Icon.Trash size={14} /> Delete
                     </div>
                   </>
                 )}
                 {canReport && (
-                  <div onClick={() => { onReport(post.id); onToggleMenu(null); }} style={{ padding: '8px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 4 }} onMouseEnter={e => e.target.style.background = 'var(--bg)'} onMouseLeave={e => e.target.style.background = 'transparent'}>
+                  <div onClick={e => { e.stopPropagation(); onReport(post.id); onToggleMenu(null); }} style={{ padding: '8px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 4 }} onMouseEnter={e => e.target.style.background = 'var(--bg)'} onMouseLeave={e => e.target.style.background = 'transparent'}>
                     <Icon.Flag size={14} /> Report
                   </div>
                 )}
