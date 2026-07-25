@@ -169,7 +169,6 @@ export default function CommunityPage() {
   const { user } = useAuth();
   const [posts, setPosts] = useState(MOCK_POSTS);
   const [groups, setGroups] = useState(MOCK_GROUPS);
-  const [loading, setLoading] = useState(true);
   const [newPostContent, setNewPostContent] = useState('');
   const [posting, setPosting] = useState(false);
   const [expandedComments, setExpandedComments] = useState({});
@@ -188,23 +187,18 @@ export default function CommunityPage() {
   const [openMenuPostId, setOpenMenuPostId] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`${API_BASE}/community`, { headers: apiHeaders() });
-        if (res.ok) setPosts(await res.json());
-      } catch {}
-      try {
-        const res = await fetch(`${API_BASE}/community/groups`, { headers: apiHeaders() });
-        if (res.ok) setGroups(await res.json());
-      } catch {}
-      try {
-        const res = await fetch(`${API_BASE}/community/reported`, { headers: apiHeaders() });
-        if (res.ok) setReportedPostIds(await res.json());
-      } catch {}
-      setLoading(false);
-    };
-    fetchData();
+    fetch(`${API_BASE}/community`, { headers: apiHeaders() })
+      .then(res => res.ok && res.json())
+      .then(data => data && setPosts(data))
+      .catch(() => {});
+    fetch(`${API_BASE}/community/groups`, { headers: apiHeaders() })
+      .then(res => res.ok && res.json())
+      .then(data => data && setGroups(data))
+      .catch(() => {});
+    fetch(`${API_BASE}/community/reported`, { headers: apiHeaders() })
+      .then(res => res.ok && res.json())
+      .then(data => data && setReportedPostIds(data))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -439,10 +433,6 @@ export default function CommunityPage() {
             </div>
           </div>
         </Card>
-      )}
-
-      {loading && (
-        <div style={{ textAlign: 'center', padding: 40, fontSize: 13, color: 'var(--muted)' }}>Loading community...</div>
       )}
 
       <div className="community-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
