@@ -189,11 +189,19 @@ export default function CommunityPage() {
   useEffect(() => {
     fetch(`${API_BASE}/community`, { headers: apiHeaders() })
       .then(res => res.ok && res.json())
-      .then(data => data && setPosts(data))
+      .then(data => {
+        if (data && data.length > 0) {
+          setPosts(prev => {
+            const fetchedIds = new Set(data.map(p => p.id));
+            const extras = prev.filter(p => !fetchedIds.has(p.id));
+            return extras.length ? [...extras, ...data] : data;
+          });
+        }
+      })
       .catch(() => {});
     fetch(`${API_BASE}/community/groups`, { headers: apiHeaders() })
       .then(res => res.ok && res.json())
-      .then(data => data && setGroups(data))
+      .then(data => data && data.length > 0 && setGroups(data))
       .catch(() => {});
     fetch(`${API_BASE}/community/reported`, { headers: apiHeaders() })
       .then(res => res.ok && res.json())
