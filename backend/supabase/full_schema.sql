@@ -537,6 +537,58 @@ create policy "manage_own_wordbook" on public.word_book_entries
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+-- ============================================================
+-- COMMUNITY TABLES (đặt trước triggers để DO block thấy được)
+-- ============================================================
+
+create table public.community_posts (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) not null,
+  content text not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table public.community_likes (
+  id uuid default gen_random_uuid() primary key,
+  post_id uuid references public.community_posts(id) on delete cascade,
+  user_id uuid references public.profiles(id) not null,
+  created_at timestamptz default now(),
+  unique(post_id, user_id)
+);
+
+create table public.community_comments (
+  id uuid default gen_random_uuid() primary key,
+  post_id uuid references public.community_posts(id) on delete cascade,
+  user_id uuid references public.profiles(id) not null,
+  content text not null,
+  created_at timestamptz default now()
+);
+
+create table public.community_groups (
+  id uuid default gen_random_uuid() primary key,
+  name text not null unique,
+  description text,
+  created_by uuid references public.profiles(id),
+  created_at timestamptz default now()
+);
+
+create table public.community_group_members (
+  id uuid default gen_random_uuid() primary key,
+  group_id uuid references public.community_groups(id) on delete cascade,
+  user_id uuid references public.profiles(id) not null,
+  created_at timestamptz default now(),
+  unique(group_id, user_id)
+);
+
+-- Indexes
+create index idx_community_posts_user on public.community_posts(user_id);
+create index idx_community_posts_created on public.community_posts(created_at desc);
+create index idx_community_likes_post on public.community_likes(post_id);
+create index idx_community_comments_post on public.community_comments(post_id);
+create index idx_community_group_members_group on public.community_group_members(group_id);
+create index idx_community_group_members_user on public.community_group_members(user_id);
+
 -- ################################################################
 -- PHẦN 5: TRIGGERS
 -- ################################################################
@@ -662,57 +714,7 @@ create trigger trg_quiz_question_count
   after insert or delete on public.quiz_questions
   for each row execute function public.update_quiz_question_count();
 
--- ============================================================
--- COMMUNITY TABLES
--- ============================================================
 
-create table public.community_posts (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references public.profiles(id) not null,
-  content text not null,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
-create table public.community_likes (
-  id uuid default gen_random_uuid() primary key,
-  post_id uuid references public.community_posts(id) on delete cascade,
-  user_id uuid references public.profiles(id) not null,
-  created_at timestamptz default now(),
-  unique(post_id, user_id)
-);
-
-create table public.community_comments (
-  id uuid default gen_random_uuid() primary key,
-  post_id uuid references public.community_posts(id) on delete cascade,
-  user_id uuid references public.profiles(id) not null,
-  content text not null,
-  created_at timestamptz default now()
-);
-
-create table public.community_groups (
-  id uuid default gen_random_uuid() primary key,
-  name text not null unique,
-  description text,
-  created_by uuid references public.profiles(id),
-  created_at timestamptz default now()
-);
-
-create table public.community_group_members (
-  id uuid default gen_random_uuid() primary key,
-  group_id uuid references public.community_groups(id) on delete cascade,
-  user_id uuid references public.profiles(id) not null,
-  created_at timestamptz default now(),
-  unique(group_id, user_id)
-);
-
--- Indexes
-create index idx_community_posts_user on public.community_posts(user_id);
-create index idx_community_posts_created on public.community_posts(created_at desc);
-create index idx_community_likes_post on public.community_likes(post_id);
-create index idx_community_comments_post on public.community_comments(post_id);
-create index idx_community_group_members_group on public.community_group_members(group_id);
-create index idx_community_group_members_user on public.community_group_members(user_id);
 
 -- ============================================================
 -- KẾT THÚC full_schema.sql

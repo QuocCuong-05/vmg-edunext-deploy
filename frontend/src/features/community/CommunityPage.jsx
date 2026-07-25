@@ -6,10 +6,10 @@ import { API_BASE } from '../../lib/api';
 import { useAuth } from '../auth/AuthContext';
 
 const MOCK_POSTS = [
-  { id: 'p1', author_name: 'Tran Van An', author_avatar: 'TA', created_at: '2 hours ago', content: 'Just finished the CLIL lesson planning module. The 4Cs framework is a game-changer for my science classes!', likes_count: 24, comments_count: 8, user_has_liked: false },
-  { id: 'p2', author_name: 'Le Thi Hoa', author_avatar: 'LH', created_at: '5 hours ago', content: 'Anyone using exit tickets regularly? I found that asking "What is one thing you understood better today?" works really well with my 6th graders.', likes_count: 18, comments_count: 12, user_has_liked: false },
-  { id: 'p3', author_name: 'Pham Minh Duc', author_avatar: 'PD', created_at: '1 day ago', content: 'Tip for new teachers: wait time is your best friend. Count to five silently after asking a question. The quality of answers improves dramatically.', likes_count: 42, comments_count: 15, user_has_liked: false },
-  { id: 'p4', author_name: 'Hoang Ngoc Lan', author_avatar: 'HL', created_at: '2 days ago', content: 'Our school just adopted VMG EduNext for our bilingual program. The teachers are loving the practical phrases for classroom management!', likes_count: 31, comments_count: 6, user_has_liked: false },
+  { id: 'p1', author_name: 'Tran Van An', author_avatar: 'TA', created_at: '2 hours ago', content: 'Just finished the CLIL lesson planning module. The 4Cs framework is a game-changer for my science classes!', likes_count: 24, comments_count: 8, shares_count: 5, user_has_liked: false },
+  { id: 'p2', author_name: 'Le Thi Hoa', author_avatar: 'LH', created_at: '5 hours ago', content: 'Anyone using exit tickets regularly? I found that asking "What is one thing you understood better today?" works really well with my 6th graders.', likes_count: 18, comments_count: 12, shares_count: 3, user_has_liked: false },
+  { id: 'p3', author_name: 'Pham Minh Duc', author_avatar: 'PD', created_at: '1 day ago', content: 'Tip for new teachers: wait time is your best friend. Count to five silently after asking a question. The quality of answers improves dramatically.', likes_count: 42, comments_count: 15, shares_count: 12, user_has_liked: false },
+  { id: 'p4', author_name: 'Hoang Ngoc Lan', author_avatar: 'HL', created_at: '2 days ago', content: 'Our school just adopted VMG EduNext for our bilingual program. The teachers are loving the practical phrases for classroom management!', likes_count: 31, comments_count: 6, shares_count: 7, user_has_liked: false },
 ];
 
 const MOCK_GROUPS = [
@@ -41,7 +41,7 @@ function timeAgo(dateStr) {
 }
 
 function shareToFacebook(content) {
-  const url = 'https://vmg-edunext.com/community';
+  const url = window.location.origin + '/community';
   const quote = content.length > 300 ? content.slice(0, 297) + '...' : content;
   window.open(
     `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(quote)}`,
@@ -49,7 +49,7 @@ function shareToFacebook(content) {
   );
 }
 
-function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comments, savingComment, newComment, onCommentChange }) {
+function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comments, savingComment, newComment, onCommentChange, onShare }) {
   return (
     <Card style={{ padding: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
@@ -71,13 +71,13 @@ function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comm
       </p>
       <div style={{ display: 'flex', gap: 20, fontSize: 12, color: 'var(--muted)' }}>
         <span onClick={() => onLike(post.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, color: post.user_has_liked ? 'var(--red)' : 'inherit' }}>
-          <Icon.ArrowRight size={14} /> {post.likes_count}
+          <Icon.Heart size={14} /> {post.likes_count}
         </span>
         <span onClick={() => onToggleComments(post.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
           <Icon.Classroom size={14} /> {post.comments_count}
         </span>
-        <span onClick={() => shareToFacebook(post.content)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Icon.Send size={14} />
+        <span onClick={() => onShare(post.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Icon.Send size={14} /> {post.shares_count}
         </span>
       </div>
       {expanded && (
@@ -194,18 +194,15 @@ export default function CommunityPage() {
     } catch {}
   };
 
-  const handleToggleComments = async (postId) => {
+  const handleToggleComments = (postId) => {
     const currentlyExpanded = expandedComments[postId];
-    if (!currentlyExpanded && !postComments[postId]) {
-      try {
-        const res = await fetch(`${API_BASE}/community/${postId}/comments`, { headers: apiHeaders() });
-        if (res.ok) {
-          const data = await res.json();
-          setPostComments(prev => ({ ...prev, [postId]: data }));
-        }
-      } catch {}
-    }
     setExpandedComments(prev => ({ ...prev, [postId]: !currentlyExpanded }));
+    if (!currentlyExpanded && !postComments[postId]) {
+      fetch(`${API_BASE}/community/${postId}/comments`, { headers: apiHeaders() })
+        .then(res => res.ok && res.json())
+        .then(data => data && setPostComments(prev => ({ ...prev, [postId]: data })))
+        .catch(() => {});
+    }
   };
 
   const handleAddComment = async (postId) => {
@@ -232,6 +229,15 @@ export default function CommunityPage() {
       }
     } catch {}
     setSavingComment(prev => ({ ...prev, [postId]: false }));
+  };
+
+  const handleShare = (postId) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    shareToFacebook(post.content);
+    setPosts(prev => prev.map(p =>
+      p.id === postId ? { ...p, shares_count: (p.shares_count || 0) + 1 } : p
+    ));
   };
 
   const handleJoinGroup = async (groupId) => {
@@ -318,6 +324,7 @@ export default function CommunityPage() {
               onLike={handleLike}
               onToggleComments={handleToggleComments}
               onAddComment={handleAddComment}
+              onShare={handleShare}
               expanded={expandedComments[post.id]}
               comments={postComments[post.id] || []}
               savingComment={savingComment[post.id]}

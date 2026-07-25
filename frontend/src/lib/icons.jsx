@@ -6,7 +6,7 @@ import {
   BiBookOpen, BiAtom, BiMicrophone, BiMicrophoneOff,
   BiVolumeFull, BiPause, BiLoaderCircle, BiCalendar,
   BiDownload, BiPrinter, BiShareAlt, BiCartAlt, BiTime,
-  BiUser, BiMoon, BiSun, BiGlobe, BiCog, BiLogOut,
+  BiUser, BiMoon, BiSun, BiGlobe, BiCog, BiLogOut, BiHeart,
 } from 'react-icons/bi';
 
 export const Icon = {
@@ -50,4 +50,5 @@ export const Icon = {
   Globe: ({ size }) => <BiGlobe size={size || 20} />,
   Cog: ({ size }) => <BiCog size={size || 20} />,
   LogOut: ({ size }) => <BiLogOut size={size || 20} />,
+  Heart: ({ size }) => <BiHeart size={size || 20} />,
 };
