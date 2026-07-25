@@ -11,6 +11,7 @@ import classroomRoutes from './routes/classroom.js';
 import quizRoutes from './routes/quiz.js';
 import ttsRoutes from './routes/tts.js';
 import vimiAiRoutes from './routes/vimi-ai.js';
+import communityRoutes from './routes/community.js';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/classroom', classroomRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api/tts', ttsRoutes);
 app.use('/api/vimi-ai', vimiAiRoutes);
+app.use('/api/community', communityRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error('Unhandled error:', err);

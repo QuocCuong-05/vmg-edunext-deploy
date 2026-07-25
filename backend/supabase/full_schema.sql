@@ -558,7 +558,7 @@ begin
     select unnest(array[
       'profiles', 'courses', 'lessons', 'vocabulary_entries',
       'classroom_phrases', 'quiz_sets', 'tips', 'rewards',
-      'word_book_entries'
+      'word_book_entries', 'community_posts'
     ])
   loop
     execute format(
@@ -663,9 +663,61 @@ create trigger trg_quiz_question_count
   for each row execute function public.update_quiz_question_count();
 
 -- ============================================================
+-- COMMUNITY TABLES
+-- ============================================================
+
+create table public.community_posts (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) not null,
+  content text not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table public.community_likes (
+  id uuid default gen_random_uuid() primary key,
+  post_id uuid references public.community_posts(id) on delete cascade,
+  user_id uuid references public.profiles(id) not null,
+  created_at timestamptz default now(),
+  unique(post_id, user_id)
+);
+
+create table public.community_comments (
+  id uuid default gen_random_uuid() primary key,
+  post_id uuid references public.community_posts(id) on delete cascade,
+  user_id uuid references public.profiles(id) not null,
+  content text not null,
+  created_at timestamptz default now()
+);
+
+create table public.community_groups (
+  id uuid default gen_random_uuid() primary key,
+  name text not null unique,
+  description text,
+  created_by uuid references public.profiles(id),
+  created_at timestamptz default now()
+);
+
+create table public.community_group_members (
+  id uuid default gen_random_uuid() primary key,
+  group_id uuid references public.community_groups(id) on delete cascade,
+  user_id uuid references public.profiles(id) not null,
+  created_at timestamptz default now(),
+  unique(group_id, user_id)
+);
+
+-- Indexes
+create index idx_community_posts_user on public.community_posts(user_id);
+create index idx_community_posts_created on public.community_posts(created_at desc);
+create index idx_community_likes_post on public.community_likes(post_id);
+create index idx_community_comments_post on public.community_comments(post_id);
+create index idx_community_group_members_group on public.community_group_members(group_id);
+create index idx_community_group_members_user on public.community_group_members(user_id);
+
+-- ============================================================
 -- KẾT THÚC full_schema.sql
 -- ============================================================
--- Tổng số tables: 18
+-- Tổng số tables: 23
 --   1. profiles          10. classroom_phrases
 --   2. courses           11. quiz_sets
 --   3. lessons           12. quiz_questions
@@ -675,6 +727,11 @@ create trigger trg_quiz_question_count
 --   7. vocabulary_entries 16. user_quests
 --   8. classroom_phrase_categories  17. rewards
 --   9. (tiếp)            18. user_purchases
---                          + word_book_entries
--- Tổng: 18 tables
+--                        19. word_book_entries
+--                        20. community_posts
+--                        21. community_likes
+--                        22. community_comments
+--                        23. community_groups
+--                         + community_group_members
+-- Tổng: 23 tables
 -- ============================================================

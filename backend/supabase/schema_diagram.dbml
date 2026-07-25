@@ -355,3 +355,69 @@ Table word_book_entries {
 }
 
 // Ghi chú: Từ vựng cá nhân của từng user. FK → auth.users.
+
+// ------------------------------------------------------------
+// COMMUNITY TABLES
+// ------------------------------------------------------------
+
+Table community_posts {
+  id         uuid        [pk]
+  user_id    uuid        [not null, ref: > auth.users.id]
+  content    text        [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  indexes {
+    (user_id)
+    (created_at)
+  }
+}
+
+// Ghi chú: Bài viết trang Community. content tối đa 2000 ký tự.
+
+Table community_likes {
+  id         uuid        [pk]
+  post_id    uuid        [ref: > community_posts.id]
+  user_id    uuid        [not null, ref: > auth.users.id]
+  created_at timestamptz [not null, default: `now()`]
+  indexes {
+    (post_id)
+    (user_id)
+  }
+}
+
+// Ghi chú: Like bài viết. Unique(post_id, user_id) — toggle được.
+
+Table community_comments {
+  id         uuid        [pk]
+  post_id    uuid        [ref: > community_posts.id]
+  user_id    uuid        [not null, ref: > auth.users.id]
+  content    text        [not null]
+  created_at timestamptz [not null, default: `now()`]
+  indexes {
+    (post_id)
+  }
+}
+
+// Ghi chú: Bình luận trên bài viết.
+
+Table community_groups {
+  id          uuid        [pk]
+  name        text        [not null, unique]
+  description text
+  created_by  uuid        [ref: > auth.users.id]
+  created_at  timestamptz [not null, default: `now()`]
+}
+
+// Ghi chú: Nhóm cộng đồng. name unique.
+
+Table community_group_members {
+  id         uuid        [pk]
+  group_id   uuid        [ref: > community_groups.id]
+  user_id    uuid        [not null, ref: > auth.users.id]
+  created_at timestamptz [not null, default: `now()`]
+  indexes {
+    (group_id)
+  }
+}
+
+// Ghi chú: Thành viên nhóm. Unique(group_id, user_id).
