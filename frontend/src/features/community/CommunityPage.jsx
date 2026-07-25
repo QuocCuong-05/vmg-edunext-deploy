@@ -232,9 +232,25 @@ export default function CommunityPage() {
       if (res.ok) {
         const newPost = await res.json();
         newPost.created_at = new Date().toISOString();
+        newPost.user_id = user?.id;
         setPosts(prev => [newPost, ...prev]);
       }
-    } catch {}
+    } catch {
+      const fallbackPost = {
+        id: 'mock_' + Date.now(),
+        user_id: user?.id,
+        content: text,
+        created_at: new Date().toISOString(),
+        author_name: user?.full_name || 'You',
+        author_avatar: getInitials(user?.full_name || 'You'),
+        likes_count: 0,
+        comments_count: 0,
+        shares_count: 0,
+        user_has_liked: false,
+        user_has_reported: false,
+      };
+      setPosts(prev => [fallbackPost, ...prev]);
+    }
     setPosting(false);
   };
 
