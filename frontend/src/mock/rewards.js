@@ -1,8 +1,8 @@
 
 const CATEGORIES = {
-  hoc_lieu: { label: 'Học liệu dùng ngay', color: 'var(--blue)' },
-  phat_trien: { label: 'Phát triển chuyên môn', color: 'var(--green)' },
-  cong_nhan: { label: 'Công nhận & Cơ hội', color: 'var(--gold)' },
+  hoc_lieu: { label: 'Tủ học liệu', color: 'var(--blue)' },
+  phat_trien: { label: 'Nâng tầm chuyên môn', color: 'var(--green)' },
+  cong_nhan: { label: 'Vinh danh & Đặc quyền', color: 'var(--gold)' },
 };
 
 const ITEMS = [
