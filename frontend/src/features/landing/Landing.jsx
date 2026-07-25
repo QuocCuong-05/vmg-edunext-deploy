@@ -75,7 +75,7 @@ export default function Landing() {
         <div className="landing-nav-inner">
           <div className="landing-logo">
             <img src="/vmg.png" alt="VMG" style={{ height: 22 }} />
-            <span className="landing-logo-text">VMG EduNext</span>
+            <span className="landing-logo-text"><span style={{ whiteSpace: 'nowrap' }}>VMG EduNext</span></span>
           </div>
           <div className="landing-nav-actions">
             {user ? (
@@ -102,7 +102,7 @@ export default function Landing() {
         <div className="landing-hero-content">
           <h1 className="landing-hero-title">
             Tự tin làm chủ<br />
-            <span className="landing-hero-accent">lớp học song ngữ cùng VMG EduNext</span>
+            <span className="landing-hero-accent">lớp học song ngữ cùng <span style={{ whiteSpace: 'nowrap' }}>VMG EduNext</span></span>
           </h1>
            <p className="landing-hero-sub">Nền tảng học tiếng Anh chuyên sâu ứng dụng công nghệ AI và mô&nbsp;hình Hybrid Learning, giúp giáo viên nâng cao năng lực giao tiếp và giảng dạy chuẩn quốc tế.</p>
           <div className="landing-hero-actions">
