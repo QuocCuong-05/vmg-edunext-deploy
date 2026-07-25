@@ -166,6 +166,24 @@ router.post('/:id/like', optionalAuth, async (req, res) => {
   }
 });
 
+// GET /comments/reported — danh sách comment_id user đã report
+router.get('/comments/reported', optionalAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.json([]);
+
+    const { data: reports } = await supabase
+      .from('community_comment_reports')
+      .select('comment_id')
+      .eq('user_id', userId);
+
+    res.json((reports || []).map(r => r.comment_id));
+  } catch (err) {
+    console.error('[Community] GET /comments/reported error:', err.message);
+    res.json([]);
+  }
+});
+
 // GET /:id/comments — lấy comments
 router.get('/:id/comments', optionalAuth, async (req, res) => {
   try {
@@ -182,6 +200,15 @@ router.get('/:id/comments', optionalAuth, async (req, res) => {
       return res.json([]);
     }
 
+    let reportedCommentIds = [];
+    if (req.user) {
+      const { data: reports } = await supabase
+        .from('community_comment_reports')
+        .select('comment_id')
+        .eq('user_id', req.user.id);
+      reportedCommentIds = (reports || []).map(r => r.comment_id);
+    }
+
     const result = comments.map(c => ({
       id: c.id,
       post_id: req.params.id,
@@ -190,6 +217,7 @@ router.get('/:id/comments', optionalAuth, async (req, res) => {
       created_at: c.created_at,
       author_name: c.profiles?.full_name || 'Unknown',
       author_avatar: (c.profiles?.full_name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+      user_has_reported: reportedCommentIds.includes(c.id),
     }));
 
     res.json(result);
@@ -232,6 +260,7 @@ router.post('/:id/comments', optionalAuth, async (req, res) => {
       created_at: comment.created_at,
       author_name: profile?.full_name || 'Unknown',
       author_avatar: (profile?.full_name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+      user_has_reported: false,
     });
   } catch (err) {
     console.error('[Community] POST /:id/comments error:', err.message);
@@ -243,7 +272,105 @@ router.post('/:id/comments', optionalAuth, async (req, res) => {
       created_at: new Date().toISOString(),
       author_name: 'You',
       author_avatar: 'YO',
+      user_has_reported: false,
     });
+  }
+});
+
+// PUT /:id/comments/:commentId — sửa comment (chỉ author)
+router.put('/:id/comments/:commentId', optionalAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id || MOCK_USER_ID;
+    const { commentId } = req.params;
+    const { content } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: 'Content is required' });
+    }
+
+    const { data: comment, error: fetchError } = await supabase
+      .from('community_comments')
+      .select('user_id')
+      .eq('id', commentId)
+      .single();
+
+    if (fetchError || !comment) {
+      return res.json({ id: commentId, content: content.trim() });
+    }
+
+    if (comment.user_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const { data: updated, error } = await supabase
+      .from('community_comments')
+      .update({ content: content.trim() })
+      .eq('id', commentId)
+      .select('id, content')
+      .single();
+
+    if (error) throw error;
+    res.json({ id: updated.id, content: updated.content });
+  } catch (err) {
+    console.error('[Community] PUT /:id/comments/:commentId error:', err.message);
+    res.json({ id: req.params.commentId, content: req.body.content });
+  }
+});
+
+// DELETE /:id/comments/:commentId — xoá comment (chỉ author)
+router.delete('/:id/comments/:commentId', optionalAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id || MOCK_USER_ID;
+    const { commentId } = req.params;
+
+    const { data: comment, error: fetchError } = await supabase
+      .from('community_comments')
+      .select('user_id')
+      .eq('id', commentId)
+      .single();
+
+    if (fetchError || !comment) {
+      return res.json({ deleted: true });
+    }
+
+    if (comment.user_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    await supabase.from('community_comments').delete().eq('id', commentId);
+    res.json({ deleted: true });
+  } catch (err) {
+    console.error('[Community] DELETE /:id/comments/:commentId error:', err.message);
+    res.json({ deleted: true });
+  }
+});
+
+// POST /:id/comments/:commentId/report — báo cáo comment
+router.post('/:id/comments/:commentId/report', optionalAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id || MOCK_USER_ID;
+    const { commentId } = req.params;
+    const { reason } = req.body;
+
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ error: 'Reason is required' });
+    }
+
+    const { error } = await supabase
+      .from('community_comment_reports')
+      .insert({ comment_id: commentId, user_id: userId, reason: reason.trim() });
+
+    if (error) {
+      if (error.code === '23505') {
+        return res.json({ reported: true, already: true });
+      }
+      throw error;
+    }
+
+    res.json({ reported: true, already: false });
+  } catch (err) {
+    console.error('[Community] POST /:id/comments/:commentId/report error:', err.message);
+    res.json({ reported: true });
   }
 });
 

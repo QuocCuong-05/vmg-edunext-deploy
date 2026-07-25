@@ -601,6 +601,18 @@ create table public.community_reports (
 
 create index idx_community_reports_post on public.community_reports(post_id);
 
+-- community_comment_reports
+create table public.community_comment_reports (
+  id uuid default gen_random_uuid() primary key,
+  comment_id uuid references public.community_comments(id) on delete cascade,
+  user_id uuid references public.profiles(id) not null,
+  reason text not null,
+  created_at timestamptz default now(),
+  unique(comment_id, user_id)
+);
+
+create index idx_community_comment_reports_comment on public.community_comment_reports(comment_id);
+
 -- ################################################################
 -- PHẦN 5: TRIGGERS
 -- ################################################################
@@ -747,6 +759,7 @@ create trigger trg_quiz_question_count
 --                        22. community_comments
 --                        23. community_groups
 --                         + community_group_members
---                        + community_reports
--- Tổng: 24 tables
+--                         + community_reports
+--                         + community_comment_reports
+-- Tổng: 25 tables
 -- ============================================================

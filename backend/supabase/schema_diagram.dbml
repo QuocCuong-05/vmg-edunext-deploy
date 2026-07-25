@@ -434,3 +434,16 @@ Table community_reports {
 }
 
 // Ghi chú: Báo cáo bài viết. Unique(post_id, user_id).
+
+Table community_comment_reports {
+  id         uuid        [pk]
+  comment_id uuid        [ref: > community_comments.id]
+  user_id    uuid        [not null, ref: > auth.users.id]
+  reason     text        [not null]
+  created_at timestamptz [not null, default: `now()`]
+  indexes {
+    (comment_id)
+  }
+}
+
+// Ghi chú: Báo cáo bình luận. Unique(comment_id, user_id).

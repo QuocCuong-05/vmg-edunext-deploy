@@ -49,7 +49,7 @@ function shareToFacebook(content) {
   );
 }
 
-function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comments, savingComment, newComment, onCommentChange, onShare, onEdit, onDelete, onReport, currentUserId, openMenu, onToggleMenu, editing, editContent, onEditContentChange, onSaveEdit, onCancelEdit }) {
+function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comments, savingComment, newComment, onCommentChange, onShare, onEdit, onDelete, onReport, currentUserId, openMenu, onToggleMenu, editing, editContent, onEditContentChange, onSaveEdit, onCancelEdit, onEditComment, onDeleteComment, onReportComment, onSaveEditComment, onCancelEditComment, editingCommentId, editCommentContent, onEditCommentContentChange, openCommentMenu, onToggleCommentMenu, reportedCommentIds }) {
   const isOwner = currentUserId && post.user_id === currentUserId;
   const canReport = currentUserId && !isOwner && !post.user_has_reported;
 
@@ -130,7 +130,12 @@ function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comm
       {expanded && (
         <div style={{ marginTop: 16, borderTop: '1px solid var(--line)', paddingTop: 12 }}>
           {comments.length === 0 && <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>No comments yet.</p>}
-          {comments.map(c => (
+          {comments.map(c => {
+            const cIsOwner = currentUserId && c.user_id === currentUserId;
+            const cCanReport = currentUserId && !cIsOwner && !reportedCommentIds.includes(c.id);
+            const cMenuId = post.id + '_' + c.id;
+            const isEditing = editingCommentId === c.id;
+            return (
             <div key={c.id} style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
               <div style={{
                 width: 28, height: 28, borderRadius: '50%',
@@ -141,11 +146,58 @@ function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comm
                 {c.author_avatar || getInitials(c.author_name)}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 2 }}>{c.author_name}</div>
-                <p style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--muted)' }}>{c.content}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 2 }}>{c.author_name}</div>
+                  {(cIsOwner || cCanReport) && (
+                    <div style={{ position: 'relative' }}>
+                      <span onClick={e => { e.stopPropagation(); onToggleCommentMenu(cMenuId); }} style={{ cursor: 'pointer', padding: 2, display: 'flex', borderRadius: 3, background: openCommentMenu === cMenuId ? 'var(--bg)' : 'transparent' }}>
+                        <Icon.Dots size={12} />
+                      </span>
+                      {openCommentMenu === cMenuId && (
+                        <div style={{
+                          position: 'absolute', left: 0, top: '100%', zIndex: 10,
+                          background: '#fff', border: '1px solid var(--line)', borderRadius: 6,
+                          boxShadow: '0 4px 12px rgba(0,0,0,.1)', minWidth: 120, padding: 4,
+                        }}>
+                          {cIsOwner && (
+                            <>
+                              <div onClick={e => { e.stopPropagation(); onEditComment(post.id, c.id, c.content); onToggleCommentMenu(null); }} style={{ padding: '6px 10px', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 4 }} onMouseEnter={e => e.target.style.background = 'var(--bg)'} onMouseLeave={e => e.target.style.background = 'transparent'}>
+                                <Icon.Pen size={12} /> Edit
+                              </div>
+                              <div onClick={e => { e.stopPropagation(); onDeleteComment(post.id, c.id); onToggleCommentMenu(null); }} style={{ padding: '6px 10px', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 4, color: 'var(--red)' }} onMouseEnter={e => e.target.style.background = 'var(--bg)'} onMouseLeave={e => e.target.style.background = 'transparent'}>
+                                <Icon.Trash size={12} /> Delete
+                              </div>
+                            </>
+                          )}
+                          {cCanReport && (
+                            <div onClick={e => { e.stopPropagation(); onReportComment(c.id); onToggleCommentMenu(null); }} style={{ padding: '6px 10px', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 4 }} onMouseEnter={e => e.target.style.background = 'var(--bg)'} onMouseLeave={e => e.target.style.background = 'transparent'}>
+                              <Icon.Flag size={12} /> Report
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {isEditing ? (
+                  <div style={{ marginTop: 4 }}>
+                    <textarea
+                      value={editCommentContent}
+                      onChange={e => onEditCommentContentChange(e.target.value)}
+                      style={{ width: '100%', border: '1px solid var(--line)', borderRadius: 6, padding: 6, fontSize: 12, fontFamily: 'inherit', resize: 'vertical', minHeight: 40 }}
+                    />
+                    <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                      <button onClick={() => onSaveEditComment(post.id, c.id)} disabled={!editCommentContent.trim()} style={{ background: 'var(--red)', color: '#fff', border: 'none', borderRadius: 12, padding: '4px 10px', fontSize: 11, cursor: 'pointer', opacity: editCommentContent.trim() ? 1 : .4 }}>Save</button>
+                      <button onClick={() => onCancelEditComment()} style={{ border: '1px solid var(--line)', borderRadius: 12, padding: '4px 10px', fontSize: 11, cursor: 'pointer', background: 'transparent' }}>Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <p style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--muted)' }}>{c.content}</p>
+                )}
               </div>
             </div>
-          ))}
+          );
+          })}
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <input
               value={newComment}
@@ -185,6 +237,10 @@ export default function CommunityPage() {
   const [reportReason, setReportReason] = useState('');
   const [reportedPostIds, setReportedPostIds] = useState([]);
   const [openMenuPostId, setOpenMenuPostId] = useState(null);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editCommentContent, setEditCommentContent] = useState('');
+  const [openCommentMenuId, setOpenCommentMenuId] = useState(null);
+  const [reportedCommentIds, setReportedCommentIds] = useState([]);
 
   useEffect(() => {
     fetch(`${API_BASE}/community`, { headers: apiHeaders() })
@@ -207,10 +263,14 @@ export default function CommunityPage() {
       .then(res => res.ok && res.json())
       .then(data => data && setReportedPostIds(data))
       .catch(() => {});
+    fetch(`${API_BASE}/community/comments/reported`, { headers: apiHeaders() })
+      .then(res => res.ok && res.json())
+      .then(data => data && setReportedCommentIds(data))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
-    const handler = () => setOpenMenuPostId(null);
+    const handler = () => { setOpenMenuPostId(null); setOpenCommentMenuId(null); };
     document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
   }, []);
@@ -306,6 +366,7 @@ export default function CommunityPage() {
       if (res.ok) {
         const newComment = await res.json();
         newComment.created_at = new Date().toISOString();
+        newComment.user_id = user?.id;
         setPostComments(prev => ({
           ...prev,
           [postId]: [...(prev[postId] || []), newComment],
@@ -375,6 +436,74 @@ export default function CommunityPage() {
     setReportedPostIds(prev => [...prev, reportPostId]);
     try {
       await fetch(`${API_BASE}/community/${reportPostId}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...apiHeaders() },
+        body: JSON.stringify({ reason: reportReason }),
+      });
+    } catch {}
+  };
+
+  const handleEditComment = (commentId, content) => {
+    setEditingCommentId(commentId);
+    setEditCommentContent(content);
+  };
+
+  const handleCancelEditComment = () => {
+    setEditingCommentId(null);
+    setEditCommentContent('');
+  };
+
+  const handleSaveEditComment = (postId, commentId) => {
+    if (!editCommentContent.trim()) return;
+    setPostComments(prev => ({
+      ...prev,
+      [postId]: (prev[postId] || []).map(c =>
+        c.id === commentId ? { ...c, content: editCommentContent.trim() } : c
+      ),
+    }));
+    setEditingCommentId(null);
+    setEditCommentContent('');
+    fetch(`${API_BASE}/community/${postId}/comments/${commentId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...apiHeaders() },
+      body: JSON.stringify({ content: editCommentContent.trim() }),
+    }).catch(() => {});
+  };
+
+  const handleDeleteComment = (postId, commentId) => {
+    if (!window.confirm('Delete this comment?')) return;
+    setPostComments(prev => ({
+      ...prev,
+      [postId]: (prev[postId] || []).filter(c => c.id !== commentId),
+    }));
+    setPosts(prev => prev.map(p =>
+      p.id === postId ? { ...p, comments_count: Math.max(0, p.comments_count - 1) } : p
+    ));
+    fetch(`${API_BASE}/community/${postId}/comments/${commentId}`, {
+      method: 'DELETE',
+      headers: apiHeaders(),
+    }).catch(() => {});
+  };
+
+  const handleReportComment = (commentId) => {
+    setReportPostId('comment_' + commentId);
+    setReportReason('');
+    setShowReportModal(true);
+  };
+
+  const handleSubmitCommentReport = async () => {
+    if (!reportReason || !reportPostId) return;
+    setShowReportModal(false);
+    const commentId = reportPostId.replace('comment_', '');
+    setReportedCommentIds(prev => [...prev, commentId]);
+    // We need the postId — find it from postComments
+    let foundPostId = null;
+    for (const [pid, comments] of Object.entries(postComments)) {
+      if (comments.some(c => c.id === commentId)) { foundPostId = pid; break; }
+    }
+    if (!foundPostId) return;
+    try {
+      await fetch(`${API_BASE}/community/${foundPostId}/comments/${commentId}/report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...apiHeaders() },
         body: JSON.stringify({ reason: reportReason }),
@@ -479,6 +608,17 @@ export default function CommunityPage() {
               savingComment={savingComment[post.id]}
               newComment={newComments[post.id] || ''}
               onCommentChange={(id, val) => setNewComments(prev => ({ ...prev, [id]: val }))}
+              onEditComment={handleEditComment}
+              onDeleteComment={handleDeleteComment}
+              onReportComment={handleReportComment}
+              onSaveEditComment={handleSaveEditComment}
+              onCancelEditComment={handleCancelEditComment}
+              editingCommentId={editingCommentId}
+              editCommentContent={editCommentContent}
+              onEditCommentContentChange={setEditCommentContent}
+              openCommentMenu={openCommentMenuId}
+              onToggleCommentMenu={setOpenCommentMenuId}
+              reportedCommentIds={reportedCommentIds}
             />
           ))}
         </div>
@@ -576,7 +716,7 @@ export default function CommunityPage() {
             ))}
             <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end' }}>
               <Button variant="ghost" size="sm" onClick={() => setShowReportModal(false)}>Cancel</Button>
-              <Button variant="primary" size="sm" onClick={handleSubmitReport} isDisabled={!reportReason}>
+              <Button variant="primary" size="sm" onClick={() => reportPostId?.startsWith('comment_') ? handleSubmitCommentReport() : handleSubmitReport()} isDisabled={!reportReason}>
                 Submit Report
               </Button>
             </div>
