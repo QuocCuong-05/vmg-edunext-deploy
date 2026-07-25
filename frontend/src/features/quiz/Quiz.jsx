@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { MOCK_QUIZZES, MOCK_QUIZ_QUESTIONS, MOCK_TIPS } from '../../mock/data';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
@@ -17,7 +17,10 @@ function shuffle(arr) {
 
 export default function Quiz() {
   const quiz = MOCK_QUIZZES[0];
-  const allQuestions = shuffle(MOCK_QUIZ_QUESTIONS).slice(0, QUESTIONS_PER_ROUND);
+  const allQuestions = useMemo(
+    () => shuffle(MOCK_QUIZ_QUESTIONS).slice(0, QUESTIONS_PER_ROUND),
+    []
+  );
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState(null);
   const [answered, setAnswered] = useState(false);
@@ -131,9 +134,7 @@ export default function Quiz() {
     );
   }
 
-  const shuffledOptions = question ? shuffle(question.options) : [];
-
-  return (
+    return (
     <div className="page-enter" style={{ maxWidth: 700 }}>
       <div className="page-title">
         <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icon.Quiz size={24} /> Luyện tập</h1>
