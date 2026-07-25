@@ -1,16 +1,28 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Dialog from '../../components/ui/Dialog';
 import { Icon } from '../../lib/icons';
 import { getXp, addXp } from '../../lib/xp';
-import { REWARDS } from '../../mock/rewards';
+import ITEMS, { CATEGORIES } from '../../mock/rewards';
 
 const ICON_MAP = {
   BookOpen: Icon.BookOpen,
   Vocab: Icon.Vocab,
   Sparkles: Icon.Sparkles,
   Play: Icon.Play,
+  Calendar: Icon.Calendar,
+  User: Icon.User,
+  Brain: Icon.Brain,
+  Target: Icon.Target,
+  Check: Icon.Check,
+  Globe: Icon.Globe,
+  Pen: Icon.Pen,
+  Stats: Icon.Stats,
+  Flask: Icon.Flask,
+  Book: Icon.Book,
+  ArrowRight: Icon.ArrowRight,
+  Classroom: Icon.Classroom,
 };
 
 export default function RewardsPage() {
@@ -25,6 +37,15 @@ export default function RewardsPage() {
     catch { return []; }
   });
   const [selected, setSelected] = useState(null);
+
+  const grouped = useMemo(() => {
+    const map = {};
+    ITEMS.forEach(item => {
+      if (!map[item.category]) map[item.category] = [];
+      map[item.category].push(item);
+    });
+    return map;
+  }, []);
 
   function handleRedeem(item) {
     if (xp < item.price || owned.includes(item.id)) return;
@@ -46,6 +67,8 @@ export default function RewardsPage() {
   function renderContent(item) {
     const c = item.content;
     switch (c.type) {
+      case 'info':
+        return <p style={{ fontSize: 14, lineHeight: 1.8, color: 'var(--muted)', whiteSpace: 'pre-wrap' }}>{c.text}</p>;
       case 'lessons':
         return (
           <div className="reward-content-list">
@@ -113,29 +136,42 @@ export default function RewardsPage() {
       </div>
 
       {tab === 'shop' ? (
-        <div className="reward-grid">
-          {REWARDS.map(item => {
-            const ItemIcon = ICON_MAP[item.iconType] || Icon.Book;
-            const isOwned = owned.includes(item.id);
-            const canAfford = xp >= item.price;
+        <div>
+          {Object.entries(grouped).map(([catKey, items]) => {
+            const cat = CATEGORIES[catKey];
             return (
-                <Card key={item.id} className="reward-card">
-                <div className="reward-card-icon"><ItemIcon size={32} /></div>
-                <h3 className="reward-card-name">{item.name}</h3>
-                <p className="reward-card-desc">{item.desc}</p>
-                <div className="reward-card-price">{item.price} XP</div>
-                {isOwned ? (
-                  <Button variant="primary" size="sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setSelected(item)}>
-                    <Icon.Check size={14} /> Xem
-                  </Button>
-                ) : canAfford ? (
-                  <Button variant="primary" size="sm" label="Đổi ngay" style={{ width: '100%', justifyContent: 'center' }} onClick={() => handleRedeem(item)} />
-                ) : (
-                  <Button size="sm" isDisabled style={{ width: '100%', justifyContent: 'center', opacity: .4, cursor: 'not-allowed', background: 'var(--surface)', overflow: 'hidden' }}>
-                    Còn thiếu {item.price - xp} XP
-                  </Button>
-                )}
-              </Card>
+              <div key={catKey} style={{ marginBottom: 32 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <div style={{ width: 4, height: 24, borderRadius: 2, background: cat.color }} />
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: cat.color }}>{cat.label}</h2>
+                </div>
+                <div className="reward-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+                  {items.map(item => {
+                    const ItemIcon = ICON_MAP[item.iconType] || Icon.Book;
+                    const isOwned = owned.includes(item.id);
+                    const canAfford = xp >= item.price;
+                    return (
+                      <Card key={item.id} className="reward-card">
+                        <div className="reward-card-icon"><ItemIcon size={32} /></div>
+                        <h3 className="reward-card-name">{item.name}</h3>
+                        <p className="reward-card-desc">{item.desc}</p>
+                        <div className="reward-card-price">{item.price} XP</div>
+                        {isOwned ? (
+                          <Button variant="primary" size="sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setSelected(item)}>
+                            <Icon.Check size={14} /> Xem
+                          </Button>
+                        ) : canAfford ? (
+                          <Button variant="primary" size="sm" label="Đổi ngay" style={{ width: '100%', justifyContent: 'center' }} onClick={() => handleRedeem(item)} />
+                        ) : (
+                          <Button size="sm" isDisabled style={{ width: '100%', justifyContent: 'center', opacity: .4, cursor: 'not-allowed', background: 'var(--surface)', overflow: 'hidden' }}>
+                            Còn thiếu {item.price - xp} XP
+                          </Button>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </div>
