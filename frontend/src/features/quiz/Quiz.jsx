@@ -3,6 +3,7 @@ import { MOCK_QUIZZES, MOCK_QUIZ_QUESTIONS, MOCK_TIPS } from '../../mock/data';
 import { Icon } from '../../lib/icons';
 import { updateStreak } from '../../lib/streak';
 import { logActivity } from '../../lib/activity';
+import { addXp } from '../../lib/xp';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 
@@ -39,6 +40,7 @@ export default function Quiz() {
   useEffect(() => {
     if (finished && score >= quiz.passing_score) {
       updateStreak();
+      addXp(quiz.xp_reward);
       logActivity('quiz', 'Quiz: ' + score + '% - ' + quiz.title, 'Đạt ' + correctCount + '/' + allQuestions.length);
     }
   }, [finished, score]);

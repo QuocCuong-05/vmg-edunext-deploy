@@ -4,6 +4,7 @@ import { MOCK_COURSES, MOCK_ENROLLMENTS } from '../../mock/data';
 import { Icon } from '../../lib/icons';
 import { updateStreak } from '../../lib/streak';
 import { logActivity } from '../../lib/activity';
+import { addXp } from '../../lib/xp';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 
@@ -64,6 +65,7 @@ export default function LessonView() {
   const handleComplete = () => {
     setCompleted(true);
     updateStreak();
+    addXp(60);
     logActivity('lesson', 'Đã học bài: ' + lesson.title, course.title);
     if (MOCK_ENROLLMENTS[course.id]) {
       const arr = MOCK_ENROLLMENTS[course.id].completed_lessons || [];
