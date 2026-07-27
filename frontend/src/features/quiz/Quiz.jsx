@@ -8,6 +8,7 @@ import { addXp } from '../../lib/xp';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import { MOCK_QUIZZES, MOCK_QUIZ_QUESTIONS } from '../../mock/data';
 
 const QUESTIONS_PER_ROUND = 5;
 
@@ -53,10 +54,8 @@ export default function Quiz() {
         setLoading(false);
       }).catch(() => setLoading(false));
     } else {
-      import('../../mock/data').then(({ MOCK_QUIZZES, MOCK_QUIZ_QUESTIONS }) => {
-        setQuizSet(MOCK_QUIZZES[0]);
-        setQuizQuestions(shuffle(MOCK_QUIZ_QUESTIONS).slice(0, QUESTIONS_PER_ROUND));
-      });
+      setQuizSet(MOCK_QUIZZES[0]);
+      setQuizQuestions(shuffle(MOCK_QUIZ_QUESTIONS).slice(0, QUESTIONS_PER_ROUND));
     }
   }, [slug]);
 
@@ -115,6 +114,28 @@ export default function Quiz() {
     setFinished(false);
     setStarted(true);
   };
+
+  if (loading) {
+    return (
+      <div className="page-enter">
+        <div className="page-title">
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icon.Quiz size={24} /> Luyện tập</h1>
+        </div>
+        <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>
+      </div>
+    );
+  }
+
+  if (!quiz) {
+    return (
+      <div className="page-enter">
+        <div className="page-title">
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icon.Quiz size={24} /> Luyện tập</h1>
+        </div>
+        <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Không tìm thấy bài tập</p>
+      </div>
+    );
+  }
 
   if (!started) {
     return (
