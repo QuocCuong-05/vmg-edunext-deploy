@@ -28,8 +28,17 @@ export default function PlannerPage() {
         const err = await res.json().catch(() => ({ error: 'Request failed' }));
         throw new Error(err.error || `HTTP ${res.status}`);
       }
-      const data = await res.json();
-      setResult(data);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let text = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        text += decoder.decode(value, { stream: true });
+      }
+      const json = JSON.parse(text.match(/\{.*\}/s)?.[0] || '{}');
+      if (!json.title) throw new Error('AI returned invalid response');
+      setResult(json);
     } catch (err) {
       setError(err.message);
     } finally {

@@ -93,7 +93,7 @@ router.post('/lesson-plan', async (req, res) => {
     if (process.env.FPT_API_KEY) {
       try {
         const { createOpenAI } = await import('@ai-sdk/openai');
-        const { generateText } = await import('ai');
+        const { streamText } = await import('ai');
 
         const provider = createOpenAI({
           baseURL: 'https://mkp-api.fptcloud.com',
@@ -105,23 +105,28 @@ Topic: ${topic}
 
 Return ONLY valid JSON obeying the output format specified in the system prompt.`;
 
-        console.log('[ViMi-AI] Calling generateText for lesson plan...');
-        const result = await generateText({
+        console.log('[ViMi-AI] Calling streamText for lesson plan...');
+        const result = streamText({
           model: provider.chat('DeepSeek-V4-Flash'),
           system: LESSON_PLAN_SYSTEM_PROMPT,
           messages: [{ role: 'user', content: prompt }],
         });
 
-        const text = result.text.trim();
-        const braceStart = text.indexOf('{');
-        const braceEnd = text.lastIndexOf('}');
-        if (braceStart === -1 || braceEnd <= braceStart) {
-          console.error('[ViMi-AI] No JSON found in response:', text.slice(0, 200));
-          return res.status(500).json({ error: 'AI returned invalid response format' });
+        console.log('[ViMi-AI] Streaming lesson plan response...');
+        const stream = result.toTextStreamResponse().body;
+        const reader = stream.getReader();
+        res.writeHead(200, {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Transfer-Encoding': 'chunked',
+        });
+        const decoder = new TextDecoder();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          res.write(stripEmoji(decoder.decode(value, { stream: true })));
         }
-
-        const json = JSON.parse(text.slice(braceStart, braceEnd + 1));
-        res.json(json);
+        res.end();
+        return;
       } catch (err) {
         console.error('[ViMi-AI] Lesson plan AI call failed:', err.message);
         res.status(500).json({ error: 'AI service unavailable' });

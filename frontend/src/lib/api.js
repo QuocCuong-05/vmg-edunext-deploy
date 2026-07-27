@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 async function request(url, options = {}) {
   const token = localStorage.getItem('vmg_token');
