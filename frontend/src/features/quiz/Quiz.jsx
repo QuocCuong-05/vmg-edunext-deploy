@@ -52,7 +52,14 @@ export default function Quiz() {
           setQuizQuestions(questions);
         }
         setLoading(false);
-      }).catch(() => setLoading(false));
+      }).catch(() => {
+        const mock = MOCK_QUIZZES.find(q => q.slug === slug);
+        if (mock) {
+          setQuizSet(mock);
+          setQuizQuestions(shuffle(MOCK_QUIZ_QUESTIONS).slice(0, QUESTIONS_PER_ROUND));
+        }
+        setLoading(false);
+      });
     } else {
       setQuizSet(MOCK_QUIZZES[0]);
       setQuizQuestions(shuffle(MOCK_QUIZ_QUESTIONS).slice(0, QUESTIONS_PER_ROUND));

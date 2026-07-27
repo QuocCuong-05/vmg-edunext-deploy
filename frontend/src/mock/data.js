@@ -169,6 +169,16 @@ export const MOCK_QUIZZES = [
     xp_reward: 50,
     level: 'B1',
   },
+  {
+    id: 'quiz-2',
+    title: 'Classroom English & CLIL',
+    slug: 'classroom-clil-mixed',
+    description: 'Kiểm tra kiến thức tổng hợp về Classroom English, phương pháp CLIL, đánh giá và kỹ thuật giảng dạy.',
+    question_count: 5,
+    passing_score: 80,
+    xp_reward: 50,
+    level: 'B2',
+  },
 ];
 
 export const MOCK_QUIZ_QUESTIONS = [
