@@ -80,6 +80,9 @@ export default function Quiz() {
       addXp(quiz.xp_reward);
       showToast('+' + quiz.xp_reward + ' XP', 'success');
       logActivity('quiz', 'Quiz: ' + score + '% - ' + quiz.title, 'Đạt ' + correctCount + '/' + allQuestions.length);
+      if (slug) {
+        try { localStorage.setItem('vmg_quiz_completed', JSON.stringify({ slug, xp: quiz.xp_reward })); } catch {}
+      }
     }
   }, [finished, score]);
 

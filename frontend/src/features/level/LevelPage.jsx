@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
-import { getXp } from '../../lib/xp';
+import { getXp, addXp } from '../../lib/xp';
 import { Icon } from '../../lib/icons';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import { useToast } from '../../components/ui/Toast';
 
 const XP_PER_LEVEL = 3000;
 const CHALLENGES_KEY = 'vmg_challenges_completed';
@@ -18,6 +19,7 @@ function saveCompleted(completed) {
 
 export default function LevelPage() {
   const navigate = useNavigate();
+  const showToast = useToast();
   const [challenges, setChallenges] = useState([]);
   const [completed, setCompleted] = useState(loadCompleted);
   const [xp, setXp] = useState(getXp);
@@ -30,6 +32,28 @@ export default function LevelPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (!challenges.length) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem('vmg_quiz_completed'));
+      if (!stored) return;
+      const challenge = challenges.find(c => c.quiz_slug === stored.slug);
+      if (!challenge || completed[challenge.id]) {
+        localStorage.removeItem('vmg_quiz_completed');
+        return;
+      }
+      addXp(challenge.xp_reward);
+      setXp(getXp());
+      showToast('+' + challenge.xp_reward + ' XP', 'success');
+      setCompleted(prev => {
+        const next = { ...prev, [challenge.id]: true };
+        saveCompleted(next);
+        return next;
+      });
+      localStorage.removeItem('vmg_quiz_completed');
+    } catch {}
+  }, [challenges]);
+
   const totalXp = xp;
   const level = Math.floor(totalXp / XP_PER_LEVEL) + 1;
   const currentLevelXp = totalXp % XP_PER_LEVEL;
@@ -41,6 +65,9 @@ export default function LevelPage() {
     if (c.quiz_slug) {
       navigate(`/quiz/${c.quiz_slug}`);
     } else {
+      addXp(c.xp_reward);
+      setXp(getXp());
+      showToast('+' + c.xp_reward + ' XP', 'success');
       setCompleted(prev => {
         const next = { ...prev, [c.id]: true };
         saveCompleted(next);
@@ -48,6 +75,8 @@ export default function LevelPage() {
       });
     }
   };
+
+  const firstQuizChallenge = challenges.find(c => c.quiz_slug && !completed[c.id] && c.level_min <= level);
 
   useEffect(() => {
     const interval = setInterval(() => { setXp(getXp()); }, 2000);
@@ -142,7 +171,10 @@ export default function LevelPage() {
             <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Luyện tập thêm</div>
             <div style={{ fontSize: 12, color: 'var(--muted)' }}>Làm quiz để kiếm XP và mở khoá thử thách mới</div>
           </div>
-          <Button onClick={() => navigate('/quiz')} variant="secondary">Vào thi</Button>
+          <Button
+            onClick={() => navigate(firstQuizChallenge ? `/quiz/${firstQuizChallenge.quiz_slug}` : '/quiz')}
+            variant="secondary"
+          >Vào thi</Button>
         </div>
       </Card>
     </div>
