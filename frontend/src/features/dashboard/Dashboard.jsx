@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { MOCK_COURSES, MOCK_ENROLLMENTS, MOCK_TIPS, MOCK_VOCABULARY, MOCK_QUIZZES } from '../../mock/data';
-import { getDailyQuests, getWeeklyQuests, getDateKey, getWeekKey } from '../../mock/quests';
+import { api } from '../../lib/api';
+import { MOCK_COURSES, MOCK_ENROLLMENTS, MOCK_QUIZZES } from '../../mock/data';
+import { getDateKey, getWeekKey } from '../../mock/quests';
 import { getXp, addXp } from '../../lib/xp';
 import { getStreak } from '../../lib/streak';
 import { getActivities, logActivity } from '../../lib/activity';
@@ -34,12 +35,11 @@ const STAT_META = [
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const showToast = useToast();
   const streak = useState(getStreak())[0];
   const [quote] = useState(shuffleQuote);
 
   const [tab, setTab] = useState('daily');
-  const [dailyQuests] = useState(getDailyQuests);
-  const [weeklyQuests] = useState(getWeeklyQuests);
   const [done, setDone] = useState(() => {
     try {
       const stored = localStorage.getItem('vmg_quests');
@@ -52,19 +52,37 @@ export default function Dashboard() {
   const [xp, setXp] = useState(getXp());
   const [animXp, setAnimXp] = useState(null);
   const [activities, setActivities] = useState(getActivities(5));
-  const showToast = useToast();
+
+  const [dailyQuests, setDailyQuests] = useState([]);
+  const [weeklyQuests, setWeeklyQuests] = useState([]);
+  const [tips, setTips] = useState([]);
+  const [vocab, setVocab] = useState([]);
+
+  useEffect(() => {
+    Promise.all([
+      api.quests.list('daily'),
+      api.quests.list('weekly'),
+      api.tips.list(),
+      api.vocabulary.list(),
+    ]).then(([d, w, t, v]) => {
+      setDailyQuests(d || []);
+      setWeeklyQuests(w || []);
+      setTips(t || []);
+      setVocab(v || []);
+    }).catch(() => {});
+  }, []);
 
   const activeQuests = tab === 'daily' ? dailyQuests : weeklyQuests;
   const doneCount = activeQuests.filter(q => done[q.id]).length;
   const pct = Math.round((doneCount / activeQuests.length) * 100);
 
   const enrolledCount = Object.values(MOCK_ENROLLMENTS).filter(e => e.enrolled).length;
-  const vocabCount = MOCK_VOCABULARY.length;
+  const vocabCount = vocab.length;
   const quizCount = MOCK_QUIZZES.length;
-  const tipsCount = MOCK_TIPS.length;
+  const tipsCount = tips.length;
   const inProgress = MOCK_COURSES.filter(c => MOCK_ENROLLMENTS[c.id]?.enrolled);
 
-  const todaysWord = MOCK_VOCABULARY[new Date().getDate() % MOCK_VOCABULARY.length];
+  const todaysWord = vocab[new Date().getDate() % Math.max(vocab.length, 1)] || {};
 
   const STATS = {
     courses: enrolledCount,
@@ -144,7 +162,7 @@ export default function Dashboard() {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="dash-wotd-word">{todaysWord.word}</div>
-              <div className="dash-wotd-detail">{todaysWord.level} · {todaysWord.part_of_speech.replace('_', ' ')}</div>
+              <div className="dash-wotd-detail">{todaysWord.level} · {(todaysWord.part_of_speech || '').replace('_', ' ')}</div>
               <div className="dash-wotd-meaning">{todaysWord.meaning_vi}</div>
             </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -246,7 +264,7 @@ export default function Dashboard() {
                   <span className={`quest-title ${done[q.id] ? 'done' : ''}`}>{q.title}</span>
                   <span className={`quest-xp ${done[q.id] ? 'done' : ''}`}>+{q.xp}XP</span>
                 </div>
-                <div className="quest-desc">{q.desc}</div>
+                <div className="quest-desc">{q.desc_text}</div>
               </div>
             ))}
 
@@ -270,8 +288,8 @@ export default function Dashboard() {
             <h3 className="section-sub-title" style={{ marginBottom: 12, fontSize: 14 }}>
               <Icon.Lightbulb size={15} /> Tips
             </h3>
-            {MOCK_TIPS.slice(0, 4).map((tip, i) => (
-              <div key={i} className="tip-row" style={{ borderBottom: i < 3 ? '1px solid var(--line)' : 'none', padding: '10px 0' }}>
+            {tips.slice(0, 4).map((tip, i) => (
+              <div key={tip.id || i} className="tip-row" style={{ borderBottom: i < 3 ? '1px solid var(--line)' : 'none', padding: '10px 0' }}>
                 <div className="tip-category">{tip.category}</div>
                 <div className="tip-title">{tip.title}</div>
               </div>

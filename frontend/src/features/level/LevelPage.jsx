@@ -1,25 +1,58 @@
-import { useState } from 'react';
-import { MOCK_USER, MOCK_QUIZ_QUESTIONS } from '../../mock/data';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../../lib/api';
+import { getXp } from '../../lib/xp';
 import { Icon } from '../../lib/icons';
 import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
 
 const XP_PER_LEVEL = 3000;
+const CHALLENGES_KEY = 'vmg_challenges_completed';
 
-const CHALLENGES = [
-  { id: 'c1', title: 'Classroom English Basics', xp: 150, completed: true },
-  { id: 'c2', title: 'CLIL Lesson Design', xp: 200, completed: true },
-  { id: 'c3', title: 'Assessment Strategies', xp: 250, completed: false, locked: false },
-  { id: 'c4', title: 'Learning Science', xp: 300, completed: false, locked: true },
-];
-
-const level = Math.floor(MOCK_USER.xp / XP_PER_LEVEL) + 1;
-const currentLevelXp = MOCK_USER.xp % XP_PER_LEVEL;
-const xpProgress = (currentLevelXp / XP_PER_LEVEL) * 100;
+function loadCompleted() {
+  try { return JSON.parse(localStorage.getItem(CHALLENGES_KEY) || '{}'); } catch { return {}; }
+}
+function saveCompleted(completed) {
+  localStorage.setItem(CHALLENGES_KEY, JSON.stringify(completed));
+}
 
 export default function LevelPage() {
-  const [selected, setSelected] = useState(null);
+  const navigate = useNavigate();
+  const [challenges, setChallenges] = useState([]);
+  const [completed, setCompleted] = useState(loadCompleted);
+  const [xp, setXp] = useState(getXp);
+  const [loading, setLoading] = useState(true);
 
-  const sampleQuestions = MOCK_QUIZ_QUESTIONS.slice(0, 3);
+  useEffect(() => {
+    api.level.challenges()
+      .then(data => { setChallenges(data || []); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const totalXp = xp;
+  const level = Math.floor(totalXp / XP_PER_LEVEL) + 1;
+  const currentLevelXp = totalXp % XP_PER_LEVEL;
+  const xpProgress = (currentLevelXp / XP_PER_LEVEL) * 100;
+
+  const handleChallengeClick = (c) => {
+    if (completed[c.id]) return;
+    if (c.level_min > level) return;
+    if (c.quiz_slug) {
+      navigate(`/quiz/${c.quiz_slug}`);
+    } else {
+      setCompleted(prev => {
+        const next = { ...prev, [c.id]: true };
+        saveCompleted(next);
+        return next;
+      });
+    }
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => { setXp(getXp()); }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="page-enter">
@@ -27,7 +60,7 @@ export default function LevelPage() {
         <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Icon.Target size={24} /> Level & Progress
         </h1>
-        <p>Track your development journey</p>
+        <p>Hoàn thành thử thách để lên cấp độ mới</p>
       </div>
 
       <Card style={{ marginBottom: 24, padding: 24 }}>
@@ -43,7 +76,7 @@ export default function LevelPage() {
           <div style={{ flex: 1, minWidth: 200 }}>
             <div style={{ fontSize: 18, fontWeight: 700 }}>Level {level}</div>
             <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 10 }}>
-              {MOCK_USER.full_name} | {currentLevelXp} / {XP_PER_LEVEL} XP to next level
+              {currentLevelXp} / {XP_PER_LEVEL} XP to next level
             </div>
             <div className="progress-bar" style={{ maxWidth: 400 }}>
               <div className="progress-fill" style={{ width: `${xpProgress}%` }} />
@@ -54,73 +87,64 @@ export default function LevelPage() {
               <Icon.Sparkles size={18} />
               <span className="stat-label">Total XP</span>
             </div>
-            <div className="stat-value" style={{ fontSize: 24 }}>{MOCK_USER.xp.toLocaleString()}</div>
+            <div className="stat-value" style={{ fontSize: 24 }}>{totalXp.toLocaleString()}</div>
           </div>
         </div>
       </Card>
 
       <div className="section-title">
-        <h3>Challenges</h3>
+        <h3>Thử thách lên cấp</h3>
       </div>
-      <div className="grid-4" style={{ marginBottom: 28 }}>
-        {CHALLENGES.map(c => (
-          <Card key={c.id} style={{
-            opacity: c.locked ? 0.5 : 1,
-            cursor: c.locked ? 'default' : 'pointer',
-            display: 'flex', flexDirection: 'column', gap: 8,
-            padding: 20
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Icon.Brain size={20} color={c.completed ? 'var(--green)' : 'var(--muted)'} />
-              {c.completed && <Icon.Check size={18} color="var(--green)" />}
-              {c.locked && <Icon.X size={18} color="var(--muted)" />}
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>{c.title}</div>
-            <div style={{ fontSize: 12, color: 'var(--muted)' }}>{c.xp} XP</div>
-          </Card>
-        ))}
-      </div>
-
-      <div className="section-title">
-        <h3>Level Quiz</h3>
-        <p>Sample questions to test your knowledge</p>
-      </div>
-      {sampleQuestions.map((q, qi) => (
-        <Card key={q.id} style={{ marginBottom: 16, padding: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14 }}>
-            {qi + 1}. {q.prompt}
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12, fontStyle: 'italic' }}>
-            {q.prompt_translation}
-          </div>
-          {q.options.map((opt, oi) => {
-            const isSelected = selected === `${q.id}-${oi}`;
-            const showResult = selected && selected.startsWith(q.id);
-            let cls = 'quiz-option';
-            if (isSelected && showResult) {
-              cls += opt.is_correct ? ' correct' : ' incorrect';
-            } else if (showResult && opt.is_correct) {
-              cls += ' correct';
-            } else if (isSelected) {
-              cls += ' selected';
-            }
+      {loading ? (
+        <p style={{ color: 'var(--muted)' }}>Đang tải...</p>
+      ) : (
+        <div className="grid-4" style={{ marginBottom: 28 }}>
+          {challenges.map(c => {
+            const done = completed[c.id];
+            const locked = c.level_min > level;
             return (
-              <div
-                key={oi}
-                className={cls}
-                onClick={() => !selected?.startsWith(q.id) && setSelected(`${q.id}-${oi}`)}
+              <Card
+                key={c.id}
+                style={{
+                  opacity: done || locked ? 0.5 : 1,
+                  cursor: done ? 'default' : locked ? 'default' : 'pointer',
+                  display: 'flex', flexDirection: 'column', gap: 8,
+                  padding: 20
+                }}
+                onClick={() => handleChallengeClick(c)}
               >
-                {opt.option_text}
-                {isSelected && showResult && (
-                  <div className="feedback">
-                    {opt.is_correct ? opt.feedback_correct : opt.feedback_incorrect}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Icon.Brain size={20} color={done ? 'var(--green)' : 'var(--muted)'} />
+                  {done && <Icon.Check size={18} color="var(--green)" />}
+                  {locked && <Icon.X size={18} color="var(--muted)" />}
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{c.title}</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)' }}>{c.xp_reward} XP</div>
+                {locked && (
+                  <div style={{ fontSize: 11, color: 'var(--orange)' }}>
+                    Cần Level {c.level_min}
                   </div>
                 )}
-              </div>
+                {c.quiz_slug && !locked && !done && (
+                  <div style={{ fontSize: 11, color: 'var(--blue)' }}>
+                    Làm quiz để hoàn thành
+                  </div>
+                )}
+              </Card>
             );
           })}
-        </Card>
-      ))}
+        </div>
+      )}
+
+      <Card style={{ padding: 24, marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Luyện tập thêm</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)' }}>Làm quiz để kiếm XP và mở khoá thử thách mới</div>
+          </div>
+          <Button onClick={() => navigate('/quiz')} variant="secondary">Vào thi</Button>
+        </div>
+      </Card>
     </div>
   );
 }

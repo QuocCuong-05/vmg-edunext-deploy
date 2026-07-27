@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
     let query = supabase.from('classroom_phrases').select(`
       *,
       classroom_phrase_categories!inner(slug, name_vi)
-    `).eq('status', 'published');
+    `).eq('is_published', true);
 
     if (category) query = query.eq('classroom_phrase_categories.slug', category);
     if (level) query = query.eq('level', level);

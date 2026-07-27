@@ -10,7 +10,8 @@ async function request(url, options = {}) {
     const err = await res.json().catch(() => ({ error: 'Request failed' }));
     throw new Error(err.error || `HTTP ${res.status}`);
   }
-  return res.json();
+  const json = await res.json();
+  return json.data !== undefined ? json.data : json;
 }
 
 export { API_BASE };
@@ -37,5 +38,36 @@ export const api = {
       if (!res.ok) throw new Error('TTS failed');
       return res.blob();
     },
+  },
+  tips: {
+    list: () => request('/tips'),
+  },
+  quests: {
+    list: (type) => request(`/quests?type=${type || ''}`),
+  },
+  rewards: {
+    list: () => request('/rewards'),
+  },
+  vocabulary: {
+    list: (params) => {
+      const q = new URLSearchParams(params || {}).toString();
+      return request(`/vocabulary${q ? '?' + q : ''}`);
+    },
+  },
+  classroom: {
+    list: (params) => {
+      const q = new URLSearchParams(params || {}).toString();
+      return request(`/classroom${q ? '?' + q : ''}`);
+    },
+    categories: () => request('/classroom/categories'),
+  },
+  quiz: {
+    list: () => request('/quiz/sets'),
+    get: (slug) => request(`/quiz/sets/${slug}`),
+  },
+  level: {
+    challenges: () => request('/level/challenges'),
+    userChallenges: () => request('/level/challenges/user'),
+    complete: (id) => request(`/level/challenges/${id}/complete`, { method: 'POST' }),
   },
 };

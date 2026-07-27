@@ -8,7 +8,7 @@ router.get('/sets', async (_req, res) => {
     const { data, error } = await supabase
       .from('quiz_sets')
       .select('*')
-      .eq('status', 'published')
+      .eq('is_published', true)
       .order('title');
 
     if (error) return res.status(400).json({ error: error.message });

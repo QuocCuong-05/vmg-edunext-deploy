@@ -1,0 +1,21 @@
+question_id,option_text,is_correct,feedback_correct,feedback_incorrect,sort_order
+9f356a97-77c3-46d7-be0e-765cd13bf1b5,"""Work in groups.""",false,,,1
+9f356a97-77c3-46d7-be0e-765cd13bf1b5,"""In groups of three, discuss the causes of deforestation. You have 8 minutes. Each person shares one idea.""",true,,,2
+9f356a97-77c3-46d7-be0e-765cd13bf1b5,"""Do the group task now.""",false,,,3
+9f356a97-77c3-46d7-be0e-765cd13bf1b5,"""Get into groups and talk.""",false,,,4
+933208ef-18b2-7a44-03b4-c00f8d454fa2,"To check if students understand what to do, not the content.",true,,,1
+933208ef-18b2-7a44-03b4-c00f8d454fa2,To check if students are happy with the task.,false,,,2
+933208ef-18b2-7a44-03b4-c00f8d454fa2,To review vocabulary from the lesson.,false,,,3
+933208ef-18b2-7a44-03b4-c00f8d454fa2,To assess the final product.,false,,,4
+a6a5c627-3daf-c5b1-49e3-966059c2e850,"""Good job. Next.""",false,,,1
+a6a5c627-3daf-c5b1-49e3-966059c2e850,"""That is wrong. Try again.""",false,,,2
+a6a5c627-3daf-c5b1-49e3-966059c2e850,"""You need to improve your grammar.""",false,,,3
+a6a5c627-3daf-c5b1-49e3-966059c2e850,"""I like your use of evidence. Next time, add a concluding sentence.""",true,,,4
+6ea48ed7-2f84-c758-4ce0-b8a1df14f56c,To simplify the content so it is easy.,false,,,1
+6ea48ed7-2f84-c758-4ce0-b8a1df14f56c,To replace the teacher's instruction.,false,,,2
+6ea48ed7-2f84-c758-4ce0-b8a1df14f56c,To provide structured access to challenging content while maintaining cognitive demand.,true,,,3
+6ea48ed7-2f84-c758-4ce0-b8a1df14f56c,To translate difficult words into the L1.,false,,,4
+966f09e3-2a4e-c931-bfe9-b9943a6b55ee,They are not paying attention.,false,,,1
+966f09e3-2a4e-c931-bfe9-b9943a6b55ee,They lack basic vocabulary.,false,,,2
+966f09e3-2a4e-c931-bfe9-b9943a6b55ee,"They are processing both content and language simultaneously, which increases cognitive load.",true,,,3
+966f09e3-2a4e-c931-bfe9-b9943a6b55ee,They have low motivation.,false,,,4

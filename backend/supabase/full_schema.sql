@@ -298,7 +298,37 @@ create table if not exists public.user_quests (
 );
 
 -- +---------------------------------------------------------------+
--- | 2p. REWARDS — cửa hàng phần thưởng đổi bằng XP              |
+-- | 2p. LEVEL_CHALLENGES — thử thách lên cấp (Level Page)        |
+-- | Mỗi challenge có thể gắn với 1 quiz_set để kiểm tra           |
+-- +---------------------------------------------------------------+
+create table if not exists public.level_challenges (
+  id           uuid primary key default gen_random_uuid(),
+  title        text not null,
+  description  text,
+  xp_reward    integer not null default 0,
+  quiz_set_id  uuid references public.quiz_sets(id) on delete set null,
+  level_min    integer not null default 1,
+  sort_order   integer not null default 0,
+  is_active    boolean not null default true,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+
+-- +---------------------------------------------------------------+
+-- | 2q. USER_CHALLENGES — trạng thái hoàn thành challenge        |
+-- | FK: user_id → auth.users, challenge_id → level_challenges.id  |
+-- +---------------------------------------------------------------+
+create table if not exists public.user_challenges (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  challenge_id uuid not null references public.level_challenges(id) on delete cascade,
+  completed    boolean not null default false,
+  completed_at timestamptz,
+  unique(user_id, challenge_id)
+);
+
+-- +---------------------------------------------------------------+
+-- | 2r. REWARDS — cửa hàng phần thưởng đổi bằng XP              |
 -- | content_json chứa nội dung động (items array, webinar info)   |
 -- +---------------------------------------------------------------+
 create table if not exists public.rewards (
@@ -390,6 +420,13 @@ create index if not exists idx_tips_category     on public.tips(category);
 -- user_quests
 create index if not exists idx_uq_user           on public.user_quests(user_id);
 create index if not exists idx_uq_datekey        on public.user_quests(date_key);
+
+-- level_challenges
+create index if not exists idx_lc_sort           on public.level_challenges(sort_order);
+
+-- user_challenges
+create index if not exists idx_uchal_user        on public.user_challenges(user_id);
+create index if not exists idx_uchal_challenge   on public.user_challenges(challenge_id);
 
 -- user_purchases
 create index if not exists idx_up_user           on public.user_purchases(user_id);
@@ -516,6 +553,20 @@ create policy "manage_own_quests" on public.user_quests
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+-- level_challenges: đọc được active
+alter table public.level_challenges enable row level security;
+drop policy if exists "read_active_level_challenges" on public.level_challenges;
+create policy "read_active_level_challenges" on public.level_challenges
+  for select to authenticated using (is_active);
+
+-- user_challenges: user quản lý của mình
+alter table public.user_challenges enable row level security;
+drop policy if exists "manage_own_user_challenges" on public.user_challenges;
+create policy "manage_own_user_challenges" on public.user_challenges
+  for all to authenticated
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
 -- rewards: đọc được active
 alter table public.rewards enable row level security;
 drop policy if exists "read_active_rewards" on public.rewards;
@@ -634,7 +685,7 @@ begin
     select unnest(array[
       'profiles', 'courses', 'lessons', 'vocabulary_entries',
       'classroom_phrases', 'quiz_sets', 'tips', 'rewards',
-      'word_book_entries', 'community_posts'
+      'word_book_entries', 'community_posts', 'level_challenges'
     ])
   loop
     execute format(

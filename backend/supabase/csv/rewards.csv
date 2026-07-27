@@ -1,0 +1,20 @@
+name,desc_text,price,icon_type,content_type,content_json,stock,is_active
+Bộ từ vựng theo chủ đề,"File PDF tổng hợp 20+ từ vựng theo chủ đề CLIL, Assessment, Classroom English.",150,book,vocabulary,{},,true
+Bảng câu hỏi ICQ/CCQ mẫu,30 câu hỏi kiểm tra hiểu bài theo từng giai đoạn của tiết học.,100,file-text,prompts,{},,true
+Mẫu giáo án CLIL 4Cs,"Template giáo án CLIL tích hợp Content, Communication, Cognition, Culture.",200,file-text,prompts,{},,true
+Bộ thẻ từ vựng (Flashcards),"50 thẻ từ song ngữ dùng cho warm-up, word wall và trò chơi từ vựng.",120,video,lessons,{},,true
+Mẫu Rubric đánh giá,"5 mẫu rubric cho thuyết trình, viết luận, dự án nhóm, phản biện và tự đánh giá.",100,file-text,prompts,{},,true
+Bộ câu hỏi warm-up theo chủ đề,"40 câu hỏi khởi động dùng ngay cho lớp song ngữ. Theo chủ đề: Khoa học, CLIL, Kỹ năng.",80,file-text,prompts,{},,true
+Video hướng dẫn: ICQ & CCQ trong 5 phút,Video ngắn hướng dẫn kỹ thuật đặt câu hỏi kiểm tra hiểu bài hiệu quả.,300,video,lessons,{},,true
+Ebook: 10 kỹ thuật Scaffolding trong CLIL,"Sách điện tử 45 trang kèm ví dụ thực tế, phân tích từng kỹ thuật và cách áp dụng trong lớp học.",400,book,vocabulary,{},,true
+Workshop Online: Phân hóa trong CLIL,"Buổi workshop 90 phút với chuyên gia. Gồm tài liệu, bài tập thực hành và chứng nhận tham dự.",500,monitor,webinar,{},,true
+Template: Kế hoạch bài dạy theo tuần,Khung kế hoạch giảng dạy tuần dành cho giáo viên song ngữ. Tích hợp mục tiêu content + language.,150,file-text,prompts,{},,true
+Bộ câu hỏi phản tư cho giáo viên,"20 câu hỏi phản tư sau giờ dạy, giúp giáo viên tự cải thiện phương pháp mỗi ngày.",100,file-text,prompts,{},,true
+Bài mẫu: CLIL Khoa học lớp 6,"Bài học CLIL mẫu kèm video, bài tập, rubric và giáo án chi tiết cho chủ đề Khoa học.",250,video,lessons,{},,true
+Hướng dẫn dạy từ vựng qua Collocations,"Bộ tài liệu gồm lý thuyết, bài tập và 10 collocations thiết yếu cho lớp học song ngữ.",200,video,lessons,{},,true
+Kỹ thuật Retrieval Practice trong 5 phút,Video + handout hướng dẫn 3 kỹ thuật truy hồi dùng ngay trong lớp học song ngữ.,200,video,lessons,{},,true
+Badge kỹ năng (hiển thị trên hồ sơ),"Badge hiển thị trên hồ sơ EduNext. Chọn từ danh mục: CLIL Practitioner, Classroom English Expert, Differentiated Instruction Specialist, Assessment Pro, Technology Integrator. Có thể chia sẻ lên LinkedIn.",0,award,lessons,{},,true
+1 tháng truy cập VIP Kho học liệu,"Truy cập toàn bộ tài liệu cao cấp trong 30 ngày. Gồm: giáo án, rubric, bài tập, video hướng dẫn.",600,video,lessons,{},,true
+Đặt lịch Coaching 1:1 với Academic Expert,1 buổi coaching 45 phút với chuyên gia học thuật. Nhận phản hồi cá nhân hóa về phương pháp giảng dạy.,1000,monitor,webinar,{},,true
+Chứng nhận hoàn thành khóa học,"Chứng nhận hoàn thành mỗi khóa học, có mã xác thực. Tự động mở khóa khi hoàn thành 100% khóa học.",0,award,lessons,{},,true
+Gói Mentor 1 tháng (4 buổi),"4 buổi mentoring 45 phút với chuyên gia. Thiết kế lộ trình phát triển chuyên môn cá nhân, quan sát lớp và phản hồi.",1500,monitor,webinar,{},,true

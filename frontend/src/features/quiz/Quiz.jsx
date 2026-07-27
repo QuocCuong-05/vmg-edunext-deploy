@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { MOCK_QUIZZES, MOCK_QUIZ_QUESTIONS, MOCK_TIPS } from '../../mock/data';
+import { useParams } from 'react-router-dom';
+import { api } from '../../lib/api';
 import { Icon } from '../../lib/icons';
 import { updateStreak } from '../../lib/streak';
 import { logActivity } from '../../lib/activity';
@@ -20,12 +21,47 @@ function shuffle(arr) {
 }
 
 export default function Quiz() {
-  const quiz = MOCK_QUIZZES[0];
+  const { slug } = useParams();
   const showToast = useToast();
-  const allQuestions = useMemo(
-    () => shuffle(MOCK_QUIZ_QUESTIONS).slice(0, QUESTIONS_PER_ROUND),
-    []
-  );
+  const [quizSet, setQuizSet] = useState(null);
+  const [quizQuestions, setQuizQuestions] = useState([]);
+  const [loading, setLoading] = useState(!!slug);
+
+  useEffect(() => {
+    if (slug) {
+      api.quiz.get(slug).then(qs => {
+        if (qs) {
+          setQuizSet(qs);
+          const questions = (qs.questions || []).map(q => ({
+            id: q.id,
+            prompt: q.prompt,
+            prompt_translation: q.prompt_translation,
+            correct_answer: q.correct_answer,
+            explanation: q.explanation || '',
+            explanation_vi: q.explanation_vi || '',
+            competency_code: q.competency_code || '',
+            level: q.level || 'B1',
+            options: (q.options || []).map(o => ({
+              option_text: o.option_text,
+              is_correct: o.is_correct,
+              feedback_correct: o.feedback_correct || '',
+              feedback_incorrect: o.feedback_incorrect || '',
+            })),
+          }));
+          setQuizQuestions(questions);
+        }
+        setLoading(false);
+      }).catch(() => setLoading(false));
+    } else {
+      import('../../mock/data').then(({ MOCK_QUIZZES, MOCK_QUIZ_QUESTIONS }) => {
+        setQuizSet(MOCK_QUIZZES[0]);
+        setQuizQuestions(shuffle(MOCK_QUIZ_QUESTIONS).slice(0, QUESTIONS_PER_ROUND));
+      });
+    }
+  }, [slug]);
+
+  const quiz = quizSet;
+  const allQuestions = quizQuestions;
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState(null);
   const [answered, setAnswered] = useState(false);

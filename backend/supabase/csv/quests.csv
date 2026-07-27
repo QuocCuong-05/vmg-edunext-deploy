@@ -1,0 +1,14 @@
+id,type,title,desc_text,xp,is_active
+daily-quiz,daily,Hoàn thành 1 bài quiz,Làm một bài quiz bất kỳ để kiểm tra kiến thức,50,true
+daily-vimi,daily,Hỏi ViMi 1 câu hỏi,Chat với ViMi về bất kỳ chủ đề nào bạn quan tâm,40,true
+daily-blog,daily,Đọc 1 bài viết Blog,Đọc một bài blog trong thư viện VMG,30,true
+daily-vocab,daily,Ôn 5 từ vựng,Ôn tập 5 từ vựng bất kỳ trong danh sách,30,true
+daily-phrases,daily,Luyện 5 câu Classroom Phrases,Luyện nói 5 câu lệnh lớp học tiếng Anh,40,true
+daily-lesson,daily,Hoàn thành 1 bài học,Học xong một bài trong khóa học bất kỳ,60,true
+daily-progress,daily,Xem tiến độ của bạn,Kiểm tra tiến độ học tập trên Dashboard,20,true
+weekly-3daily,weekly,Hoàn thành 3 Daily Quest trong tuần,Hoàn thành 3 nhiệm vụ hàng ngày trong tuần này,150,true
+weekly-quiz80,weekly,Đạt 80%+ trong 1 bài quiz,Đạt điểm cao trong một bài quiz bất kỳ,200,true
+weekly-vocab15,weekly,Học 15 từ vựng mới,Mở rộng vốn từ vựng của bạn với 15 từ mới,200,true
+weekly-2lessons,weekly,Hoàn thành 2 bài học,Học xong 2 bài trong bất kỳ khóa học nào,250,true
+weekly-streak5,weekly,Duy trì streak 5 ngày,Giữ chuỗi học tập 5 ngày liên tiếp,300,true
+weekly-vimi4,weekly,Luyện nói với ViMi 4 lần,Thực hành nói với ViMi ở chế độ speaking 4 lần,300,true

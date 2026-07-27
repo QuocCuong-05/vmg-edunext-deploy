@@ -1,0 +1,8 @@
+id,slug,name_vi,sort_order,icon
+126d21c3-6ac1-614a-2d9d-188f6e68055e,settling,Ổn định lớp,1,users
+1f82e99d-b049-dcad-c2a5-2b44c9536ec5,warm-up,Khởi động,2,activity
+e26677f5-8b1c-8374-5cfd-3ccb631a5e57,instruction,Hướng dẫn bài tập,3,book-open
+2de60a6a-57c5-9a3b-8be6-ae2586d7103d,grouping,Chia nhóm,4,grid
+4c3f4858-5056-5776-88ac-004e9e99bd99,checking,Kiểm tra hiểu bài,5,help-circle
+3b2cc72a-f141-b51a-1dd3-be11f38701d4,feedback,Phản hồi và ghi nhận,6,message-square
+90d39ca7-0337-fe54-ed4b-4546f5c3b06a,transition,Chuyển tiếp và kết thúc,7,arrow-right
