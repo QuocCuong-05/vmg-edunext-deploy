@@ -48,6 +48,7 @@ export default function App() {
         <Route path="/classroom" element={<Classroom />} />
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/quiz/:slug" element={<Quiz />} />
+        <Route path="/level/quiz/:slug" element={<Quiz />} />
         <Route path="/vimi" element={<VimiPage />} />
         <Route path="/wordbook" element={<WordbookPage />} />
         <Route path="/library" element={<LibraryPage />} />

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Icon } from '../../lib/icons';
 import { updateStreak } from '../../lib/streak';
@@ -24,6 +24,8 @@ function shuffle(arr) {
 export default function Quiz() {
   const { slug } = useParams();
   const showToast = useToast();
+  const location = useLocation();
+  const isChallenge = location.pathname.startsWith('/level/quiz');
   const [quizSet, setQuizSet] = useState(null);
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [loading, setLoading] = useState(!!slug);
@@ -133,7 +135,7 @@ export default function Quiz() {
     return (
       <div className="page-enter">
         <div className="page-title">
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icon.Quiz size={24} /> Luyện tập</h1>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{isChallenge ? <Icon.Target size={24} /> : <Icon.Quiz size={24} />} {isChallenge ? 'Thử thách lên cấp' : 'Luyện tập'}</h1>
         </div>
         <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>
       </div>
@@ -144,7 +146,7 @@ export default function Quiz() {
     return (
       <div className="page-enter">
         <div className="page-title">
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icon.Quiz size={24} /> Luyện tập</h1>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{isChallenge ? <Icon.Target size={24} /> : <Icon.Quiz size={24} />} {isChallenge ? 'Thử thách lên cấp' : 'Luyện tập'}</h1>
         </div>
         <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Không tìm thấy bài tập</p>
       </div>
@@ -155,8 +157,9 @@ export default function Quiz() {
     return (
       <div className="page-enter">
         <div className="page-title">
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icon.Quiz size={24} /> Luyện tập</h1>
-          <p>Kiểm tra kiến thức về Classroom English, CLIL, đánh giá và phương pháp giảng dạy</p>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{isChallenge ? <Icon.Target size={24} /> : <Icon.Quiz size={24} />} {isChallenge ? 'Thử thách lên cấp' : 'Luyện tập'}</h1>
+          {!isChallenge && <p>Kiểm tra kiến thức về Classroom English, CLIL, đánh giá và phương pháp giảng dạy</p>}
+          {isChallenge && <p>Làm bài thi để vượt qua thử thách này</p>}
         </div>
         <Card style={{ maxWidth: 600, textAlign: 'center', padding: 40 }}>
           <div style={{ marginBottom: 16 }}><Icon.Target size={48} /></div>
@@ -171,7 +174,7 @@ export default function Quiz() {
             <span className="pill">{quiz.level}</span>
           </div>
           <Button variant="primary" onClick={() => setStarted(true)} style={{ padding: '14px 36px', fontSize: 15 }}>
-            Bắt đầu luyện tập <Icon.ArrowRight size={16} />
+            {isChallenge ? 'Vào thi' : 'Bắt đầu luyện tập'} <Icon.ArrowRight size={16} />
           </Button>
         </Card>
       </div>
@@ -183,7 +186,7 @@ export default function Quiz() {
     return (
       <div className="page-enter">
         <div className="page-title">
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}><Icon.Stats size={24} /> Kết quả luyện tập</h1>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}><Icon.Stats size={24} /> {isChallenge ? 'Kết quả thử thách' : 'Kết quả luyện tập'}</h1>
         </div>
         <Card style={{ maxWidth: 600, textAlign: 'center', padding: 40 }}>
           <div style={{ marginBottom: 16 }}>{passed ? <Icon.Sparkles size={48} /> : <Icon.Target size={48} />}</div>
@@ -222,7 +225,7 @@ export default function Quiz() {
     return (
     <div className="page-enter" style={{ maxWidth: 700 }}>
       <div className="page-title">
-        <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icon.Quiz size={24} /> Luyện tập</h1>
+        <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{isChallenge ? <Icon.Target size={24} /> : <Icon.Quiz size={24} />} {isChallenge ? 'Thử thách lên cấp' : 'Luyện tập'}</h1>
       </div>
       <Card style={{ padding: 28 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>

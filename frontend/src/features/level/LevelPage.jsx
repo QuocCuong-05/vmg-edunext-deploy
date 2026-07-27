@@ -149,7 +149,7 @@ export default function LevelPage() {
                   </div>
                 )}
                 {c.quiz_slug && !locked && !done && (
-                  <Button size="small" onClick={() => navigate(`/quiz/${c.quiz_slug}`)}>Vào thi</Button>
+                  <Button size="small" onClick={() => navigate(`/level/quiz/${c.quiz_slug}`)}>Vào thi</Button>
                 )}
               </Card>
             );
