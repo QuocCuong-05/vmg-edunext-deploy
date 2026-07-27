@@ -24,7 +24,6 @@ export default function LevelPage() {
   const [completed, setCompleted] = useState(loadCompleted);
   const [xp, setXp] = useState(getXp);
   const [loading, setLoading] = useState(true);
-  const [completedQuizzes, setCompletedQuizzes] = useState([]);
 
   useEffect(() => {
     api.level.challenges()
@@ -54,15 +53,6 @@ export default function LevelPage() {
       localStorage.removeItem('vmg_quiz_completed');
     } catch {}
   }, [challenges]);
-
-  useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('vmg_completed_quizzes') || '[]');
-      if (stored.length) {
-        api.quiz.list().then(all => setCompletedQuizzes(all.filter(q => stored.includes(q.slug)))).catch(() => {});
-      }
-    } catch {}
-  }, []);
 
   const totalXp = xp;
   const level = Math.floor(totalXp / XP_PER_LEVEL) + 1;
@@ -167,29 +157,7 @@ export default function LevelPage() {
         </div>
       )}
 
-      <Card style={{ padding: 24, marginBottom: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Luyện tập thêm</div>
-        {completedQuizzes.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {completedQuizzes.map(q => (
-              <div key={q.slug} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: '1px solid var(--border)' }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{q.title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>+{q.xp_reward} XP</div>
-                </div>
-                <Button size="small" onClick={() => navigate(`/quiz/${q.slug}`)}>Làm lại</Button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>
-            Làm quiz để kiếm XP và mở khoá thử thách mới
-          </div>
-        )}
-        {completedQuizzes.length > 0 && (
-          <Button onClick={() => navigate('/quiz')} variant="secondary" style={{ marginTop: 12 }}>Làm quiz mới</Button>
-        )}
-      </Card>
+
     </div>
   );
 }
