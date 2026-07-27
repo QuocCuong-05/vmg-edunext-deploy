@@ -24,6 +24,7 @@ export default function LevelPage() {
   const [completed, setCompleted] = useState(loadCompleted);
   const [xp, setXp] = useState(getXp);
   const [loading, setLoading] = useState(true);
+  const [completedQuizzes, setCompletedQuizzes] = useState([]);
 
   useEffect(() => {
     api.level.challenges()
@@ -54,29 +55,32 @@ export default function LevelPage() {
     } catch {}
   }, [challenges]);
 
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('vmg_completed_quizzes') || '[]');
+      if (stored.length) {
+        api.quiz.list().then(all => setCompletedQuizzes(all.filter(q => stored.includes(q.slug)))).catch(() => {});
+      }
+    } catch {}
+  }, []);
+
   const totalXp = xp;
   const level = Math.floor(totalXp / XP_PER_LEVEL) + 1;
   const currentLevelXp = totalXp % XP_PER_LEVEL;
   const xpProgress = (currentLevelXp / XP_PER_LEVEL) * 100;
 
-  const handleChallengeClick = (c) => {
+  const handleNonQuizChallenge = (c) => {
     if (completed[c.id]) return;
     if (c.level_min > level) return;
-    if (c.quiz_slug) {
-      navigate(`/quiz/${c.quiz_slug}`);
-    } else {
-      addXp(c.xp_reward);
-      setXp(getXp());
-      showToast('+' + c.xp_reward + ' XP', 'success');
-      setCompleted(prev => {
-        const next = { ...prev, [c.id]: true };
-        saveCompleted(next);
-        return next;
-      });
-    }
+    addXp(c.xp_reward);
+    setXp(getXp());
+    showToast('+' + c.xp_reward + ' XP', 'success');
+    setCompleted(prev => {
+      const next = { ...prev, [c.id]: true };
+      saveCompleted(next);
+      return next;
+    });
   };
-
-  const firstQuizChallenge = challenges.find(c => c.quiz_slug && !completed[c.id] && c.level_min <= level);
 
   useEffect(() => {
     const interval = setInterval(() => { setXp(getXp()); }, 2000);
@@ -136,11 +140,11 @@ export default function LevelPage() {
                 key={c.id}
                 style={{
                   opacity: done || locked ? 0.5 : 1,
-                  cursor: done ? 'default' : locked ? 'default' : 'pointer',
+                  cursor: !c.quiz_slug && !done && !locked ? 'pointer' : 'default',
                   display: 'flex', flexDirection: 'column', gap: 8,
                   padding: 20
                 }}
-                onClick={() => handleChallengeClick(c)}
+                onClick={!c.quiz_slug && !done && !locked ? () => handleNonQuizChallenge(c) : undefined}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Icon.Brain size={20} color={done ? 'var(--green)' : 'var(--muted)'} />
@@ -155,9 +159,7 @@ export default function LevelPage() {
                   </div>
                 )}
                 {c.quiz_slug && !locked && !done && (
-                  <div style={{ fontSize: 11, color: 'var(--blue)' }}>
-                    Làm quiz để hoàn thành
-                  </div>
+                  <Button size="small" onClick={() => navigate(`/quiz/${c.quiz_slug}`)}>Vào thi</Button>
                 )}
               </Card>
             );
@@ -166,16 +168,27 @@ export default function LevelPage() {
       )}
 
       <Card style={{ padding: 24, marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Luyện tập thêm</div>
-            <div style={{ fontSize: 12, color: 'var(--muted)' }}>Làm quiz để kiếm XP và mở khoá thử thách mới</div>
+        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Luyện tập thêm</div>
+        {completedQuizzes.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {completedQuizzes.map(q => (
+              <div key={q.slug} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: '1px solid var(--border)' }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{q.title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>+{q.xp_reward} XP</div>
+                </div>
+                <Button size="small" onClick={() => navigate(`/quiz/${q.slug}`)}>Làm lại</Button>
+              </div>
+            ))}
           </div>
-          <Button
-            onClick={() => navigate(firstQuizChallenge ? `/quiz/${firstQuizChallenge.quiz_slug}` : '/quiz')}
-            variant="secondary"
-          >Vào thi</Button>
-        </div>
+        ) : (
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>
+            Làm quiz để kiếm XP và mở khoá thử thách mới
+          </div>
+        )}
+        {completedQuizzes.length > 0 && (
+          <Button onClick={() => navigate('/quiz')} variant="secondary" style={{ marginTop: 12 }}>Làm quiz mới</Button>
+        )}
       </Card>
     </div>
   );

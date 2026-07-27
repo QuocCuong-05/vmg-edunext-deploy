@@ -66,7 +66,7 @@ export default function Quiz() {
   const [answered, setAnswered] = useState(false);
   const [results, setResults] = useState([]);
   const [finished, setFinished] = useState(false);
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(!!slug);
 
   const question = allQuestions[currentQ];
   const isLast = currentQ === allQuestions.length - 1;
@@ -82,6 +82,10 @@ export default function Quiz() {
       logActivity('quiz', 'Quiz: ' + score + '% - ' + quiz.title, 'Đạt ' + correctCount + '/' + allQuestions.length);
       if (slug) {
         try { localStorage.setItem('vmg_quiz_completed', JSON.stringify({ slug, xp: quiz.xp_reward })); } catch {}
+        try {
+          const list = JSON.parse(localStorage.getItem('vmg_completed_quizzes') || '[]');
+          if (!list.includes(slug)) { list.push(slug); localStorage.setItem('vmg_completed_quizzes', JSON.stringify(list)); }
+        } catch {}
       }
     }
   }, [finished, score]);
