@@ -1,73 +1,97 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+import { supabase } from './supabase';
 
-async function request(url, options = {}) {
-  const token = localStorage.getItem('vmg_token');
-  const headers = { 'Content-Type': 'application/json', ...options.headers };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+const API_BASE = '';
 
-  const res = await fetch(`${API_BASE}${url}`, { ...options, headers });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(err.error || `HTTP ${res.status}`);
-  }
-  const json = await res.json();
-  return json.data !== undefined ? json.data : json;
+function fromDb(result) {
+  if (result.error) throw result.error;
+  return result.data;
 }
 
-export { API_BASE };
 export const api = {
   auth: {
-    login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
-    signup: (email, password, full_name) => request('/auth/signup', { method: 'POST', body: JSON.stringify({ email, password, full_name }) }),
-    me: () => request('/auth/me'),
+    login: async (email, password) => {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      return data;
+    },
+    signup: async (email, password, full_name) => {
+      const { data, error } = await supabase.auth.signUp({
+        email, password,
+        options: { data: { full_name } },
+      });
+      if (error) throw error;
+      return data;
+    },
+    me: async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      return data;
+    },
   },
   courses: {
-    list: () => request('/courses'),
-    get: (slug) => request(`/courses/${slug}`),
+    list: async () => {
+      const { data, error } = await supabase.from('courses').select('*').eq('is_published', true).order('sort_order');
+      if (error) throw error;
+      return data;
+    },
+    get: async (slug) => {
+      const { data, error } = await supabase.from('courses').select('*').eq('slug', slug).single();
+      if (error) throw error;
+      return data;
+    },
   },
   vimi: {
-    chat: (message) => request('/vimi/chat', { method: 'POST', body: JSON.stringify({ message }) }),
+    chat: async (message) => {
+      throw new Error('ViMi requires a backend server – not available in direct Supabase mode');
+    },
   },
   tts: {
-    speak: async (text) => {
-      const res = await fetch(`${API_BASE}/tts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok) throw new Error('TTS failed');
-      return res.blob();
+    speak: async () => {
+      throw new Error('TTS requires a backend server – not available in direct Supabase mode');
     },
   },
   tips: {
-    list: () => request('/tips'),
+    list: async () => fromDb(await supabase.from('tips').select('*').eq('is_published', true)),
   },
   quests: {
-    list: (type) => request(`/quests?type=${type || ''}`),
+    list: async (type) => {
+      let q = supabase.from('quests').select('*').eq('is_active', true);
+      if (type) q = q.eq('type', type);
+      return fromDb(await q);
+    },
   },
   rewards: {
-    list: () => request('/rewards'),
+    list: async () => fromDb(await supabase.from('rewards').select('*').eq('is_active', true)),
   },
   vocabulary: {
-    list: (params) => {
-      const q = new URLSearchParams(params || {}).toString();
-      return request(`/vocabulary${q ? '?' + q : ''}`);
-    },
+    list: async () => fromDb(await supabase.from('vocabulary_entries').select('*').eq('is_published', true)),
   },
   classroom: {
-    list: (params) => {
-      const q = new URLSearchParams(params || {}).toString();
-      return request(`/classroom${q ? '?' + q : ''}`);
-    },
-    categories: () => request('/classroom/categories'),
+    list: async () => fromDb(await supabase.from('classroom_phrases').select('*, classroom_phrase_categories(slug, name_vi)').eq('is_published', true).order('sort_order')),
+    categories: async () => fromDb(await supabase.from('classroom_phrase_categories').select('*').order('sort_order')),
   },
   quiz: {
-    list: () => request('/quiz/sets'),
-    get: (slug) => request(`/quiz/sets/${slug}`),
+    list: async () => fromDb(await supabase.from('quiz_sets').select('*').eq('is_published', true)),
+    get: async (slug) => {
+      const { data, error } = await supabase.from('quiz_sets').select(`
+        *,
+        questions:quiz_questions(
+          *,
+          options:quiz_options(*)
+        )
+      `).eq('slug', slug).single();
+      if (error) throw error;
+      return data;
+    },
   },
   level: {
-    challenges: () => request('/level/challenges'),
-    userChallenges: () => request('/level/challenges/user'),
-    complete: (id) => request(`/level/challenges/${id}/complete`, { method: 'POST' }),
+    challenges: async () => {
+      const data = fromDb(await supabase.from('level_challenges').select('*, quiz_set:quiz_sets!quiz_set_id(slug)').eq('is_active', true).order('sort_order'));
+      return data.map(c => ({ ...c, quiz_slug: c.quiz_set?.slug || null }));
+    },
+    userChallenges: async () => [],
+    complete: async () => {},
   },
 };
+
+export { API_BASE };
