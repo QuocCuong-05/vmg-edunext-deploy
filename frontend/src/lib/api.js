@@ -2,6 +2,15 @@ import { supabase } from './supabase';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
+const MOCK_CHALLENGES = [
+  { id: 'ch-1', title: 'Classroom English Basics', description: 'Hoàn thành bài quiz kiến thức cơ bản về Classroom English.', xp_reward: 150, quiz_slug: 'classroom-clil-mixed', level_min: 1, sort_order: 1, is_active: true },
+  { id: 'ch-2', title: 'CLIL Lesson Design', description: 'Hoàn thành bài quiz về thiết kế bài học CLIL.', xp_reward: 200, quiz_slug: null, level_min: 1, sort_order: 2, is_active: true },
+  { id: 'ch-3', title: 'Assessment Strategies', description: 'Hoàn thành bài quiz về chiến lược đánh giá.', xp_reward: 250, quiz_slug: null, level_min: 2, sort_order: 3, is_active: true },
+  { id: 'ch-4', title: 'Learning Science', description: 'Hoàn thành bài quiz về khoa học học tập.', xp_reward: 300, quiz_slug: null, level_min: 3, sort_order: 4, is_active: true },
+  { id: 'ch-5', title: 'Differentiation Master', description: 'Hoàn thành bài quiz về phân hóa giảng dạy.', xp_reward: 350, quiz_slug: null, level_min: 4, sort_order: 5, is_active: true },
+  { id: 'ch-6', title: 'Classroom English Expert', description: 'Bài kiểm tra tổng hợp toàn bộ kỹ năng Classroom English.', xp_reward: 500, quiz_slug: null, level_min: 5, sort_order: 6, is_active: true },
+];
+
 async function request(url, options = {}) {
   const token = localStorage.getItem('vmg_token');
   const headers = { 'Content-Type': 'application/json', ...options.headers };
@@ -104,8 +113,13 @@ export const api = {
   },
   level: {
     challenges: async () => {
-      const data = fromDb(await supabase.from('level_challenges').select('*, quiz_set:quiz_sets!quiz_set_id(slug)').eq('is_active', true).order('sort_order'));
-      return data.map(c => ({ ...c, quiz_slug: c.quiz_set?.slug || null }));
+      try {
+        const { data, error } = await supabase.from('level_challenges').select('*, quiz_set:quiz_sets(slug)').eq('is_active', true).order('sort_order');
+        if (!error && data && data.length) {
+          return data.map(c => ({ ...c, quiz_slug: c.quiz_set?.slug || null }));
+        }
+      } catch (e) { console.warn('level.challenges fetch failed, using fallback:', e); }
+      return MOCK_CHALLENGES;
     },
     userChallenges: async () => [],
     complete: async () => {},
