@@ -20,7 +20,7 @@ export default function ViMiChat() {
   const bodyRef = useRef(null);
   const { isRecording, transcript, startRecording, stopRecording, clearTranscript } = useSpeechRecognition();
 
-  const { messages, append, isLoading } = useStreamChat({
+  const { messages, append, isLoading, error } = useStreamChat({
     api: `${API_BASE}/vimi-ai/chat`,
     initialMessages: [{
       role: 'assistant',
@@ -87,6 +87,11 @@ export default function ViMiChat() {
               </div>
             )}
           </div>
+          {error && (
+            <div style={{ padding: '8px 16px', fontSize: 11, color: 'var(--red)', background: 'rgba(189,23,48,0.06)', borderTop: '1px solid var(--line)' }}>
+              Lỗi: {error}
+            </div>
+          )}
           <div className="vimi-input">
             <button onClick={handleMic} title={isRecording ? 'Dừng thu âm' : 'Thu âm'} style={{ background: 'none', border: 'none', cursor: 'pointer', color: isRecording ? 'var(--red)' : 'var(--muted)', padding: 4 }}>
               {isRecording ? <Icon.MicOff size={18} /> : <Icon.Mic size={18} />}
