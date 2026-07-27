@@ -22,7 +22,7 @@ export function ToastProvider({ children }) {
           <span className="toast-icon">
             {toast.type === 'success' ? '🎉' : toast.type === 'error' ? '❌' : 'ℹ️'}
           </span>
-          <span className="toast-message">{toast.message}</span>
+          <span className="toast-xp">{toast.message}</span>
           <button className="toast-close" onClick={() => setToast(null)}>✕</button>
         </div>
       )}

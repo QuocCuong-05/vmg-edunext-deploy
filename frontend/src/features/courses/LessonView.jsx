@@ -68,7 +68,7 @@ export default function LessonView() {
     setCompleted(true);
     updateStreak();
     addXp(60);
-    showToast('🎉 +60 XP — ' + lesson.title, 'success');
+    showToast('+60 XP', 'success');
     logActivity('lesson', 'Đã học bài: ' + lesson.title, course.title);
     if (MOCK_ENROLLMENTS[course.id]) {
       const arr = MOCK_ENROLLMENTS[course.id].completed_lessons || [];

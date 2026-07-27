@@ -43,7 +43,7 @@ export default function Quiz() {
     if (finished && score >= quiz.passing_score) {
       updateStreak();
       addXp(quiz.xp_reward);
-      showToast('🎉 +' + quiz.xp_reward + ' XP — Quiz: ' + score + '%', 'success');
+      showToast('+' + quiz.xp_reward + ' XP', 'success');
       logActivity('quiz', 'Quiz: ' + score + '% - ' + quiz.title, 'Đạt ' + correctCount + '/' + allQuestions.length);
     }
   }, [finished, score]);

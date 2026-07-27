@@ -80,7 +80,7 @@ export default function Dashboard() {
     setXp(addXp(q.xp));
     logActivity('quest', 'Hoàn thành: ' + q.title, '+' + q.xp + 'XP');
     setActivities(getActivities(5));
-    showToast('🎉 +' + q.xp + ' XP — ' + q.title, 'success');
+    showToast('+' + q.xp + ' XP', 'success');
     localStorage.setItem('vmg_quests', JSON.stringify({
       date: getDateKey(), week: getWeekKey(), done: next,
     }));
