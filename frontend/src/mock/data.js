@@ -100,7 +100,7 @@ export const MOCK_COURSES = [
 ];
 
 export const MOCK_ENROLLMENTS = {
-  'course-1': { enrolled: true, progress_pct: 45, status: 'active', completed_lessons: ['lesson-1-1', 'lesson-1-2'] },
+  'course-1': { enrolled: true, progress_pct: 45, status: 'active', completed_lessons: [] },
   'course-2': { enrolled: true, progress_pct: 20, status: 'active', completed_lessons: ['lesson-2-1'] },
   'course-3': { enrolled: false, progress_pct: 0, status: null, completed_lessons: [] },
   'course-4': { enrolled: false, progress_pct: 0, status: null, completed_lessons: [] },

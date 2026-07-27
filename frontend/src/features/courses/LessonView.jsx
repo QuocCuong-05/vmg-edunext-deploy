@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MOCK_COURSES, MOCK_ENROLLMENTS } from '../../mock/data';
 import { Icon } from '../../lib/icons';
+import { updateStreak } from '../../lib/streak';
+import { logActivity } from '../../lib/activity';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 
@@ -34,6 +36,10 @@ export default function LessonView() {
   }
 
   const [completed, setCompleted] = useState(false);
+
+  useEffect(() => {
+    setCompleted(false);
+  }, [slug, lessonId]);
   const courseLessons = course.lessons || [];
   const currentIdx = courseLessons.findIndex(l => l.id === lessonId);
   const prevLesson = currentIdx > 0 ? courseLessons[currentIdx - 1] : null;
@@ -57,11 +63,15 @@ export default function LessonView() {
 
   const handleComplete = () => {
     setCompleted(true);
+    updateStreak();
+    logActivity('lesson', 'Đã học bài: ' + lesson.title, course.title);
     if (MOCK_ENROLLMENTS[course.id]) {
-      MOCK_ENROLLMENTS[course.id].completed_lessons = [...(MOCK_ENROLLMENTS[course.id].completed_lessons || []), lessonId];
+      const arr = MOCK_ENROLLMENTS[course.id].completed_lessons || [];
+      if (!arr.includes(lessonId)) {
+        arr.push(lessonId);
+      }
       const total = courseLessons.length;
-      const done = MOCK_ENROLLMENTS[course.id].completed_lessons.length;
-      MOCK_ENROLLMENTS[course.id].progress_pct = Math.round((done / total) * 100);
+      MOCK_ENROLLMENTS[course.id].progress_pct = Math.round((arr.length / total) * 100);
     }
   };
 

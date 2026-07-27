@@ -1,18 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { MOCK_COURSES, MOCK_ENROLLMENTS, MOCK_TIPS, MOCK_VOCABULARY, MOCK_QUIZZES, MOCK_USER } from '../../mock/data';
+import { MOCK_COURSES, MOCK_ENROLLMENTS, MOCK_TIPS, MOCK_VOCABULARY, MOCK_QUIZZES } from '../../mock/data';
 import { getDailyQuests, getWeeklyQuests, getDateKey, getWeekKey } from '../../mock/quests';
 import { getXp, addXp } from '../../lib/xp';
+import { getStreak } from '../../lib/streak';
+import { getActivities, logActivity } from '../../lib/activity';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-
-const PATHS = [
-  { title: 'Giao tiếp lớp học', desc: '104 câu lệnh song ngữ, phản xạ giảng dạy tự tin', icon: Icon.Classroom, color: 'var(--red)', to: '/classroom' },
-  { title: 'Phương pháp & CLIL', desc: 'Thiết kế bài học, đánh giá, scaffolding', icon: Icon.Brain, color: 'var(--blue)', to: '/courses' },
-  { title: 'Từ vựng & Ngôn ngữ', desc: '82 từ giáo dục, collocations, ngữ cảnh thực tế', icon: Icon.Book, color: 'var(--gold)', to: '/vocabulary' },
-];
 
 const QUOTES = [
   { text: 'Giáo dục không phải là đổ đầy một chiếc bình, mà là thắp lên một ngọn lửa.', author: 'William Butler Yeats' },
@@ -27,9 +23,17 @@ function shuffleQuote() {
   return QUOTES[i];
 }
 
+const STAT_META = [
+  { key: 'courses', label: 'Khóa học', icon: Icon.Courses, accent: 'accent-red' },
+  { key: 'vocab', label: 'Từ vựng', icon: Icon.Book, accent: 'accent-blue' },
+  { key: 'quiz', label: 'Bài tập', icon: Icon.Quiz, accent: 'accent-gold' },
+  { key: 'tips', label: 'Tips', icon: Icon.Lightbulb, accent: 'accent-green' },
+];
+
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const streak = useState(getStreak())[0];
   const [quote] = useState(shuffleQuote);
 
   const [tab, setTab] = useState('daily');
@@ -46,6 +50,7 @@ export default function Dashboard() {
   });
   const [xp, setXp] = useState(getXp());
   const [animXp, setAnimXp] = useState(null);
+  const [activities, setActivities] = useState(getActivities(5));
 
   const activeQuests = tab === 'daily' ? dailyQuests : weeklyQuests;
   const doneCount = activeQuests.filter(q => done[q.id]).length;
@@ -59,11 +64,20 @@ export default function Dashboard() {
 
   const todaysWord = MOCK_VOCABULARY[new Date().getDate() % MOCK_VOCABULARY.length];
 
+  const STATS = {
+    courses: enrolledCount,
+    vocab: vocabCount,
+    quiz: quizCount,
+    tips: tipsCount,
+  };
+
   function handleToggle(q) {
     if (done[q.id]) return;
     const next = { ...done, [q.id]: true };
     setDone(next);
     setXp(addXp(q.xp));
+    logActivity('quest', 'Hoàn thành: ' + q.title, '+' + q.xp + 'XP');
+    setActivities(getActivities(5));
     localStorage.setItem('vmg_quests', JSON.stringify({
       date: getDateKey(), week: getWeekKey(), done: next,
     }));
@@ -74,43 +88,38 @@ export default function Dashboard() {
   return (
     <div className="page-enter">
       <div className="dash-top">
-        <h1 className="dash-greeting">Xin chào, {user?.full_name?.split(' ')[0] || 'Teacher'}</h1>
-        <p className="dash-sub">Chào mừng bạn đến với VMG EduNext. Hôm nay bạn muốn học gì?</p>
+        <div className="dash-greeting-wrap">
+          <h1 className="dash-greeting">Xin chào, {user?.full_name?.split(' ')[0] || 'Teacher'}</h1>
+          <p className="dash-sub">Chào mừng bạn đến với VMG EduNext. Hôm nay bạn muốn học gì?</p>
+        </div>
+        <div className="dash-header-right">
+          {streak > 0 && (
+            <div className="streak-badge">
+              <Icon.Flame size={18} />
+              {streak} ngày
+            </div>
+          )}
+          <div className="dash-xp-badge">
+            <Icon.Stats size={15} />
+            {xp} XP
+          </div>
+        </div>
       </div>
 
       <div className="grid-4" style={{ marginBottom: 24 }}>
-        <Card className="stat-card accent-red">
-          <div className="accent-bar" />
-          <div className="stat-header">
-            <div className="stat-icon-box"><Icon.Courses size={20} /></div>
-            <span className="stat-value">{enrolledCount}</span>
-          </div>
-          <span className="stat-label">Khóa học</span>
-        </Card>
-        <Card className="stat-card accent-blue">
-          <div className="accent-bar" />
-          <div className="stat-header">
-            <div className="stat-icon-box"><Icon.Book size={20} /></div>
-            <span className="stat-value">{vocabCount}</span>
-          </div>
-          <span className="stat-label">Từ vựng</span>
-        </Card>
-        <Card className="stat-card accent-gold">
-          <div className="accent-bar" />
-          <div className="stat-header">
-            <div className="stat-icon-box"><Icon.Quiz size={20} /></div>
-            <span className="stat-value">{quizCount}</span>
-          </div>
-          <span className="stat-label">Bài tập</span>
-        </Card>
-        <Card className="stat-card accent-green">
-          <div className="accent-bar" />
-          <div className="stat-header">
-            <div className="stat-icon-box"><Icon.Lightbulb size={20} /></div>
-            <span className="stat-value">{tipsCount}</span>
-          </div>
-          <span className="stat-label">Tips</span>
-        </Card>
+        {STAT_META.map(s => {
+          const IconCmp = s.icon;
+          return (
+            <Card key={s.key} className={`stat-card ${s.accent}`}>
+              <div className="accent-bar" />
+              <div className="stat-header">
+                <div className="stat-icon-box"><IconCmp size={20} /></div>
+                <span className="stat-value">{STATS[s.key]}</span>
+              </div>
+              <span className="stat-label">{s.label}</span>
+            </Card>
+          );
+        })}
       </div>
 
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 24, padding: '18px 22px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', boxShadow: '0 2px 8px rgba(25,37,60,.04)' }}>
@@ -124,46 +133,47 @@ export default function Dashboard() {
         </button>
       </div>
 
-      <div className="section-title">
-        <h3>Lộ trình học tập</h3>
-        <p>Khám phá các hướng phát triển năng lực giảng dạy</p>
-      </div>
-      <div className="path-grid" style={{ marginBottom: 32 }}>
-        {PATHS.map((p, i) => (
-          <Card key={i} className="path-card" style={{ borderTop: `3px solid ${p.color}` }} onClick={() => navigate(p.to)}>
-            <div className="path-icon" style={{ background: `${p.color}18`, color: p.color }}><p.icon size={22} /></div>
-            <h4 className="path-title">{p.title}</h4>
-            <p className="path-desc">{p.desc}</p>
-            <span className="path-arrow" style={{ color: p.color, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              Khám phá <Icon.ArrowRight size={14} />
-            </span>
-          </Card>
-        ))}
-      </div>
-
-      <div className="dash-body">
+      <div className="dash-main-grid">
         <div>
-          <Card style={{ padding: 24 }}>
-            <h3 className="section-sub-title"><Icon.Courses size={18} /> Khóa học đang học</h3>
+          <div className="dash-wotd-row" onClick={() => navigate('/vocabulary')}>
+            <div className="dash-wotd-icon">
+              <Icon.Book size={22} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="dash-wotd-word">{todaysWord.word}</div>
+              <div className="dash-wotd-detail">{todaysWord.level} · {todaysWord.part_of_speech.replace('_', ' ')}</div>
+              <div className="dash-wotd-meaning">{todaysWord.meaning_vi}</div>
+            </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div className="dash-wotd-example">"{todaysWord.example_en}"</div>
+              <div style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 600, marginTop: 4, whiteSpace: 'nowrap' }}>Xem thêm →</div>
+            </div>
+          </div>
+
+          <Card style={{ padding: 20, marginBottom: 20 }}>
+            <h3 className="section-sub-title" style={{ marginBottom: 14, fontSize: 14 }}>
+              <Icon.Courses size={16} /> Khóa học đang học
+            </h3>
             {inProgress.length === 0 ? (
-              <div style={{ padding: '20px 0', textAlign: 'center' }}>
+              <div style={{ padding: '12px 0', textAlign: 'center' }}>
                 <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12 }}>Bạn chưa đăng ký khóa học nào.</p>
                 <Button variant="primary" size="sm" onClick={() => navigate('/courses')} label="Khám phá khóa học" />
               </div>
             ) : (
               inProgress.slice(0, 3).map(course => {
                 const enroll = MOCK_ENROLLMENTS[course.id];
+                const coverColor = course.cover === 'red' ? 'var(--red)' : course.cover === 'blue' ? 'var(--blue)' : course.cover === 'gold' ? 'var(--gold)' : 'var(--green)';
                 return (
                   <div key={course.id} className="course-row" onClick={() => navigate(`/courses/${course.slug}`)}>
                     <div className="course-row-info">
-                      <div className="course-row-level" style={{ background: course.cover === 'red' ? 'var(--red)' : course.cover === 'blue' ? 'var(--blue)' : course.cover === 'gold' ? 'var(--gold)' : 'var(--green)' }}>{course.level}</div>
+                      <div className="course-row-level" style={{ background: coverColor }}>{course.level}</div>
                       <div>
                         <div className="course-row-title">{course.title}</div>
                         <div className="course-row-meta">{enroll.progress_pct}% hoàn thành · {course.lesson_count} bài học</div>
                       </div>
                     </div>
                     <div className="progress-bar" style={{ height: 6, flex: 1, minWidth: 80 }}>
-                      <div className="progress-fill" style={{ width: `${enroll.progress_pct}%` }} />
+                      <div className="progress-fill" style={{ width: `${enroll.progress_pct}%`, background: coverColor }} />
                     </div>
                   </div>
                 );
@@ -175,16 +185,53 @@ export default function Dashboard() {
               </Button>
             )}
           </Card>
+
+          {activities.length > 0 && (
+            <Card style={{ padding: 20, marginBottom: 20 }}>
+              <h3 className="section-sub-title" style={{ marginBottom: 14, fontSize: 14 }}>
+                <Icon.Clock size={15} /> Hoạt động gần đây
+              </h3>
+              <div className="activity-list">
+                {activities.map(a => {
+                  const icons = { lesson: Icon.Book, quiz: Icon.Quiz, quest: Icon.Target };
+                  const colors = { lesson: 'var(--blue)', quiz: 'var(--gold)', quest: 'var(--green)' };
+                  const IconCmp = icons[a.type] || Icon.Clock;
+                  const color = colors[a.type] || 'var(--muted)';
+                  const ts = new Date(a.time);
+                  const now = Date.now();
+                  const diff = now - ts.getTime();
+                  let rel;
+                  if (diff < 60000) rel = 'Vừa xong';
+                  else if (diff < 3600000) rel = Math.floor(diff / 60000) + ' phút trước';
+                  else if (diff < 86400000) rel = Math.floor(diff / 3600000) + ' giờ trước';
+                  else rel = Math.floor(diff / 86400000) + ' ngày trước';
+                  return (
+                    <div key={a.id} className="activity-item">
+                      <div className="activity-icon" style={{ background: color + '18', color }}>
+                        <IconCmp size={14} />
+                      </div>
+                      <div className="activity-body">
+                        <div className="activity-title">{a.title}</div>
+                        {a.detail && <div className="activity-detail">{a.detail}</div>}
+                      </div>
+                      <div className="activity-time">{rel}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+
         </div>
 
         <div>
-          <Card style={{ padding: 22, marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
-            <h3 className="section-sub-title" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span><Icon.Target size={16} /> Nhiệm vụ</span>
+          <Card style={{ padding: 20, marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
+            <h3 className="section-sub-title" style={{ marginBottom: 10, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span><Icon.Target size={15} /> Nhiệm vụ</span>
               <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>{xp} XP</span>
             </h3>
 
-            <div className="quest-tabs">
+            <div className="quest-tabs" style={{ marginBottom: 12 }}>
               <button className={`quest-tab ${tab === 'daily' ? 'active' : ''}`} onClick={() => setTab('daily')}>Hôm nay</button>
               <button className={`quest-tab ${tab === 'weekly' ? 'active' : ''}`} onClick={() => setTab('weekly')}>Tuần này</button>
             </div>
@@ -216,25 +263,16 @@ export default function Dashboard() {
             )}
           </Card>
 
-          <Card style={{ padding: 24, marginBottom: 20 }}>
-            <h3 className="section-sub-title"><Icon.Book size={18} /> Word of the Day</h3>
-            <div className="wotd-word">{todaysWord.word}</div>
-            <div className="wotd-level">{todaysWord.level} · {todaysWord.part_of_speech.replace('_', ' ')}</div>
-            <div className="wotd-meaning">{todaysWord.meaning_vi}</div>
-            <div className="wotd-example">"{todaysWord.example_en}"</div>
-            <Button variant="ghost" size="sm" style={{ marginTop: 8 }} onClick={() => navigate('/vocabulary')}>
-              Xem thêm từ vựng <Icon.ArrowRight size={12} />
-            </Button>
-          </Card>
-
-          <Card style={{ padding: 24 }}>
-            <h3 className="section-sub-title"><Icon.Lightbulb size={18} /> Tips hôm nay</h3>
-            {MOCK_TIPS.slice(0, 3).map((tip, i) => (
-              <div key={i} className="tip-row" style={{ borderBottom: i < 2 ? '1px solid var(--line)' : 'none' }}>
-              <div className="tip-category">{tip.category}</div>
-              <div className="tip-title">{tip.title}</div>
-            </div>
-          ))}
+          <Card style={{ padding: 20 }}>
+            <h3 className="section-sub-title" style={{ marginBottom: 12, fontSize: 14 }}>
+              <Icon.Lightbulb size={15} /> Tips
+            </h3>
+            {MOCK_TIPS.slice(0, 4).map((tip, i) => (
+              <div key={i} className="tip-row" style={{ borderBottom: i < 3 ? '1px solid var(--line)' : 'none', padding: '10px 0' }}>
+                <div className="tip-category">{tip.category}</div>
+                <div className="tip-title">{tip.title}</div>
+              </div>
+            ))}
           </Card>
         </div>
       </div>
