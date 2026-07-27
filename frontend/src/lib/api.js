@@ -1,6 +1,20 @@
 import { supabase } from './supabase';
 
-const API_BASE = '';
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
+async function request(url, options = {}) {
+  const token = localStorage.getItem('vmg_token');
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}${url}`, { ...options, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Request failed' }));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  const json = await res.json();
+  return json.data !== undefined ? json.data : json;
+}
 
 function fromDb(result) {
   if (result.error) throw result.error;
@@ -41,13 +55,17 @@ export const api = {
     },
   },
   vimi: {
-    chat: async (message) => {
-      throw new Error('ViMi requires a backend server – not available in direct Supabase mode');
-    },
+    chat: (message) => request('/vimi/chat', { method: 'POST', body: JSON.stringify({ message }) }),
   },
   tts: {
-    speak: async () => {
-      throw new Error('TTS requires a backend server – not available in direct Supabase mode');
+    speak: async (text) => {
+      const res = await fetch(`${API_BASE}/tts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error('TTS failed');
+      return res.blob();
     },
   },
   tips: {
