@@ -9,6 +9,7 @@ import { getActivities, logActivity } from '../../lib/activity';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import { useToast } from '../../components/ui/Toast';
 
 const QUOTES = [
   { text: 'Giáo dục không phải là đổ đầy một chiếc bình, mà là thắp lên một ngọn lửa.', author: 'William Butler Yeats' },
@@ -51,6 +52,7 @@ export default function Dashboard() {
   const [xp, setXp] = useState(getXp());
   const [animXp, setAnimXp] = useState(null);
   const [activities, setActivities] = useState(getActivities(5));
+  const showToast = useToast();
 
   const activeQuests = tab === 'daily' ? dailyQuests : weeklyQuests;
   const doneCount = activeQuests.filter(q => done[q.id]).length;
@@ -78,6 +80,7 @@ export default function Dashboard() {
     setXp(addXp(q.xp));
     logActivity('quest', 'Hoàn thành: ' + q.title, '+' + q.xp + 'XP');
     setActivities(getActivities(5));
+    showToast('🎉 +' + q.xp + ' XP — ' + q.title, 'success');
     localStorage.setItem('vmg_quests', JSON.stringify({
       date: getDateKey(), week: getWeekKey(), done: next,
     }));

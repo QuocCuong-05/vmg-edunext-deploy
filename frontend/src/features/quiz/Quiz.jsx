@@ -4,6 +4,7 @@ import { Icon } from '../../lib/icons';
 import { updateStreak } from '../../lib/streak';
 import { logActivity } from '../../lib/activity';
 import { addXp } from '../../lib/xp';
+import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 
@@ -20,6 +21,7 @@ function shuffle(arr) {
 
 export default function Quiz() {
   const quiz = MOCK_QUIZZES[0];
+  const showToast = useToast();
   const allQuestions = useMemo(
     () => shuffle(MOCK_QUIZ_QUESTIONS).slice(0, QUESTIONS_PER_ROUND),
     []
@@ -41,6 +43,7 @@ export default function Quiz() {
     if (finished && score >= quiz.passing_score) {
       updateStreak();
       addXp(quiz.xp_reward);
+      showToast('🎉 +' + quiz.xp_reward + ' XP — Quiz: ' + score + '%', 'success');
       logActivity('quiz', 'Quiz: ' + score + '% - ' + quiz.title, 'Đạt ' + correctCount + '/' + allQuestions.length);
     }
   }, [finished, score]);

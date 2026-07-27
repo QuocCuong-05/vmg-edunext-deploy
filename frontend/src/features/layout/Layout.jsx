@@ -4,6 +4,7 @@ import ViMiChat from '../vimi/ViMiChat';
 import AvatarDropdown from './AvatarDropdown';
 import { useAuth } from '../auth/AuthContext';
 import { Icon } from '../../lib/icons';
+import { ToastProvider } from '../../components/ui/Toast';
 
 const GROUPS = [
   {
@@ -204,7 +205,7 @@ export default function Layout() {
           </header>
 
           <main className="main" style={{ flex: 1, minHeight: 0 }}>
-            <Outlet />
+            <ToastProvider><Outlet /></ToastProvider>
           </main>
 
           <footer className="site-footer">

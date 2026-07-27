@@ -5,6 +5,7 @@ import { Icon } from '../../lib/icons';
 import { updateStreak } from '../../lib/streak';
 import { logActivity } from '../../lib/activity';
 import { addXp } from '../../lib/xp';
+import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 
@@ -37,6 +38,7 @@ export default function LessonView() {
   }
 
   const [completed, setCompleted] = useState(false);
+  const showToast = useToast();
 
   useEffect(() => {
     setCompleted(false);
@@ -66,6 +68,7 @@ export default function LessonView() {
     setCompleted(true);
     updateStreak();
     addXp(60);
+    showToast('🎉 +60 XP — ' + lesson.title, 'success');
     logActivity('lesson', 'Đã học bài: ' + lesson.title, course.title);
     if (MOCK_ENROLLMENTS[course.id]) {
       const arr = MOCK_ENROLLMENTS[course.id].completed_lessons || [];
