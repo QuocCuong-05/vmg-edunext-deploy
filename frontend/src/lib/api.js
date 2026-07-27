@@ -2,15 +2,6 @@ import { supabase } from './supabase';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
-const MOCK_CHALLENGES = [
-  { id: 'ch-1', title: 'Classroom English Basics', description: 'Hoàn thành bài quiz kiến thức cơ bản về Classroom English.', xp_reward: 150, quiz_slug: 'classroom-clil-mixed', level_min: 1, sort_order: 1, is_active: true },
-  { id: 'ch-2', title: 'CLIL Lesson Design', description: 'Hoàn thành bài quiz về thiết kế bài học CLIL.', xp_reward: 200, quiz_slug: null, level_min: 1, sort_order: 2, is_active: true },
-  { id: 'ch-3', title: 'Assessment Strategies', description: 'Hoàn thành bài quiz về chiến lược đánh giá.', xp_reward: 250, quiz_slug: null, level_min: 2, sort_order: 3, is_active: true },
-  { id: 'ch-4', title: 'Learning Science', description: 'Hoàn thành bài quiz về khoa học học tập.', xp_reward: 300, quiz_slug: null, level_min: 3, sort_order: 4, is_active: true },
-  { id: 'ch-5', title: 'Differentiation Master', description: 'Hoàn thành bài quiz về phân hóa giảng dạy.', xp_reward: 350, quiz_slug: null, level_min: 4, sort_order: 5, is_active: true },
-  { id: 'ch-6', title: 'Classroom English Expert', description: 'Bài kiểm tra tổng hợp toàn bộ kỹ năng Classroom English.', xp_reward: 500, quiz_slug: null, level_min: 5, sort_order: 6, is_active: true },
-];
-
 async function request(url, options = {}) {
   const token = localStorage.getItem('vmg_token');
   const headers = { 'Content-Type': 'application/json', ...options.headers };
@@ -100,26 +91,42 @@ export const api = {
   quiz: {
     list: async () => fromDb(await supabase.from('quiz_sets').select('*').eq('is_published', true)),
     get: async (slug) => {
-      const { data, error } = await supabase.from('quiz_sets').select(`
-        *,
-        questions:quiz_questions(
-          *,
-          options:quiz_options(*)
-        )
-      `).eq('slug', slug).single();
-      if (error) throw error;
-      return data;
+      try {
+        const quizSet = fromDb(await supabase.from('quiz_sets').select('*').eq('slug', slug).single());
+        if (!quizSet) return null;
+        const questions = fromDb(await supabase.from('quiz_questions').select('*').eq('quiz_set_id', quizSet.id).order('sort_order'));
+        const questionIds = questions.map(q => q.id);
+        let optionsMap = {};
+        if (questionIds.length) {
+          const options = fromDb(await supabase.from('quiz_options').select('*').in('question_id', questionIds).order('sort_order'));
+          options.forEach(o => {
+            if (!optionsMap[o.question_id]) optionsMap[o.question_id] = [];
+            optionsMap[o.question_id].push(o);
+          });
+        }
+        return { ...quizSet, questions: questions.map(q => ({ ...q, options: optionsMap[q.id] || [] })) };
+      } catch (e) {
+        console.warn('quiz.get failed:', e);
+        return null;
+      }
     },
   },
   level: {
     challenges: async () => {
       try {
-        const { data, error } = await supabase.from('level_challenges').select('*, quiz_set:quiz_sets(slug)').eq('is_active', true).order('sort_order');
-        if (!error && data && data.length) {
-          return data.map(c => ({ ...c, quiz_slug: c.quiz_set?.slug || null }));
+        const challenges = fromDb(await supabase.from('level_challenges').select('*').eq('is_active', true).order('sort_order'));
+        if (!challenges.length) return [];
+        const quizIds = challenges.filter(c => c.quiz_set_id).map(c => c.quiz_set_id);
+        let quizMap = {};
+        if (quizIds.length) {
+          const quizSets = fromDb(await supabase.from('quiz_sets').select('id, slug').in('id', quizIds));
+          quizSets.forEach(q => { quizMap[q.id] = q.slug; });
         }
-      } catch (e) { console.warn('level.challenges fetch failed, using fallback:', e); }
-      return MOCK_CHALLENGES;
+        return challenges.map(c => ({ ...c, quiz_slug: quizMap[c.quiz_set_id] || null }));
+      } catch (e) {
+        console.warn('level.challenges failed:', e);
+        return [];
+      }
     },
     userChallenges: async () => [],
     complete: async () => {},
