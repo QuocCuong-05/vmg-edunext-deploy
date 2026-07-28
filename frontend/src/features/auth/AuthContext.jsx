@@ -28,9 +28,9 @@ export function AuthProvider({ children }) {
     return mockUser;
   }, []);
 
-  const signup = useCallback(async (email, password, full_name) => {
+  const signup = useCallback(async (email, password, full_name, school) => {
     if (password.length < 6) throw new Error('Mật khẩu phải có ít nhất 6 ký tự');
-    const mockUser = { ...MOCK_USER, email, full_name: full_name || email.split('@')[0] };
+    const mockUser = { ...MOCK_USER, email, full_name: full_name || email.split('@')[0], school: school || '' };
     localStorage.setItem('vmg_user', JSON.stringify(mockUser));
     localStorage.setItem('vmg_token', 'mock-token-' + Date.now());
     setUser(mockUser);

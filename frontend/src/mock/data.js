@@ -6,6 +6,7 @@ export const MOCK_USER = {
   xp: 2450,
   streak_days: 7,
   avatar_url: null,
+  school: 'Trường THCS Hùng Vương',
 };
 
 export const MOCK_COURSES = [

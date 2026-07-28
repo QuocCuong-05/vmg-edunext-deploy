@@ -8,6 +8,7 @@ export default function Login() {
   const [email, setEmail] = useState('teacher@vmg-edunext.com');
   const [password, setPassword] = useState('2026demo');
   const [fullName, setFullName] = useState('');
+  const [school, setSchool] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [showPw, setShowPw] = useState(false);
@@ -22,7 +23,7 @@ export default function Login() {
       if (isLogin) {
         await login(email, password);
       } else {
-        await signup(email, password, fullName);
+        await signup(email, password, fullName, school);
       }
       navigate('/dashboard');
     } catch (err) {
@@ -64,12 +65,16 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit}>
-            {!isLogin && (
+            {!isLogin && (<>
               <div className="form-group">
                 <label>Họ và tên</label>
                 <input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nguyễn Văn A" />
               </div>
-            )}
+              <div className="form-group">
+                <label>Trường học</label>
+                <input value={school} onChange={e => setSchool(e.target.value)} placeholder="Trường THCS Hùng Vương" />
+              </div>
+            </>)}
             <div className="form-group">
               <label>Email</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="teacher@vmg-edunext.com" required />
