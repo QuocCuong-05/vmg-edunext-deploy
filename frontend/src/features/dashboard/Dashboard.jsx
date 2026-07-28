@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { api } from '../../lib/api';
-import { MOCK_COURSES, MOCK_ENROLLMENTS, MOCK_QUIZZES } from '../../mock/data';
+
 import { getDateKey, getWeekKey } from '../../mock/quests';
 import { getXp, addXp } from '../../lib/xp';
 import { getStreak } from '../../lib/streak';
@@ -57,6 +57,8 @@ export default function Dashboard() {
   const [weeklyQuests, setWeeklyQuests] = useState([]);
   const [tips, setTips] = useState([]);
   const [vocab, setVocab] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [quizSets, setQuizSets] = useState([]);
 
   useEffect(() => {
     Promise.all([
@@ -64,11 +66,15 @@ export default function Dashboard() {
       api.quests.list('weekly'),
       api.tips.list(),
       api.vocabulary.list(),
-    ]).then(([d, w, t, v]) => {
+      api.courses.list(),
+      api.quiz.list(),
+    ]).then(([d, w, t, v, c, q]) => {
       setDailyQuests(d || []);
       setWeeklyQuests(w || []);
       setTips(t || []);
       setVocab(v || []);
+      setCourses(c || []);
+      setQuizSets(q || []);
     }).catch(() => {});
   }, []);
 
@@ -76,11 +82,21 @@ export default function Dashboard() {
   const doneCount = activeQuests.filter(q => done[q.id]).length;
   const pct = Math.round((doneCount / activeQuests.length) * 100);
 
-  const enrolledCount = Object.values(MOCK_ENROLLMENTS).filter(e => e.enrolled).length;
+  const enrolledCount = courses.filter(c => {
+    try {
+      const e = localStorage.getItem('vmg_enroll_' + c.slug);
+      return e ? JSON.parse(e).enrolled : false;
+    } catch { return false; }
+  }).length;
   const vocabCount = vocab.length;
-  const quizCount = MOCK_QUIZZES.length;
+  const quizCount = quizSets.length;
   const tipsCount = tips.length;
-  const inProgress = MOCK_COURSES.filter(c => MOCK_ENROLLMENTS[c.id]?.enrolled);
+  const inProgress = courses.filter(c => {
+    try {
+      const e = localStorage.getItem('vmg_enroll_' + c.slug);
+      return e ? JSON.parse(e).enrolled : false;
+    } catch { return false; }
+  });
 
   const todaysWord = vocab[new Date().getDate() % Math.max(vocab.length, 1)] || {};
 
@@ -182,8 +198,13 @@ export default function Dashboard() {
               </div>
             ) : (
               inProgress.slice(0, 3).map(course => {
-                const enroll = MOCK_ENROLLMENTS[course.id];
-                const coverColor = course.cover === 'red' ? 'var(--red)' : course.cover === 'blue' ? 'var(--blue)' : course.cover === 'gold' ? 'var(--gold)' : 'var(--green)';
+                const enroll = (() => {
+                  try {
+                    const e = localStorage.getItem('vmg_enroll_' + course.slug);
+                    return e ? JSON.parse(e) : null;
+                  } catch { return null; }
+                })();
+                const coverColor = course.category === 'classroom_english' ? 'var(--red)' : course.category === 'clil_stem' ? 'var(--blue)' : course.category === 'assessment' ? 'var(--gold)' : course.category === 'vocabulary' ? 'var(--green)' : 'var(--purple)';
                 return (
                   <div key={course.id} className="course-row" onClick={() => navigate(`/courses/${course.slug}`)}>
                     <div className="course-row-info">

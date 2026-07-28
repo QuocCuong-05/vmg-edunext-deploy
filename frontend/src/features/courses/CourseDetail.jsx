@@ -1,15 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MOCK_COURSES, MOCK_ENROLLMENTS } from '../../mock/data';
+import { api } from '../../lib/api';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 
+function loadEnroll(slug) {
+  try {
+    const e = localStorage.getItem('vmg_enroll_' + slug);
+    return e ? JSON.parse(e) : null;
+  } catch { return null; }
+}
+function saveEnroll(slug, data) {
+  localStorage.setItem('vmg_enroll_' + slug, JSON.stringify(data));
+}
+
+const COVER_MAP = {
+  classroom_english: { color: 'red', icon: Icon.Courses },
+  clil_stem: { color: 'blue', icon: Icon.Brain },
+  assessment: { color: 'gold', icon: Icon.Pen },
+  vocabulary: { color: 'green', icon: Icon.BookOpen },
+  learning_science: { color: 'purple', icon: Icon.Microscope },
+};
+
 export default function CourseDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const course = MOCK_COURSES.find(c => c.slug === slug);
-  const [enrolled, setEnrolled] = useState(MOCK_ENROLLMENTS[course?.id]?.enrolled || false);
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [enrolled, setEnrolled] = useState(false);
+
+  useEffect(() => {
+    if (!slug) return;
+    api.courses.get(slug).then(data => {
+      setCourse(data);
+      const e = loadEnroll(slug);
+      setEnrolled(e?.enrolled || false);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [slug]);
+
+  if (loading) {
+    return <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>;
+  }
 
   if (!course) {
     return (
@@ -20,15 +53,16 @@ export default function CourseDetail() {
     );
   }
 
-  const enroll = MOCK_ENROLLMENTS[course.id] || { progress_pct: 0, completed_lessons: [] };
+  const enroll = loadEnroll(slug) || { progress_pct: 0, completed_lessons: [] };
   const completedIds = enroll.completed_lessons || [];
 
   const handleEnroll = () => {
-    MOCK_ENROLLMENTS[course.id] = { enrolled: true, progress_pct: 0, status: 'active', completed_lessons: [] };
+    saveEnroll(slug, { enrolled: true, progress_pct: 0, status: 'active', completed_lessons: [] });
     setEnrolled(true);
   };
 
-  const coverIcons = { red: Icon.Courses, blue: Icon.Brain, gold: Icon.Pen, green: Icon.BookOpen, purple: Icon.Microscope };
+  const cover = COVER_MAP[course.category] || { color: 'red', icon: Icon.Courses };
+  const C = cover.icon;
 
   return (
     <div className="page-enter">
@@ -36,8 +70,8 @@ export default function CourseDetail() {
 
       <Card style={{ padding: 28, marginBottom: 24 }}>
         <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-          <div className={`course-cover ${course.cover}`} style={{ width: 120, height: 120, fontSize: 40 }}>
-            {(() => { const C = coverIcons[course.cover] || Icon.Courses; return <C size={36} />; })()}
+          <div className={`course-cover ${cover.color}`} style={{ width: 120, height: 120, fontSize: 40 }}>
+            <C size={36} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <h1 style={{ fontSize: 24, marginBottom: 8 }}>{course.title}</h1>
@@ -99,9 +133,9 @@ export default function CourseDetail() {
                   {lesson.content_type === 'article' ? '📄' : '📝'}
                 </span>
               )}
-              {lesson.duration > 0 && (
+              {(lesson.video_duration_seconds || lesson.duration) > 0 && (
                 <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-                  {Math.floor(lesson.duration / 60)}:{String(lesson.duration % 60).padStart(2, '0')}
+                  {Math.floor((lesson.video_duration_seconds || lesson.duration) / 60)}:{String((lesson.video_duration_seconds || lesson.duration) % 60).padStart(2, '0')}
                 </span>
               )}
               <span className={`lesson-badge ${lesson.is_free ? 'free' : 'pro'}`}>

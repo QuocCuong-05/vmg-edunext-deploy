@@ -49,9 +49,11 @@ export const api = {
       return data;
     },
     get: async (slug) => {
-      const { data, error } = await supabase.from('courses').select('*').eq('slug', slug).single();
+      const { data: course, error } = await supabase.from('courses').select('*').eq('slug', slug).single();
       if (error) throw error;
-      return data;
+      const { data: lessons, error: lerr } = await supabase.from('lessons').select('*').eq('course_id', course.id).order('sort_order');
+      if (lerr) throw lerr;
+      return { ...course, lessons: lessons || [] };
     },
   },
   vimi: {
