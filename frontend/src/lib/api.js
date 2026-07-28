@@ -44,7 +44,7 @@ export const api = {
   },
   courses: {
     list: async () => {
-      const { data, error } = await supabase.from('courses').select('*').eq('is_published', true).order('sort_order');
+      const { data, error } = await supabase.from('courses').select('*').eq('is_published', true);
       if (error) throw error;
       return data;
     },
