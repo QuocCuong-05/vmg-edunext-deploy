@@ -104,7 +104,7 @@ export default function LessonView() {
           ) : (
             <div className="placeholder">
               <div style={{ marginBottom: 12 }}><Icon.Play size={48} /></div>
-              <p>Video demo — Bài học "{lesson.title}"</p>
+              <p>Video sẽ được cập nhật sau</p>
               <p style={{ fontSize: 12, marginTop: 8, opacity: .5 }}>
                 Thời lượng: {Math.floor(dur / 60)}:{String(dur % 60).padStart(2, '0')}
               </p>
