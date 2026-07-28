@@ -1,33 +1,40 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Dialog from '../../components/ui/Dialog';
 import { Icon } from '../../lib/icons';
 import { getXp, addXp } from '../../lib/xp';
-import ITEMS, { CATEGORIES } from '../../mock/rewards';
+import { api } from '../../lib/api';
+
+const CATEGORIES = {
+  hoc_lieu: { label: 'Tủ học liệu', color: 'var(--blue)' },
+  phat_trien: { label: 'Nâng tầm chuyên môn', color: 'var(--green)' },
+  cong_nhan: { label: 'Vinh danh & Đặc quyền', color: 'var(--gold)' },
+};
 
 const ICON_MAP = {
-  BookOpen: Icon.BookOpen,
-  Vocab: Icon.Vocab,
-  Sparkles: Icon.Sparkles,
-  Play: Icon.Play,
-  Calendar: Icon.Calendar,
-  User: Icon.User,
-  Brain: Icon.Brain,
-  Target: Icon.Target,
-  Check: Icon.Check,
-  Globe: Icon.Globe,
-  Pen: Icon.Pen,
-  Stats: Icon.Stats,
-  Flask: Icon.Flask,
-  Book: Icon.Book,
-  ArrowRight: Icon.ArrowRight,
-  Classroom: Icon.Classroom,
+  sparkles: Icon.Sparkles,
+  book: Icon.Book,
+  'bar-chart': Icon.Stats,
+  'book-open': Icon.BookOpen,
+  flask: Icon.Flask,
+  pen: Icon.Pen,
+  calendar: Icon.Calendar,
+  play: Icon.Play,
+  monitor: Icon.Classroom,
+  user: Icon.User,
+  brain: Icon.Brain,
+  target: Icon.Target,
+  check: Icon.Check,
+  globe: Icon.Globe,
+  'arrow-right': Icon.ArrowRight,
 };
 
 export default function RewardsPage() {
   const [tab, setTab] = useState('shop');
   const [xp, setXpState] = useState(getXp);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [owned, setOwned] = useState(() => {
     try { return JSON.parse(localStorage.getItem('vmg_owned') || '[]'); }
     catch { return []; }
@@ -38,14 +45,21 @@ export default function RewardsPage() {
   });
   const [selected, setSelected] = useState(null);
 
+  useEffect(() => {
+    api.rewards.list().then(data => {
+      setItems(data || []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
   const grouped = useMemo(() => {
     const map = {};
-    ITEMS.forEach(item => {
+    items.forEach(item => {
       if (!map[item.category]) map[item.category] = [];
       map[item.category].push(item);
     });
     return map;
-  }, []);
+  }, [items]);
 
   function handleRedeem(item) {
     if (xp < item.price || owned.includes(item.id)) return;
@@ -65,7 +79,7 @@ export default function RewardsPage() {
   }
 
   function renderContent(item) {
-    const c = item.content;
+    const c = item.content_json || {};
     switch (c.type) {
       case 'info':
         return <p style={{ fontSize: 14, lineHeight: 1.8, color: 'var(--muted)', whiteSpace: 'pre-wrap' }}>{c.text}</p>;
@@ -136,6 +150,11 @@ export default function RewardsPage() {
       </div>
 
       {tab === 'shop' ? (
+        loading ? (
+          <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>
+        ) : items.length === 0 ? (
+          <Card style={{ textAlign: 'center', padding: 48, color: 'var(--muted)', fontSize: 14 }}>Không có vật phẩm nào</Card>
+        ) : (
         <div>
           {Object.entries(grouped).map(([catKey, items]) => {
             const cat = CATEGORIES[catKey];
@@ -147,14 +166,14 @@ export default function RewardsPage() {
                 </div>
                 <div className="reward-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
                   {items.map(item => {
-                    const ItemIcon = ICON_MAP[item.iconType] || Icon.Book;
+                    const ItemIcon = ICON_MAP[item.icon_type] || Icon.Book;
                     const isOwned = owned.includes(item.id);
                     const canAfford = xp >= item.price;
                     return (
                       <Card key={item.id} className="reward-card">
                         <div className="reward-card-icon"><ItemIcon size={32} /></div>
                         <h3 className="reward-card-name">{item.name}</h3>
-                        <p className="reward-card-desc">{item.desc}</p>
+                        <p className="reward-card-desc">{item.desc_text}</p>
                         <div className="reward-card-price">{item.price} XP</div>
                         {isOwned ? (
                           <Button variant="primary" size="sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setSelected(item)}>
@@ -175,6 +194,7 @@ export default function RewardsPage() {
             );
           })}
         </div>
+      )
       ) : (
         <div className="history-list">
           {history.length === 0 ? (
