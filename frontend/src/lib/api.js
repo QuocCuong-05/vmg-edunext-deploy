@@ -118,6 +118,127 @@ export const api = {
       }
     },
   },
+  community: {
+    _profileMap: async (userIds) => {
+      if (!userIds.length) return {};
+      const profiles = fromDb(await supabase.from('profiles').select('id, full_name').in('id', userIds));
+      const map = {};
+      (profiles || []).forEach(p => { map[p.id] = p; });
+      return map;
+    },
+    _initials: (name) => (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+    posts: {
+      list: async (userId) => {
+        const posts = fromDb(await supabase.from('community_posts').select('*').order('created_at', { ascending: false }));
+        if (!posts?.length) return [];
+        const userIds = [...new Set(posts.map(p => p.user_id))];
+        const profileMap = await api.community._profileMap(userIds);
+        const postIds = posts.map(p => p.id);
+        const likes = fromDb(await supabase.from('community_likes').select('post_id').in('post_id', postIds));
+        const likeCountMap = {};
+        (likes || []).forEach(l => { likeCountMap[l.post_id] = (likeCountMap[l.post_id] || 0) + 1; });
+        const comments = fromDb(await supabase.from('community_comments').select('post_id').in('post_id', postIds));
+        const commentCountMap = {};
+        (comments || []).forEach(c => { commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1; });
+        let likedSet = new Set();
+        let reportedSet = new Set();
+        if (userId) {
+          const userLikes = fromDb(await supabase.from('community_likes').select('post_id').eq('user_id', userId));
+          likedSet = new Set((userLikes || []).map(l => l.post_id));
+          const reports = fromDb(await supabase.from('community_reports').select('post_id').eq('user_id', userId));
+          reportedSet = new Set((reports || []).map(r => r.post_id));
+        }
+        return posts.map(p => ({
+          id: p.id, user_id: p.user_id, created_at: p.created_at, content: p.content,
+          author_name: profileMap[p.user_id]?.full_name || 'Unknown',
+          author_avatar: api.community._initials(profileMap[p.user_id]?.full_name),
+          likes_count: likeCountMap[p.id] || 0,
+          comments_count: commentCountMap[p.id] || 0, shares_count: 0,
+          user_has_liked: likedSet.has(p.id), user_has_reported: reportedSet.has(p.id),
+        }));
+      },
+      create: async (userId, content) => {
+        const { data, error } = await supabase.from('community_posts').insert({ user_id: userId, content }).select().single();
+        if (error) throw error;
+        const profileMap = await api.community._profileMap([userId]);
+        return {
+          id: data.id, user_id: data.user_id, created_at: data.created_at, content: data.content,
+          author_name: profileMap[userId]?.full_name || 'Unknown',
+          author_avatar: api.community._initials(profileMap[userId]?.full_name),
+          likes_count: 0, comments_count: 0, shares_count: 0,
+          user_has_liked: false, user_has_reported: false,
+        };
+      },
+      likeToggle: async (postId, userId) => {
+        const existing = fromDb(await supabase.from('community_likes').select('id').eq('post_id', postId).eq('user_id', userId));
+        if (existing?.length) {
+          await supabase.from('community_likes').delete().eq('post_id', postId).eq('user_id', userId);
+          return { liked: false };
+        }
+        await supabase.from('community_likes').insert({ post_id: postId, user_id: userId });
+        return { liked: true };
+      },
+      update: async (postId, userId, content) => fromDb(await supabase.from('community_posts').update({ content }).eq('id', postId).eq('user_id', userId).select().single()),
+      delete: async (postId, userId) => fromDb(await supabase.from('community_posts').delete().eq('id', postId).eq('user_id', userId)),
+      report: async (postId, userId, reason) => fromDb(await supabase.from('community_reports').insert({ post_id: postId, user_id: userId, reason }).select().single()),
+    },
+    comments: {
+      list: async (postId) => {
+        const comments = fromDb(await supabase.from('community_comments').select('*').eq('post_id', postId));
+        if (!comments?.length) return [];
+        const userIds = [...new Set(comments.map(c => c.user_id))];
+        const profileMap = await api.community._profileMap(userIds);
+        return comments.map(c => ({
+          id: c.id, post_id: c.post_id, user_id: c.user_id, content: c.content, created_at: c.created_at,
+          author_name: profileMap[c.user_id]?.full_name || 'Unknown',
+          author_avatar: api.community._initials(profileMap[c.user_id]?.full_name),
+        }));
+      },
+      create: async (postId, userId, content) => {
+        const { data, error } = await supabase.from('community_comments').insert({ post_id: postId, user_id: userId, content }).select().single();
+        if (error) throw error;
+        const profileMap = await api.community._profileMap([userId]);
+        return {
+          id: data.id, post_id: data.post_id, user_id: data.user_id, content: data.content, created_at: data.created_at,
+          author_name: profileMap[userId]?.full_name || 'Unknown',
+          author_avatar: api.community._initials(profileMap[userId]?.full_name),
+        };
+      },
+      update: async (commentId, userId, content) => fromDb(await supabase.from('community_comments').update({ content }).eq('id', commentId).eq('user_id', userId).select().single()),
+      delete: async (commentId, userId) => fromDb(await supabase.from('community_comments').delete().eq('id', commentId).eq('user_id', userId)),
+      report: async (commentId, userId, reason) => fromDb(await supabase.from('community_comment_reports').insert({ comment_id: commentId, user_id: userId, reason }).select().single()),
+    },
+    groups: {
+      list: async (userId) => {
+        const groups = fromDb(await supabase.from('community_groups').select('*, members:community_group_members(count)').order('name'));
+        if (!groups?.length) return [];
+        let memberSet = new Set();
+        if (userId) {
+          const memberships = fromDb(await supabase.from('community_group_members').select('group_id').eq('user_id', userId));
+          memberSet = new Set((memberships || []).map(m => m.group_id));
+        }
+        return groups.map(g => ({
+          id: g.id, name: g.name, description: g.description,
+          member_count: g.members?.[0]?.count || 0,
+          is_member: memberSet.has(g.id),
+        }));
+      },
+      create: async (userId, name, description) => fromDb(await supabase.from('community_groups').insert({ name, description, created_by: userId }).select().single()),
+      joinToggle: async (groupId, userId) => {
+        const existing = fromDb(await supabase.from('community_group_members').select('id').eq('group_id', groupId).eq('user_id', userId));
+        if (existing?.length) {
+          await supabase.from('community_group_members').delete().eq('group_id', groupId).eq('user_id', userId);
+          return { joined: false };
+        }
+        await supabase.from('community_group_members').insert({ group_id: groupId, user_id: userId });
+        return { joined: true };
+      },
+    },
+    reported: {
+      posts: async (userId) => userId ? fromDb(await supabase.from('community_reports').select('post_id').eq('user_id', userId)) : [],
+      comments: async (userId) => userId ? fromDb(await supabase.from('community_comment_reports').select('comment_id').eq('user_id', userId)) : [],
+    },
+  },
   ranking: {
     list: async (limit = 50) => fromDb(await supabase.from('profiles').select('id, full_name, xp').order('xp', { ascending: false }).limit(limit)),
   },

@@ -1,23 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import { API_BASE } from '../../lib/api';
+import { api } from '../../lib/api';
 import { useAuth } from '../auth/AuthContext';
-
-const MOCK_POSTS = [
-  { id: 'p1', user_id: 'user-001', author_name: 'Tran Van An', author_avatar: 'TA', created_at: '2 hours ago', content: 'Just finished the CLIL lesson planning module. The 4Cs framework is a game-changer for my science classes!', likes_count: 24, comments_count: 8, shares_count: 5, user_has_liked: false, user_has_reported: false },
-  { id: 'p2', user_id: 'u2', author_name: 'Le Thi Hoa', author_avatar: 'LH', created_at: '5 hours ago', content: 'Anyone using exit tickets regularly? I found that asking "What is one thing you understood better today?" works really well with my 6th graders.', likes_count: 18, comments_count: 12, shares_count: 3, user_has_liked: false, user_has_reported: false },
-  { id: 'p3', user_id: 'u3', author_name: 'Pham Minh Duc', author_avatar: 'PD', created_at: '1 day ago', content: 'Tip for new teachers: wait time is your best friend. Count to five silently after asking a question. The quality of answers improves dramatically.', likes_count: 42, comments_count: 15, shares_count: 12, user_has_liked: false, user_has_reported: false },
-  { id: 'p4', user_id: 'u4', author_name: 'Hoang Ngoc Lan', author_avatar: 'HL', created_at: '2 days ago', content: 'Our school just adopted VMG EduNext for our bilingual program. The teachers are loving the practical phrases for classroom management!', likes_count: 31, comments_count: 6, shares_count: 7, user_has_liked: false, user_has_reported: false },
-];
-
-const MOCK_GROUPS = [
-  { id: 'g1', name: 'CLIL Teachers Vietnam', member_count: 1240, is_member: false },
-  { id: 'g2', name: 'Classroom English Practitioners', member_count: 890, is_member: false },
-  { id: 'g3', name: 'Bilingual Education Research', member_count: 560, is_member: false },
-  { id: 'g4', name: 'Vietnamese Teacher Network', member_count: 2100, is_member: false },
-];
 
 const COLORS = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--gold)'];
 
@@ -219,8 +205,8 @@ function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comm
 
 export default function CommunityPage() {
   const { user } = useAuth();
-  const [posts, setPosts] = useState(MOCK_POSTS);
-  const [groups, setGroups] = useState(MOCK_GROUPS);
+  const [posts, setPosts] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [newPostContent, setNewPostContent] = useState('');
   const [posting, setPosting] = useState(false);
   const [expandedComments, setExpandedComments] = useState({});
@@ -243,31 +229,19 @@ export default function CommunityPage() {
   const [reportedCommentIds, setReportedCommentIds] = useState([]);
 
   useEffect(() => {
-    fetch(`${API_BASE}/community`, { headers: apiHeaders() })
-      .then(res => res.ok && res.json())
-      .then(data => {
-        if (data && data.length > 0) {
-          setPosts(prev => {
-            const fetchedIds = new Set(data.map(p => p.id));
-            const extras = prev.filter(p => !fetchedIds.has(p.id));
-            return extras.length ? [...extras, ...data] : data;
-          });
-        }
-      })
-      .catch(() => {});
-    fetch(`${API_BASE}/community/groups`, { headers: apiHeaders() })
-      .then(res => res.ok && res.json())
-      .then(data => data && data.length > 0 && setGroups(data))
-      .catch(() => {});
-    fetch(`${API_BASE}/community/reported`, { headers: apiHeaders() })
-      .then(res => res.ok && res.json())
-      .then(data => data && setReportedPostIds(data))
-      .catch(() => {});
-    fetch(`${API_BASE}/community/comments/reported`, { headers: apiHeaders() })
-      .then(res => res.ok && res.json())
-      .then(data => data && setReportedCommentIds(data))
-      .catch(() => {});
-  }, []);
+    api.community.posts.list(user?.id).then(data => {
+      if (data?.length) setPosts(data);
+    }).catch(() => {});
+    api.community.groups.list(user?.id).then(data => {
+      if (data?.length) setGroups(data);
+    }).catch(() => {});
+    api.community.reported.posts(user?.id).then(data => {
+      if (data?.length) setReportedPostIds(data.map(r => r.post_id));
+    }).catch(() => {});
+    api.community.reported.comments(user?.id).then(data => {
+      if (data?.length) setReportedCommentIds(data.map(r => r.comment_id));
+    }).catch(() => {});
+  }, [user?.id]);
 
   useEffect(() => {
     const handler = () => { setOpenMenuPostId(null); setOpenCommentMenuId(null); };
@@ -275,48 +249,20 @@ export default function CommunityPage() {
     return () => document.removeEventListener('click', handler);
   }, []);
 
-  const apiHeaders = () => {
-    const token = localStorage.getItem('vmg_token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
-
   const handleCreatePost = async () => {
-    if (!newPostContent.trim() || posting) return;
+    if (!newPostContent.trim() || posting || !user?.id) return;
     setPosting(true);
     const text = newPostContent.trim();
     setNewPostContent('');
     try {
-      const res = await fetch(`${API_BASE}/community`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...apiHeaders() },
-        body: JSON.stringify({ content: text }),
-      });
-      if (res.ok) {
-        const newPost = await res.json();
-        newPost.created_at = new Date().toISOString();
-        newPost.user_id = user?.id;
-        setPosts(prev => [newPost, ...prev]);
-      }
-    } catch {
-      const fallbackPost = {
-        id: 'mock_' + Date.now(),
-        user_id: user?.id,
-        content: text,
-        created_at: new Date().toISOString(),
-        author_name: user?.full_name || 'You',
-        author_avatar: getInitials(user?.full_name || 'You'),
-        likes_count: 0,
-        comments_count: 0,
-        shares_count: 0,
-        user_has_liked: false,
-        user_has_reported: false,
-      };
-      setPosts(prev => [fallbackPost, ...prev]);
-    }
+      const newPost = await api.community.posts.create(user.id, text);
+      setPosts(prev => [newPost, ...prev]);
+    } catch {}
     setPosting(false);
   };
 
   const handleLike = async (postId) => {
+    if (!user?.id) return;
     setPosts(prev => prev.map(p =>
       p.id === postId ? {
         ...p,
@@ -324,58 +270,43 @@ export default function CommunityPage() {
         user_has_liked: !p.user_has_liked,
       } : p
     ));
-    try {
-      await fetch(`${API_BASE}/community/${postId}/like`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...apiHeaders() },
-      });
-    } catch {}
+    try { await api.community.posts.likeToggle(postId, user.id); } catch {}
   };
 
   const handleToggleComments = (postId) => {
     const currentlyExpanded = expandedComments[postId];
     setExpandedComments(prev => ({ ...prev, [postId]: !currentlyExpanded }));
     if (!currentlyExpanded && !postComments[postId]) {
-      fetch(`${API_BASE}/community/${postId}/comments`, { headers: apiHeaders() })
-        .then(res => res.ok && res.json())
-        .then(data => {
-          if (data) {
-            setPostComments(prev => {
-              const existing = prev[postId] || [];
-              if (existing.length === 0) return { ...prev, [postId]: data };
+      api.community.comments.list(postId).then(data => {
+        if (data?.length) {
+          setPostComments(prev => {
+            const existing = prev[postId] || [];
+            if (existing.length) {
               const fetchedIds = new Set(data.map(c => c.id));
               const extras = existing.filter(c => !fetchedIds.has(c.id));
               return extras.length ? { ...prev, [postId]: [...extras, ...data] } : prev;
-            });
-          }
-        })
-        .catch(() => {});
+            }
+            return { ...prev, [postId]: data };
+          });
+        }
+      }).catch(() => {});
     }
   };
 
   const handleAddComment = async (postId) => {
     const text = newComments[postId]?.trim();
-    if (!text) return;
+    if (!text || !user?.id) return;
     setSavingComment(prev => ({ ...prev, [postId]: true }));
     try {
-      const res = await fetch(`${API_BASE}/community/${postId}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...apiHeaders() },
-        body: JSON.stringify({ content: text }),
-      });
-      if (res.ok) {
-        const newComment = await res.json();
-        newComment.created_at = new Date().toISOString();
-        newComment.user_id = user?.id;
-        setPostComments(prev => ({
-          ...prev,
-          [postId]: [...(prev[postId] || []), newComment],
-        }));
-        setPosts(prev => prev.map(p =>
-          p.id === postId ? { ...p, comments_count: p.comments_count + 1 } : p
-        ));
-        setNewComments(prev => ({ ...prev, [postId]: '' }));
-      }
+      const newComment = await api.community.comments.create(postId, user.id, text);
+      setPostComments(prev => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), newComment],
+      }));
+      setPosts(prev => prev.map(p =>
+        p.id === postId ? { ...p, comments_count: p.comments_count + 1 } : p
+      ));
+      setNewComments(prev => ({ ...prev, [postId]: '' }));
     } catch {}
     setSavingComment(prev => ({ ...prev, [postId]: false }));
   };
@@ -400,28 +331,19 @@ export default function CommunityPage() {
   };
 
   const handleSaveEdit = async (postId) => {
-    if (!editContent.trim()) return;
+    if (!editContent.trim() || !user?.id) return;
     setPosts(prev => prev.map(p =>
       p.id === postId ? { ...p, content: editContent.trim() } : p
     ));
     setEditingPostId(null);
     setEditContent('');
-    try {
-      await fetch(`${API_BASE}/community/${postId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...apiHeaders() },
-        body: JSON.stringify({ content: editContent.trim() }),
-      });
-    } catch {}
+    try { await api.community.posts.update(postId, user.id, editContent.trim()); } catch {}
   };
 
   const handleDelete = (postId) => {
-    if (!window.confirm('Are you sure you want to delete this post?')) return;
+    if (!window.confirm('Are you sure you want to delete this post?') || !user?.id) return;
     setPosts(prev => prev.filter(p => p.id !== postId));
-    fetch(`${API_BASE}/community/${postId}`, {
-      method: 'DELETE',
-      headers: apiHeaders(),
-    }).catch(() => {});
+    api.community.posts.delete(postId, user.id).catch(() => {});
   };
 
   const handleReport = (postId) => {
@@ -431,16 +353,10 @@ export default function CommunityPage() {
   };
 
   const handleSubmitReport = async () => {
-    if (!reportReason || !reportPostId) return;
+    if (!reportReason || !reportPostId || !user?.id) return;
     setShowReportModal(false);
     setReportedPostIds(prev => [...prev, reportPostId]);
-    try {
-      await fetch(`${API_BASE}/community/${reportPostId}/report`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...apiHeaders() },
-        body: JSON.stringify({ reason: reportReason }),
-      });
-    } catch {}
+    try { await api.community.posts.report(reportPostId, user.id, reportReason); } catch {}
   };
 
   const handleEditComment = (commentId, content) => {
@@ -454,7 +370,7 @@ export default function CommunityPage() {
   };
 
   const handleSaveEditComment = (postId, commentId) => {
-    if (!editCommentContent.trim()) return;
+    if (!editCommentContent.trim() || !user?.id) return;
     setPostComments(prev => ({
       ...prev,
       [postId]: (prev[postId] || []).map(c =>
@@ -463,15 +379,11 @@ export default function CommunityPage() {
     }));
     setEditingCommentId(null);
     setEditCommentContent('');
-    fetch(`${API_BASE}/community/${postId}/comments/${commentId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...apiHeaders() },
-      body: JSON.stringify({ content: editCommentContent.trim() }),
-    }).catch(() => {});
+    api.community.comments.update(commentId, user.id, editCommentContent.trim()).catch(() => {});
   };
 
   const handleDeleteComment = (postId, commentId) => {
-    if (!window.confirm('Delete this comment?')) return;
+    if (!window.confirm('Delete this comment?') || !user?.id) return;
     setPostComments(prev => ({
       ...prev,
       [postId]: (prev[postId] || []).filter(c => c.id !== commentId),
@@ -479,10 +391,7 @@ export default function CommunityPage() {
     setPosts(prev => prev.map(p =>
       p.id === postId ? { ...p, comments_count: Math.max(0, p.comments_count - 1) } : p
     ));
-    fetch(`${API_BASE}/community/${postId}/comments/${commentId}`, {
-      method: 'DELETE',
-      headers: apiHeaders(),
-    }).catch(() => {});
+    api.community.comments.delete(commentId, user.id).catch(() => {});
   };
 
   const handleReportComment = (commentId) => {
@@ -492,26 +401,15 @@ export default function CommunityPage() {
   };
 
   const handleSubmitCommentReport = async () => {
-    if (!reportReason || !reportPostId) return;
+    if (!reportReason || !reportPostId || !user?.id) return;
     setShowReportModal(false);
     const commentId = reportPostId.replace('comment_', '');
     setReportedCommentIds(prev => [...prev, commentId]);
-    // We need the postId — find it from postComments
-    let foundPostId = null;
-    for (const [pid, comments] of Object.entries(postComments)) {
-      if (comments.some(c => c.id === commentId)) { foundPostId = pid; break; }
-    }
-    if (!foundPostId) return;
-    try {
-      await fetch(`${API_BASE}/community/${foundPostId}/comments/${commentId}/report`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...apiHeaders() },
-        body: JSON.stringify({ reason: reportReason }),
-      });
-    } catch {}
+    try { await api.community.comments.report(commentId, user.id, reportReason); } catch {}
   };
 
   const handleJoinGroup = async (groupId) => {
+    if (!user?.id) return;
     setGroups(prev => prev.map(g =>
       g.id === groupId ? {
         ...g,
@@ -519,29 +417,17 @@ export default function CommunityPage() {
         is_member: !g.is_member,
       } : g
     ));
-    try {
-      await fetch(`${API_BASE}/community/groups/${groupId}/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...apiHeaders() },
-      });
-    } catch {}
+    try { await api.community.groups.joinToggle(groupId, user.id); } catch {}
   };
 
   const handleCreateGroup = async () => {
-    if (!createGroupName.trim()) return;
+    if (!createGroupName.trim() || !user?.id) return;
     try {
-      const res = await fetch(`${API_BASE}/community/groups`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...apiHeaders() },
-        body: JSON.stringify({ name: createGroupName.trim(), description: createGroupDesc.trim() }),
-      });
-      if (res.ok) {
-        const newGroup = await res.json();
-        setGroups(prev => [newGroup, ...prev]);
-        setCreateGroupName('');
-        setCreateGroupDesc('');
-        setShowCreateGroup(false);
-      }
+      const newGroup = await api.community.groups.create(user.id, createGroupName.trim(), createGroupDesc.trim());
+      setGroups(prev => [newGroup, ...prev]);
+      setCreateGroupName('');
+      setCreateGroupDesc('');
+      setShowCreateGroup(false);
     } catch {}
   };
 
