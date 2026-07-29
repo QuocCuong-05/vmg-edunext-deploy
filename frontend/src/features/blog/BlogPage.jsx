@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Icon } from '../../lib/icons';
+import { dispatchAction } from '../../lib/quest-engine';
 import Card from '../../components/ui/Card';
 
 const ARTICLES = [
@@ -68,7 +69,7 @@ export default function BlogPage() {
     return (
       <div className="page-enter">
         <div style={{ maxWidth: 780, margin: '0 auto' }}>
-          <button onClick={() => setArticle(null)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--muted)', marginBottom: 20, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--card)', cursor: 'pointer' }}>
+          <button onClick={() => { setArticle(null); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--muted)', marginBottom: 20, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--card)', cursor: 'pointer' }}>
             <Icon.ArrowLeft size={14} /> Quay lại
           </button>
 
@@ -111,7 +112,7 @@ export default function BlogPage() {
         {filtered.map((a, i) => {
           const IconComp = ICON_MAP[a.icon];
           return (
-            <Card key={i} className="blog-card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }} onClick={() => setArticle(a)}>
+            <Card key={i} className="blog-card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }} onClick={() => { setArticle(a); dispatchAction('blog_read'); }}>
               <div className="blog-cover" style={{ background: 'linear-gradient(135deg, #1a2639, #2c4063)', color: 'rgba(255,255,255,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', height: 120 }}>
                 {IconComp && <IconComp />}
               </div>

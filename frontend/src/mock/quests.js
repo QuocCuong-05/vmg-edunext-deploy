@@ -1,20 +1,20 @@
 const DAILY_QUESTS = [
-  { id: 'dq-1', title: 'Hoàn thành 1 bài quiz', xp: 50, desc: 'Làm một bài quiz bất kỳ để kiểm tra kiến thức' },
-  { id: 'dq-2', title: 'Hỏi ViMi 1 câu hỏi', xp: 40, desc: 'Chat với ViMi về bất kỳ chủ đề nào bạn quan tâm' },
-  { id: 'dq-3', title: 'Đọc 1 bài viết Blog', xp: 30, desc: 'Đọc một bài blog trong thư viện VMG' },
-  { id: 'dq-4', title: 'Ôn 5 từ vựng', xp: 30, desc: 'Ôn tập 5 từ vựng bất kỳ trong danh sách' },
-  { id: 'dq-5', title: 'Luyện 5 câu Classroom Phrases', xp: 40, desc: 'Luyện nói 5 câu lệnh lớp học tiếng Anh' },
-  { id: 'dq-6', title: 'Hoàn thành 1 bài học', xp: 60, desc: 'Học xong một bài trong khóa học bất kỳ' },
-  { id: 'dq-7', title: 'Xem tiến độ của bạn', xp: 20, desc: 'Kiểm tra tiến độ học tập trên Dashboard' },
+  { id: 'dq-1', title: 'Hoàn thành 1 bài quiz', xp: 50, desc: 'Làm một bài quiz bất kỳ để kiểm tra kiến thức', trigger: { type: 'quiz_complete' } },
+  { id: 'dq-2', title: 'Hỏi ViMi 1 câu hỏi', xp: 40, desc: 'Chat với ViMi về bất kỳ chủ đề nào bạn quan tâm', trigger: { type: 'vimi_chat' } },
+  { id: 'dq-3', title: 'Đọc 1 bài viết Blog', xp: 30, desc: 'Đọc một bài blog trong thư viện VMG', trigger: { type: 'blog_read' } },
+  { id: 'dq-4', title: 'Ôn 5 từ vựng', xp: 30, desc: 'Ôn tập 5 từ vựng bất kỳ trong danh sách', trigger: { type: 'vocab_review', count: 5 } },
+  { id: 'dq-5', title: 'Luyện 5 câu Classroom Phrases', xp: 40, desc: 'Luyện nói 5 câu lệnh lớp học tiếng Anh', trigger: { type: 'classroom_practice', count: 5 } },
+  { id: 'dq-6', title: 'Hoàn thành 1 bài học', xp: 60, desc: 'Học xong một bài trong khóa học bất kỳ', trigger: { type: 'lesson_complete' } },
+  { id: 'dq-7', title: 'Xem tiến độ của bạn', xp: 20, desc: 'Kiểm tra tiến độ học tập trên Dashboard', trigger: { type: 'dashboard_view' } },
 ];
 
 const WEEKLY_QUESTS = [
-  { id: 'wq-1', title: 'Hoàn thành 3 Daily Quest trong tuần', xp: 150, desc: 'Hoàn thành 3 nhiệm vụ hàng ngày trong tuần này' },
-  { id: 'wq-2', title: 'Đạt 80%+ trong 1 bài quiz', xp: 200, desc: 'Đạt điểm cao trong một bài quiz bất kỳ' },
-  { id: 'wq-3', title: 'Học 15 từ vựng mới', xp: 200, desc: 'Mở rộng vốn từ vựng của bạn với 15 từ mới' },
-  { id: 'wq-4', title: 'Hoàn thành 2 bài học', xp: 250, desc: 'Học xong 2 bài trong bất kỳ khóa học nào' },
-  { id: 'wq-5', title: 'Duy trì streak 5 ngày', xp: 300, desc: 'Giữ chuỗi học tập 5 ngày liên tiếp' },
-  { id: 'wq-6', title: 'Luyện nói với ViMi 4 lần', xp: 300, desc: 'Thực hành nói với ViMi ở chế độ speaking 4 lần' },
+  { id: 'wq-1', title: 'Hoàn thành 3 Daily Quest trong tuần', xp: 150, desc: 'Hoàn thành 3 nhiệm vụ hàng ngày trong tuần này', trigger: { type: 'special', special: 'daily_quest_count', count: 3 } },
+  { id: 'wq-2', title: 'Đạt 80%+ trong 1 bài quiz', xp: 200, desc: 'Đạt điểm cao trong một bài quiz bất kỳ', trigger: { type: 'quiz_complete', condition: (p) => (p.score || 0) >= 80 } },
+  { id: 'wq-3', title: 'Học 15 từ vựng mới', xp: 200, desc: 'Mở rộng vốn từ vựng của bạn với 15 từ mới', trigger: { type: 'vocab_review', count: 15 } },
+  { id: 'wq-4', title: 'Hoàn thành 2 bài học', xp: 250, desc: 'Học xong 2 bài trong bất kỳ khóa học nào', trigger: { type: 'lesson_complete', count: 2 } },
+  { id: 'wq-5', title: 'Duy trì streak 5 ngày', xp: 300, desc: 'Giữ chuỗi học tập 5 ngày liên tiếp', trigger: { type: 'special', special: 'streak', count: 5 } },
+  { id: 'wq-6', title: 'Luyện nói với ViMi 4 lần', xp: 300, desc: 'Thực hành nói với ViMi ở chế độ speaking 4 lần', trigger: { type: 'vimi_chat', count: 4 } },
 ];
 
 function hashString(str) {
@@ -67,5 +67,5 @@ export function getDailyQuests() {
 
 export function getWeeklyQuests() {
   const seed = hashString(getWeekKey());
-  return deterministicShuffle(WEEKLY_QUESTS, seed).slice(0, 3);
+  return deterministicShuffle(WEEKLY_QUESTS, seed).slice(0, 5);
 }

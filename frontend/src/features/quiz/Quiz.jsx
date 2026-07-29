@@ -5,6 +5,7 @@ import { Icon } from '../../lib/icons';
 import { updateStreak } from '../../lib/streak';
 import { logActivity } from '../../lib/activity';
 import { addXp } from '../../lib/xp';
+import { dispatchAction } from '../../lib/quest-engine';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -80,6 +81,7 @@ export default function Quiz() {
       addXp(quiz.xp_reward);
       showToast('+' + quiz.xp_reward + ' XP', 'success');
       logActivity('quiz', 'Quiz: ' + score + '% - ' + quiz.title, 'Đạt ' + correctCount + '/' + allQuestions.length);
+      dispatchAction('quiz_complete', { score });
       if (slug) {
         try { localStorage.setItem('vmg_quiz_completed', JSON.stringify({ slug, xp: quiz.xp_reward })); } catch {}
         try {

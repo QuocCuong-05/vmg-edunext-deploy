@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Icon } from '../../lib/icons';
 import { useSpeechRecognition } from '../../lib/useSpeechRecognition';
 import { useStreamChat } from '../../lib/useStreamChat';
+import { dispatchAction } from '../../lib/quest-engine';
 import { API_BASE } from '../../lib/api';
 
 function renderInline(text) {
@@ -42,6 +43,7 @@ export default function ViMiChat() {
     setInput('');
     clearTranscript();
     append({ role: 'user', content: text });
+    dispatchAction('vimi_chat');
   };
 
   const handleKeyDown = (e) => {

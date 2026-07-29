@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Icon } from '../../lib/icons';
 import { api } from '../../lib/api';
+import { dispatchAction } from '../../lib/quest-engine';
 import Card from '../../components/ui/Card';
 import { useAuth } from '../auth/AuthContext';
 
@@ -14,6 +15,7 @@ export default function Vocabulary() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savedIds, setSavedIds] = useState(new Set());
+  const [dispatched, setDispatched] = useState(false);
 
   useEffect(() => {
     api.vocabulary.list().then(data => {
@@ -21,6 +23,13 @@ export default function Vocabulary() {
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!loading && items.length && !dispatched) {
+      dispatchAction('vocab_review', { count: items.length });
+      setDispatched(true);
+    }
+  }, [loading, items, dispatched]);
 
   useEffect(() => {
     if (user?.id) {

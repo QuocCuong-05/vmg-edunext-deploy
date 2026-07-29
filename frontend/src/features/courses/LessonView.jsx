@@ -5,6 +5,7 @@ import { Icon } from '../../lib/icons';
 import { updateStreak } from '../../lib/streak';
 import { logActivity } from '../../lib/activity';
 import { addXp } from '../../lib/xp';
+import { dispatchAction } from '../../lib/quest-engine';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -76,6 +77,7 @@ export default function LessonView() {
     addXp(60);
     showToast('+60 XP', 'success');
     logActivity('lesson', 'Đã học bài: ' + lesson.title, course.title);
+    dispatchAction('lesson_complete');
     const e = loadEnroll(slug) || { enrolled: true, progress_pct: 0, completed_lessons: [] };
     const arr = e.completed_lessons || [];
     if (!arr.includes(lessonId)) {

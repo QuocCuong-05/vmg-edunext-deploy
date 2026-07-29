@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import { Icon } from '../../lib/icons';
+import { dispatchAction } from '../../lib/quest-engine';
 
 export default function Classroom() {
   const [category, setCategory] = useState('All');
@@ -8,6 +9,7 @@ export default function Classroom() {
   const [phrases, setPhrases] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dispatched, setDispatched] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -19,6 +21,13 @@ export default function Classroom() {
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!loading && phrases.length && !dispatched) {
+      dispatchAction('classroom_practice', { count: phrases.length });
+      setDispatched(true);
+    }
+  }, [loading, phrases, dispatched]);
 
   const filtered = phrases.filter(p => {
     const catSlug = p.classroom_phrase_categories?.slug || null;

@@ -1,7 +1,7 @@
 import {
   BiGridAlt, BiBookAlt, BiBook, BiNotepad, BiChat,
   BiHelpCircle, BiBot, BiPencil, BiBrain, BiSolidFlask,
-  BiBarChartAlt2, BiCrosshair, BiBulb, BiPlay, BiCheck,
+  BiBarChartAlt2, BiCrosshair, BiBulb, BiPlay, BiCheck, BiCheckCircle, BiCircle,
   BiX,   BiChevronLeft, BiChevronRight, BiRightArrowAlt, BiSend, BiSolidMagicWand,
   BiBookOpen, BiAtom, BiMicrophone, BiMicrophoneOff,
   BiVolumeFull, BiPause, BiLoaderCircle, BiCalendar,
@@ -59,4 +59,6 @@ export const Icon = {
   Flame: ({ size }) => <BiSolidFlame size={size || 20} />,
   Bookmark: ({ size }) => <BiBookmark size={size || 20} />,
   BookmarkFill: ({ size }) => <BiSolidBookmark size={size || 20} />,
+  CheckCircle: ({ size }) => <BiCheckCircle size={size || 20} />,
+  Circle: ({ size }) => <BiCircle size={size || 20} />,
 };

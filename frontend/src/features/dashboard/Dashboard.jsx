@@ -3,15 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { api } from '../../lib/api';
 
-import { getDateKey, getWeekKey } from '../../mock/quests';
-import { getXp, addXp } from '../../lib/xp';
+import { getQuestState, dispatchAction } from '../../lib/quest-engine';
+import { getXp } from '../../lib/xp';
 import { getStreak } from '../../lib/streak';
-import { getActivities, logActivity } from '../../lib/activity';
+import { getActivities } from '../../lib/activity';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import { useToast } from '../../components/ui/Toast';
-
 const QUOTES = [
   { text: 'Giáo dục không phải là đổ đầy một chiếc bình, mà là thắp lên một ngọn lửa.', author: 'William Butler Yeats' },
   { text: 'Dạy học là nghệ thuật giúp người khác khám phá tiềm năng của chính họ.', author: 'Thông điệp giáo dục' },
@@ -35,51 +33,41 @@ const STAT_META = [
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const showToast = useToast();
   const streak = useState(getStreak())[0];
   const [quote] = useState(shuffleQuote);
 
   const [tab, setTab] = useState('daily');
-  const [done, setDone] = useState(() => {
-    try {
-      const stored = localStorage.getItem('vmg_quests');
-      if (!stored) return {};
-      const p = JSON.parse(stored);
-      if (p.date !== getDateKey() || p.week !== getWeekKey()) return {};
-      return p.done || {};
-    } catch { return {}; }
-  });
+  const [questState, setQuestState] = useState(getQuestState());
   const [xp, setXp] = useState(getXp());
-  const [animXp, setAnimXp] = useState(null);
   const [activities, setActivities] = useState(getActivities(5));
-
-  const [dailyQuests, setDailyQuests] = useState([]);
-  const [weeklyQuests, setWeeklyQuests] = useState([]);
   const [tips, setTips] = useState([]);
   const [vocab, setVocab] = useState([]);
   const [courses, setCourses] = useState([]);
   const [quizSets, setQuizSets] = useState([]);
 
   useEffect(() => {
+    dispatchAction('dashboard_view');
     Promise.all([
-      api.quests.list('daily'),
-      api.quests.list('weekly'),
       api.tips.list(),
       api.vocabulary.list(),
       api.courses.list(),
       api.quiz.list(),
-    ]).then(([d, w, t, v, c, q]) => {
-      setDailyQuests(d || []);
-      setWeeklyQuests(w || []);
+    ]).then(([t, v, c, q]) => {
       setTips(t || []);
       setVocab(v || []);
       setCourses(c || []);
       setQuizSets(q || []);
     }).catch(() => {});
+    const handler = () => {
+      setQuestState(getQuestState());
+      setXp(getXp());
+    };
+    window.addEventListener('quest-update', handler);
+    return () => window.removeEventListener('quest-update', handler);
   }, []);
 
-  const activeQuests = tab === 'daily' ? dailyQuests : weeklyQuests;
-  const doneCount = activeQuests.filter(q => done[q.id]).length;
+  const activeQuests = tab === 'daily' ? questState.daily : questState.weekly;
+  const doneCount = activeQuests.filter(q => q.done).length;
   const pct = Math.round((doneCount / activeQuests.length) * 100);
 
   const enrolledCount = courses.filter(c => {
@@ -106,21 +94,6 @@ export default function Dashboard() {
     quiz: quizCount,
     tips: tipsCount,
   };
-
-  function handleToggle(q) {
-    if (done[q.id]) return;
-    const next = { ...done, [q.id]: true };
-    setDone(next);
-    setXp(addXp(q.xp));
-    logActivity('quest', 'Hoàn thành: ' + q.title, '+' + q.xp + 'XP');
-    setActivities(getActivities(5));
-    showToast('+' + q.xp + ' XP', 'success');
-    localStorage.setItem('vmg_quests', JSON.stringify({
-      date: getDateKey(), week: getWeekKey(), done: next,
-    }));
-    setAnimXp({ xp: q.xp });
-    setTimeout(() => setAnimXp(null), 1500);
-  }
 
   return (
     <div className="page-enter">
@@ -280,12 +253,18 @@ export default function Dashboard() {
 
             {activeQuests.map(q => (
               <div key={q.id}>
-                <div className={`quest-item ${done[q.id] ? 'done' : ''}`}>
-                  <input type="checkbox" className="quest-checkbox" checked={!!done[q.id]} onChange={() => handleToggle(q)} />
-                  <span className={`quest-title ${done[q.id] ? 'done' : ''}`}>{q.title}</span>
-                  <span className={`quest-xp ${done[q.id] ? 'done' : ''}`}>+{q.xp}XP</span>
+                <div className={`quest-item ${q.done ? 'done' : ''}`}>
+                  <span className="quest-check-icon">{q.done ? <Icon.CheckCircle size={18} /> : <Icon.Circle size={18} />}</span>
+                  <span className={`quest-title ${q.done ? 'done' : ''}`}>{q.title}</span>
+                  <span className="quest-progress">{q.done ? '' : `${q.progress}/${q.max}`}</span>
+                  <span className={`quest-xp ${q.done ? 'done' : ''}`}>+{q.xp}XP</span>
                 </div>
-                <div className="quest-desc">{q.desc_text}</div>
+                <div className="quest-desc">{q.desc}</div>
+                {!q.done && q.max > 1 && (
+                  <div className="progress-bar" style={{ height: 4, margin: '4px 0 8px 26px' }}>
+                    <div className="progress-fill" style={{ width: `${Math.round((q.progress / q.max) * 100)}%`, background: 'var(--green)' }} />
+                  </div>
+                )}
               </div>
             ))}
 
@@ -298,11 +277,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {animXp && (
-              <div className="quest-anim" style={{ left: '50%', top: '50%' }}>
-                +{animXp.xp}XP
-              </div>
-            )}
           </Card>
 
           <Card style={{ padding: 20 }}>
