@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import ViMiChat from '../vimi/ViMiChat';
 import AvatarDropdown from './AvatarDropdown';
@@ -55,6 +55,11 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const initials = user?.full_name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'VM';
+
+  useEffect(() => {
+    fetch('/api/health').catch(() => {});
+  }, []);
+
   const [collapsed, setCollapsed] = useState(() => {
     try { return JSON.parse(localStorage.getItem('vmg_sidebar_collapsed') || '{}'); }
     catch { return {}; }
