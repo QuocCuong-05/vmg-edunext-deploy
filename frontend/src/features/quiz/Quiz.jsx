@@ -8,17 +8,23 @@ import { addXp } from '../../lib/xp';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import { MOCK_QUIZZES, MOCK_QUIZ_QUESTIONS } from '../../mock/data';
-
-const QUESTIONS_PER_ROUND = 5;
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+function normalizeQuestions(qs) {
+  return (qs.questions || []).map(q => ({
+    id: q.id,
+    prompt: q.prompt,
+    prompt_translation: q.prompt_translation,
+    correct_answer: q.correct_answer,
+    explanation: q.explanation || '',
+    explanation_vi: q.explanation_vi || '',
+    competency_code: q.competency_code || '',
+    level: q.level || 'B1',
+    options: (q.options || []).map(o => ({
+      option_text: o.option_text,
+      is_correct: o.is_correct,
+      feedback_correct: o.feedback_correct || '',
+      feedback_incorrect: o.feedback_incorrect || '',
+    })),
+  }));
 }
 
 export default function Quiz() {
@@ -35,36 +41,21 @@ export default function Quiz() {
       api.quiz.get(slug).then(qs => {
         if (qs) {
           setQuizSet(qs);
-          const questions = (qs.questions || []).map(q => ({
-            id: q.id,
-            prompt: q.prompt,
-            prompt_translation: q.prompt_translation,
-            correct_answer: q.correct_answer,
-            explanation: q.explanation || '',
-            explanation_vi: q.explanation_vi || '',
-            competency_code: q.competency_code || '',
-            level: q.level || 'B1',
-            options: (q.options || []).map(o => ({
-              option_text: o.option_text,
-              is_correct: o.is_correct,
-              feedback_correct: o.feedback_correct || '',
-              feedback_incorrect: o.feedback_incorrect || '',
-            })),
-          }));
-          setQuizQuestions(questions);
+          setQuizQuestions(normalizeQuestions(qs));
         }
         setLoading(false);
-      }).catch(() => {
-        const mock = MOCK_QUIZZES.find(q => q.slug === slug);
-        if (mock) {
-          setQuizSet(mock);
-          setQuizQuestions(shuffle(MOCK_QUIZ_QUESTIONS).slice(0, QUESTIONS_PER_ROUND));
-        }
-        setLoading(false);
-      });
+      }).catch(() => setLoading(false));
     } else {
-      setQuizSet(MOCK_QUIZZES[0]);
-      setQuizQuestions(shuffle(MOCK_QUIZ_QUESTIONS).slice(0, QUESTIONS_PER_ROUND));
+      api.quiz.list().then(list => {
+        if (list?.length) {
+          api.quiz.get(list[0].slug).then(qs => {
+            if (qs) { setQuizSet(qs); setQuizQuestions(normalizeQuestions(qs)); }
+            setLoading(false);
+          }).catch(() => setLoading(false));
+        } else {
+          setLoading(false);
+        }
+      }).catch(() => setLoading(false));
     }
   }, [slug]);
 
