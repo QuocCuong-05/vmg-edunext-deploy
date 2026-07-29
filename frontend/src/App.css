@@ -909,6 +909,33 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 .quest-anim { position: absolute; z-index: 10; pointer-events: none; font-size: 20px; font-weight: 800; color: var(--green); transform: translate(-50%, -50%); animation: xpFloat 1.5s ease-out forwards; }
 @keyframes xpFloat { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, calc(-50% - 60px)) scale(1.2); } }
 
+.filter-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  max-width: 420px;
+}
+.filter-select {
+  font-size: 12px;
+  padding: 6px 22px 6px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  outline: none;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23999' d='M0 0l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+.filter-select:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
 /* Rewards Store */
 .reward-xp-total { font-size: 18px; font-weight: 800; color: var(--red); letter-spacing: -.3px; }
 .reward-tabs { display: flex; gap: 4px; background: var(--surface); border-radius: 10px; padding: 3px; margin-bottom: 24px; }

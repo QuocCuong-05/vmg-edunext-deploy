@@ -7,7 +7,21 @@ export const MOCK_USER = {
   streak_days: 7,
   avatar_url: null,
   school: 'Trường THCS Hùng Vương',
+  ward: 'Trấn Biên',
 };
+
+export const MOCK_USERS = [
+  { id: 'user-001', full_name: 'Nguyễn Văn Mười', xp: 2450, school: 'Trường THCS Hùng Vương', ward: 'Trấn Biên' },
+  { id: 'user-002', full_name: 'Trần Thị Mai', xp: 3200, school: 'Trường THCS Hùng Vương', ward: 'Trấn Biên' },
+  { id: 'user-003', full_name: 'Lê Văn An', xp: 1800, school: 'Trường THCS Lý Tự Trọng', ward: 'Long Bình' },
+  { id: 'user-004', full_name: 'Phạm Thị Lan', xp: 4100, school: 'Trường THCS Lý Tự Trọng', ward: 'Long Bình' },
+  { id: 'user-005', full_name: 'Hoàng Văn Bình', xp: 560, school: 'Trường THCS Hùng Vương', ward: 'Trấn Biên' },
+  { id: 'user-006', full_name: 'Đỗ Thị Hoa', xp: 2100, school: 'Trường THCS Lý Tự Trọng', ward: 'Long Bình' },
+  { id: 'user-007', full_name: 'Vũ Minh Tuấn', xp: 980, school: 'Trường THCS Hùng Vương', ward: 'Trấn Biên' },
+  { id: 'user-008', full_name: 'Ngô Thị Lan', xp: 1500, school: 'Trường THCS Hùng Vương', ward: 'Trấn Biên' },
+  { id: 'user-009', full_name: 'Bùi Quốc Anh', xp: 6700, school: 'Trường THCS Lý Tự Trọng', ward: 'Long Bình' },
+  { id: 'user-010', full_name: 'Dương Thị Hạnh', xp: 2900, school: 'Trường THCS Lý Tự Trọng', ward: 'Long Bình' },
+];
 
 export const MOCK_COURSES = [
   {

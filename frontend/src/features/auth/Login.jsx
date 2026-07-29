@@ -1,19 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import Button from '../../components/ui/Button';
+import { getWards } from '../../mock/wards';
+import { getSchools } from '../../mock/schools';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('teacher@vmg-edunext.com');
   const [password, setPassword] = useState('2026demo');
   const [fullName, setFullName] = useState('');
+  const [ward, setWard] = useState('');
   const [school, setSchool] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [showPw, setShowPw] = useState(false);
+  const [wards, setWards] = useState([]);
+  const [schools, setSchools] = useState([]);
   const { login, signup } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setWards(getWards());
+    setSchools(getSchools());
+  }, []);
+
+  const filteredSchools = ward ? schools.filter(s => s.ward === ward) : [];
+
+  useEffect(() => {
+    setSchool('');
+  }, [ward]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,7 +39,7 @@ export default function Login() {
       if (isLogin) {
         await login(email, password);
       } else {
-        await signup(email, password, fullName, school);
+        await signup(email, password, fullName, school, ward);
       }
       navigate('/dashboard');
     } catch (err) {
@@ -71,8 +87,22 @@ export default function Login() {
                 <input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nguyễn Văn A" />
               </div>
               <div className="form-group">
+                <label>Phường/Xã</label>
+                <select value={ward} onChange={e => setWard(e.target.value)}>
+                  <option value="">Chọn phường/xã...</option>
+                  {wards.map(w => (
+                    <option key={w.id} value={w.name}>{w.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Trường học</label>
-                <input value={school} onChange={e => setSchool(e.target.value)} placeholder="Trường THCS Hùng Vương" />
+                <select value={school} onChange={e => setSchool(e.target.value)} disabled={!ward}>
+                  <option value="">{ward ? 'Chọn trường...' : 'Chọn phường/xã trước'}</option>
+                  {filteredSchools.map(s => (
+                    <option key={s.id} value={s.name}>{s.name}</option>
+                  ))}
+                </select>
               </div>
             </>)}
             <div className="form-group">

@@ -240,7 +240,18 @@ export const api = {
     },
   },
   ranking: {
-    list: async (limit = 50) => fromDb(await supabase.from('profiles').select('id, full_name, xp').order('xp', { ascending: false }).limit(limit)),
+    list: async ({ ward, school, limit = 50 } = {}) => {
+      let q = supabase.from('profiles').select('id, full_name, xp, school, ward').order('xp', { ascending: false }).limit(limit);
+      if (ward) q = q.eq('ward', ward);
+      if (school) q = q.eq('school', school);
+      return fromDb(await q);
+    },
+    schools: async (wardName) => {
+      let q = supabase.from('schools').select('*');
+      if (wardName) q = q.eq('ward_name', wardName);
+      return fromDb(await q.order('name'));
+    },
+    wards: async () => fromDb(await supabase.from('wards').select('*').order('name')),
   },
   level: {
     challenges: async () => {
