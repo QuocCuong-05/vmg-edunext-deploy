@@ -83,9 +83,9 @@ router.post('/chat', async (req, res) => {
 
 router.post('/lesson-plan', async (req, res) => {
   try {
-    const { topic, level, duration, focus } = req.body;
-    console.log('[ViMi-AI] POST /lesson-plan topic=%s level=%s duration=%s focus=%s key_present=%s',
-      topic, level, duration, focus, !!process.env.FPT_API_KEY);
+    const { topic, grade_level, level, duration, focus } = req.body;
+    console.log('[ViMi-AI] POST /lesson-plan topic=%s grade_level=%s level=%s duration=%s focus=%s key_present=%s',
+      topic, grade_level, level, duration, focus, !!process.env.FPT_API_KEY);
     if (!topic) {
       return res.status(400).json({ error: 'Topic is required' });
     }
@@ -100,7 +100,7 @@ router.post('/lesson-plan', async (req, res) => {
           apiKey: process.env.FPT_API_KEY,
         });
 
-        const prompt = `Generate a ${duration}-minute lesson plan for level ${level} with focus on ${focus}.
+        const prompt = `Generate a ${duration}-minute lesson plan for grade ${grade_level || 'unknown'}, English level ${level}, with focus on ${focus}.
 Topic: ${topic}
 
 Return ONLY valid JSON obeying the output format specified in the system prompt.`;
@@ -134,7 +134,7 @@ Return ONLY valid JSON obeying the output format specified in the system prompt.
     } else {
       console.log('[ViMi-AI] FPT_API_KEY missing, returning fallback lesson plan');
       res.json({
-        title: `${topic} Lesson Plan (${level})`,
+        title: `${topic} Lesson Plan (${grade_level || 'Lớp ?'} - ${level})`,
         objectives: [
           `Students will be able to explain key concepts related to ${topic} using target vocabulary.`,
           `Students will practice ${focus} strategies through structured activities.`,

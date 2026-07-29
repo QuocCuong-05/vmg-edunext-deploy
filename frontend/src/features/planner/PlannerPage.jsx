@@ -6,7 +6,8 @@ import { API_BASE } from '../../lib/api';
 
 export default function PlannerPage() {
   const [topic, setTopic] = useState('');
-  const [grade, setGrade] = useState('B1');
+  const [gradeLevel, setGradeLevel] = useState('Lớp 3');
+  const [learnerLevel, setLearnerLevel] = useState('B1');
   const [duration, setDuration] = useState('45');
   const [focus, setFocus] = useState('CLIL');
   const [result, setResult] = useState(null);
@@ -22,7 +23,7 @@ export default function PlannerPage() {
       const res = await fetch(`${API_BASE}/vimi-ai/lesson-plan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: topic.trim(), level: grade, duration, focus }),
+        body: JSON.stringify({ topic: topic.trim(), grade_level: gradeLevel, level: learnerLevel, duration, focus }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Request failed' }));
@@ -65,11 +66,21 @@ export default function PlannerPage() {
           />
         </div>
         <div className="form-group">
-          <label>Grade / Level</label>
-          <select value={grade} onChange={e => setGrade(e.target.value)}>
-            <option value="B1">B1</option>
-            <option value="B2">B2</option>
-            <option value="C1">C1</option>
+          <label>Khối lớp</label>
+          <select value={gradeLevel} onChange={e => setGradeLevel(e.target.value)}>
+            {[...Array(12)].map((_, i) => (
+              <option key={i} value={`Lớp ${i + 1}`}>Lớp {i + 1}</option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Trình độ tiếng Anh của HV</label>
+          <select value={learnerLevel} onChange={e => setLearnerLevel(e.target.value)}>
+            <option value="A1">A1 - Beginner</option>
+            <option value="A2">A2 - Elementary</option>
+            <option value="B1">B1 - Intermediate</option>
+            <option value="B2">B2 - Upper Intermediate</option>
+            <option value="C1">C1 - Advanced</option>
           </select>
         </div>
         <div className="form-group">
@@ -124,7 +135,7 @@ export default function PlannerPage() {
             <h2 style={{ fontSize: 20, fontWeight: 800 }}>{result.title}</h2>
           </div>
           <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>
-            Topic: <strong>{topic}</strong> | Level: <strong>{grade}</strong> | Duration: <strong>{duration} min</strong> | Focus: <strong>{focus}</strong>
+            Topic: <strong>{topic}</strong> | Khối lớp: <strong>{gradeLevel}</strong> | Level: <strong>{learnerLevel}</strong> | Duration: <strong>{duration} min</strong> | Focus: <strong>{focus}</strong>
           </p>
 
           <div style={{ marginBottom: 16 }}>
