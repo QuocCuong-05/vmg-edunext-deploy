@@ -29,13 +29,16 @@ export default function LessonView() {
   const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
-    setCompleted(false);
     if (!slug) return;
     api.courses.get(slug).then(data => {
       setCourse(data);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, [slug, lessonId]);
+  }, [slug]);
+
+  useEffect(() => {
+    setCompleted(false);
+  }, [lessonId]);
 
   if (loading) {
     return <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>;
@@ -58,6 +61,7 @@ export default function LessonView() {
   const enroll = loadEnroll(slug);
   const isFree = lesson.is_free;
   const isEnrolled = enroll?.enrolled;
+  const isLessonCompleted = enroll?.completed_lessons?.includes(lessonId) || false;
 
   if (!isFree && !isEnrolled) {
     return (
@@ -133,8 +137,8 @@ export default function LessonView() {
       )}
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-        <Button variant="primary" onClick={handleComplete} isDisabled={completed}>
-          {completed ? <><Icon.Check size={16} /> Đã hoàn thành</> : 'Đánh dấu hoàn thành'}
+        <Button variant="primary" onClick={handleComplete} isDisabled={completed || isLessonCompleted}>
+          {completed || isLessonCompleted ? <><Icon.Check size={16} /> Đã hoàn thành</> : 'Đánh dấu hoàn thành'}
         </Button>
       </div>
 
