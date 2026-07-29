@@ -1,4 +1,13 @@
 import { supabase } from './supabase';
+import {
+  getMockPosts, createMockPost, updateMockPost, deleteMockPost,
+  toggleMockLike, reportMockPost,
+  getMockComments, createMockComment, updateMockComment, deleteMockComment, reportMockComment,
+  getMockReportedPosts, getMockReportedComments,
+  getMockProfile,
+  followMockUser, unfollowMockUser, isMockFollowing, getMockFollowing, getMockFollowers,
+  sendMockRemind, getMockNotifications, markMockNotificationsRead,
+} from '../mock/community';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -119,124 +128,240 @@ export const api = {
     },
   },
   community: {
-    _profileMap: async (userIds) => {
-      if (!userIds.length) return {};
-      const profiles = fromDb(await supabase.from('profiles').select('id, full_name').in('id', userIds));
-      const map = {};
-      (profiles || []).forEach(p => { map[p.id] = p; });
-      return map;
-    },
-    _initials: (name) => (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
     posts: {
-      list: async (userId) => {
-        const posts = fromDb(await supabase.from('community_posts').select('*').order('created_at', { ascending: false }));
-        if (!posts?.length) return [];
-        const userIds = [...new Set(posts.map(p => p.user_id))];
-        const profileMap = await api.community._profileMap(userIds);
-        const postIds = posts.map(p => p.id);
-        const likes = fromDb(await supabase.from('community_likes').select('post_id').in('post_id', postIds));
-        const likeCountMap = {};
-        (likes || []).forEach(l => { likeCountMap[l.post_id] = (likeCountMap[l.post_id] || 0) + 1; });
-        const comments = fromDb(await supabase.from('community_comments').select('post_id').in('post_id', postIds));
-        const commentCountMap = {};
-        (comments || []).forEach(c => { commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1; });
-        let likedSet = new Set();
-        let reportedSet = new Set();
-        if (userId) {
-          const userLikes = fromDb(await supabase.from('community_likes').select('post_id').eq('user_id', userId));
-          likedSet = new Set((userLikes || []).map(l => l.post_id));
-          const reports = fromDb(await supabase.from('community_reports').select('post_id').eq('user_id', userId));
-          reportedSet = new Set((reports || []).map(r => r.post_id));
+      list: async (userId, topic) => {
+        try {
+          let q = supabase.from('community_posts').select('*');
+          if (topic) q = q.eq('topic', topic);
+          const posts = fromDb(await q.order('created_at', { ascending: false }));
+          if (!posts?.length) return [];
+          const userIds = [...new Set(posts.map(p => p.user_id))];
+          const profiles = userIds.length ? fromDb(await supabase.from('profiles').select('id, full_name').in('id', userIds)) : [];
+          const profileMap = {};
+          (profiles || []).forEach(p => { profileMap[p.id] = p; });
+          const postIds = posts.map(p => p.id);
+          const likes = fromDb(await supabase.from('community_likes').select('post_id').in('post_id', postIds));
+          const likeCountMap = {};
+          (likes || []).forEach(l => { likeCountMap[l.post_id] = (likeCountMap[l.post_id] || 0) + 1; });
+          const comments = fromDb(await supabase.from('community_comments').select('post_id').in('post_id', postIds));
+          const commentCountMap = {};
+          (comments || []).forEach(c => { commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1; });
+          let likedSet = new Set();
+          let reportedSet = new Set();
+          if (userId) {
+            const userLikes = fromDb(await supabase.from('community_likes').select('post_id').eq('user_id', userId));
+            likedSet = new Set((userLikes || []).map(l => l.post_id));
+            const reports = fromDb(await supabase.from('community_reports').select('post_id').eq('user_id', userId));
+            reportedSet = new Set((reports || []).map(r => r.post_id));
+          }
+          const _initials = (name) => (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+          return posts.map(p => ({
+            id: p.id, user_id: p.user_id, created_at: p.created_at, content: p.content, topic: p.topic || 'General',
+            author_name: profileMap[p.user_id]?.full_name || 'Unknown',
+            author_avatar: _initials(profileMap[p.user_id]?.full_name),
+            likes_count: likeCountMap[p.id] || 0,
+            comments_count: commentCountMap[p.id] || 0, shares_count: 0,
+            user_has_liked: likedSet.has(p.id), user_has_reported: reportedSet.has(p.id),
+          }));
+        } catch {
+          return getMockPosts(userId, topic);
         }
-        return posts.map(p => ({
-          id: p.id, user_id: p.user_id, created_at: p.created_at, content: p.content,
-          author_name: profileMap[p.user_id]?.full_name || 'Unknown',
-          author_avatar: api.community._initials(profileMap[p.user_id]?.full_name),
-          likes_count: likeCountMap[p.id] || 0,
-          comments_count: commentCountMap[p.id] || 0, shares_count: 0,
-          user_has_liked: likedSet.has(p.id), user_has_reported: reportedSet.has(p.id),
-        }));
       },
-      create: async (userId, content) => {
-        const { data, error } = await supabase.from('community_posts').insert({ user_id: userId, content }).select().single();
-        if (error) throw error;
-        const profileMap = await api.community._profileMap([userId]);
-        return {
-          id: data.id, user_id: data.user_id, created_at: data.created_at, content: data.content,
-          author_name: profileMap[userId]?.full_name || 'Unknown',
-          author_avatar: api.community._initials(profileMap[userId]?.full_name),
-          likes_count: 0, comments_count: 0, shares_count: 0,
-          user_has_liked: false, user_has_reported: false,
-        };
+      create: async (userId, content, topic) => {
+        try {
+          const { data, error } = await supabase.from('community_posts').insert({ user_id: userId, content, topic: topic || 'General' }).select().single();
+          if (error) throw error;
+          const profiles = fromDb(await supabase.from('profiles').select('id, full_name').eq('id', userId));
+          const _initials = (name) => (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+          return {
+            id: data.id, user_id: data.user_id, created_at: data.created_at, content: data.content, topic: data.topic || 'General',
+            author_name: profiles?.[0]?.full_name || 'Unknown',
+            author_avatar: _initials(profiles?.[0]?.full_name),
+            likes_count: 0, comments_count: 0, shares_count: 0,
+            user_has_liked: false, user_has_reported: false,
+          };
+        } catch {
+          return createMockPost(userId, content, topic);
+        }
       },
       likeToggle: async (postId, userId) => {
-        const existing = fromDb(await supabase.from('community_likes').select('id').eq('post_id', postId).eq('user_id', userId));
-        if (existing?.length) {
-          await supabase.from('community_likes').delete().eq('post_id', postId).eq('user_id', userId);
-          return { liked: false };
+        try {
+          const existing = fromDb(await supabase.from('community_likes').select('id').eq('post_id', postId).eq('user_id', userId));
+          if (existing?.length) {
+            await supabase.from('community_likes').delete().eq('post_id', postId).eq('user_id', userId);
+            return { liked: false };
+          }
+          await supabase.from('community_likes').insert({ post_id: postId, user_id: userId });
+          return { liked: true };
+        } catch {
+          return toggleMockLike(postId, userId);
         }
-        await supabase.from('community_likes').insert({ post_id: postId, user_id: userId });
-        return { liked: true };
       },
-      update: async (postId, userId, content) => fromDb(await supabase.from('community_posts').update({ content }).eq('id', postId).eq('user_id', userId).select().single()),
-      delete: async (postId, userId) => fromDb(await supabase.from('community_posts').delete().eq('id', postId).eq('user_id', userId)),
-      report: async (postId, userId, reason) => fromDb(await supabase.from('community_reports').insert({ post_id: postId, user_id: userId, reason }).select().single()),
+      update: async (postId, userId, content) => {
+        try {
+          return fromDb(await supabase.from('community_posts').update({ content }).eq('id', postId).eq('user_id', userId).select().single());
+        } catch {
+          return updateMockPost(postId, userId, content);
+        }
+      },
+      delete: async (postId, userId) => {
+        try {
+          return fromDb(await supabase.from('community_posts').delete().eq('id', postId).eq('user_id', userId));
+        } catch {
+          return deleteMockPost(postId, userId);
+        }
+      },
+      report: async (postId, userId, reason) => {
+        try {
+          return fromDb(await supabase.from('community_reports').insert({ post_id: postId, user_id: userId, reason }).select().single());
+        } catch {
+          return reportMockPost(postId, userId, reason);
+        }
+      },
     },
     comments: {
       list: async (postId) => {
-        const comments = fromDb(await supabase.from('community_comments').select('*').eq('post_id', postId));
-        if (!comments?.length) return [];
-        const userIds = [...new Set(comments.map(c => c.user_id))];
-        const profileMap = await api.community._profileMap(userIds);
-        return comments.map(c => ({
-          id: c.id, post_id: c.post_id, user_id: c.user_id, content: c.content, created_at: c.created_at,
-          author_name: profileMap[c.user_id]?.full_name || 'Unknown',
-          author_avatar: api.community._initials(profileMap[c.user_id]?.full_name),
-        }));
+        try {
+          const comments = fromDb(await supabase.from('community_comments').select('*').eq('post_id', postId));
+          if (!comments?.length) return [];
+          const userIds = [...new Set(comments.map(c => c.user_id))];
+          const profiles = userIds.length ? fromDb(await supabase.from('profiles').select('id, full_name').in('id', userIds)) : [];
+          const profileMap = {};
+          (profiles || []).forEach(p => { profileMap[p.id] = p; });
+          const _initials = (name) => (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+          return comments.map(c => ({
+            id: c.id, post_id: c.post_id, user_id: c.user_id, content: c.content, created_at: c.created_at,
+            author_name: profileMap[c.user_id]?.full_name || 'Unknown',
+            author_avatar: _initials(profileMap[c.user_id]?.full_name),
+          }));
+        } catch {
+          return getMockComments(postId);
+        }
       },
       create: async (postId, userId, content) => {
-        const { data, error } = await supabase.from('community_comments').insert({ post_id: postId, user_id: userId, content }).select().single();
-        if (error) throw error;
-        const profileMap = await api.community._profileMap([userId]);
-        return {
-          id: data.id, post_id: data.post_id, user_id: data.user_id, content: data.content, created_at: data.created_at,
-          author_name: profileMap[userId]?.full_name || 'Unknown',
-          author_avatar: api.community._initials(profileMap[userId]?.full_name),
-        };
-      },
-      update: async (commentId, userId, content) => fromDb(await supabase.from('community_comments').update({ content }).eq('id', commentId).eq('user_id', userId).select().single()),
-      delete: async (commentId, userId) => fromDb(await supabase.from('community_comments').delete().eq('id', commentId).eq('user_id', userId)),
-      report: async (commentId, userId, reason) => fromDb(await supabase.from('community_comment_reports').insert({ comment_id: commentId, user_id: userId, reason }).select().single()),
-    },
-    groups: {
-      list: async (userId) => {
-        const groups = fromDb(await supabase.from('community_groups').select('*, members:community_group_members(count)').order('name'));
-        if (!groups?.length) return [];
-        let memberSet = new Set();
-        if (userId) {
-          const memberships = fromDb(await supabase.from('community_group_members').select('group_id').eq('user_id', userId));
-          memberSet = new Set((memberships || []).map(m => m.group_id));
+        try {
+          const { data, error } = await supabase.from('community_comments').insert({ post_id: postId, user_id: userId, content }).select().single();
+          if (error) throw error;
+          const profiles = fromDb(await supabase.from('profiles').select('id, full_name').eq('id', userId));
+          const _initials = (name) => (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+          return {
+            id: data.id, post_id: data.post_id, user_id: data.user_id, content: data.content, created_at: data.created_at,
+            author_name: profiles?.[0]?.full_name || 'Unknown',
+            author_avatar: _initials(profiles?.[0]?.full_name),
+          };
+        } catch {
+          return createMockComment(postId, userId, content);
         }
-        return groups.map(g => ({
-          id: g.id, name: g.name, description: g.description,
-          member_count: g.members?.[0]?.count || 0,
-          is_member: memberSet.has(g.id),
-        }));
       },
-      create: async (userId, name, description) => fromDb(await supabase.from('community_groups').insert({ name, description, created_by: userId }).select().single()),
-      joinToggle: async (groupId, userId) => {
-        const existing = fromDb(await supabase.from('community_group_members').select('id').eq('group_id', groupId).eq('user_id', userId));
-        if (existing?.length) {
-          await supabase.from('community_group_members').delete().eq('group_id', groupId).eq('user_id', userId);
-          return { joined: false };
+      update: async (commentId, userId, content) => {
+        try {
+          return fromDb(await supabase.from('community_comments').update({ content }).eq('id', commentId).eq('user_id', userId).select().single());
+        } catch {
+          return updateMockComment(commentId, userId, content);
         }
-        await supabase.from('community_group_members').insert({ group_id: groupId, user_id: userId });
-        return { joined: true };
+      },
+      delete: async (commentId, userId) => {
+        try {
+          return fromDb(await supabase.from('community_comments').delete().eq('id', commentId).eq('user_id', userId));
+        } catch {
+          return deleteMockComment(commentId, userId);
+        }
+      },
+      report: async (commentId, userId, reason) => {
+        try {
+          return fromDb(await supabase.from('community_comment_reports').insert({ comment_id: commentId, user_id: userId, reason }).select().single());
+        } catch {
+          return reportMockComment(commentId, userId, reason);
+        }
       },
     },
     reported: {
-      posts: async (userId) => userId ? fromDb(await supabase.from('community_reports').select('post_id').eq('user_id', userId)) : [],
-      comments: async (userId) => userId ? fromDb(await supabase.from('community_comment_reports').select('comment_id').eq('user_id', userId)) : [],
+      posts: async (userId) => {
+        if (!userId) return [];
+        try {
+          return fromDb(await supabase.from('community_reports').select('post_id').eq('user_id', userId));
+        } catch {
+          return getMockReportedPosts(userId).map(id => ({ post_id: id }));
+        }
+      },
+      comments: async (userId) => {
+        if (!userId) return [];
+        try {
+          return fromDb(await supabase.from('community_comment_reports').select('comment_id').eq('user_id', userId));
+        } catch {
+          return getMockReportedComments(userId).map(id => ({ comment_id: id }));
+        }
+      },
+    },
+  },
+  users: {
+    profile: async (userId) => {
+      try {
+        const profile = fromDb(await supabase.from('profiles').select('id, full_name, xp, school, ward').eq('id', userId).single());
+        const follows = fromDb(await supabase.from('user_follows').select('id'));
+        const followers = follows ? follows.length : 0;
+        return { ...profile, followers_count: followers, following_count: 0, streak_days: 0, last_login: null };
+      } catch {
+        return getMockProfile(userId);
+      }
+    },
+    follow: async (followerId, followingId) => {
+      try {
+        await supabase.from('user_follows').insert({ follower_id: followerId, following_id: followingId });
+      } catch {
+        followMockUser(followerId, followingId);
+      }
+    },
+    unfollow: async (followerId, followingId) => {
+      try {
+        await supabase.from('user_follows').delete().eq('follower_id', followerId).eq('following_id', followingId);
+      } catch {
+        unfollowMockUser(followerId, followingId);
+      }
+    },
+    isFollowing: async (followerId, followingId) => {
+      if (!followerId) return false;
+      try {
+        const data = fromDb(await supabase.from('user_follows').select('id').eq('follower_id', followerId).eq('following_id', followingId));
+        return !!data?.length;
+      } catch {
+        return isMockFollowing(followerId, followingId);
+      }
+    },
+    following: async (userId) => {
+      try {
+        return fromDb(await supabase.from('user_follows').select('following_id').eq('follower_id', userId));
+      } catch {
+        return getMockFollowing(userId);
+      }
+    },
+    followers: async (userId) => {
+      try {
+        return fromDb(await supabase.from('user_follows').select('follower_id').eq('following_id', userId));
+      } catch {
+        return getMockFollowers(userId);
+      }
+    },
+    remind: async (reminderId, targetId) => {
+      try {
+        await supabase.from('notifications').insert({ user_id: targetId, from_user_id: reminderId, type: 'remind', message: `${reminderId} đã nhắc bạn học hôm nay.` });
+      } catch {
+        sendMockRemind(reminderId, targetId);
+      }
+    },
+    notifications: async (userId) => {
+      try {
+        return fromDb(await supabase.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false }));
+      } catch {
+        return getMockNotifications(userId);
+      }
+    },
+    markNotificationsRead: async (userId) => {
+      try {
+        await supabase.from('notifications').update({ read: true }).eq('user_id', userId);
+      } catch {
+        markMockNotificationsRead(userId);
+      }
     },
   },
   ranking: {

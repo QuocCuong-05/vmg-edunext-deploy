@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import { api } from '../../lib/api';
 import { useAuth } from '../auth/AuthContext';
+import { TOPICS } from '../../mock/community';
 
 const COLORS = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--gold)'];
 
@@ -41,18 +43,25 @@ function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comm
 
   return (
     <Card style={{ padding: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-        <div style={{
-          width: 40, height: 40, borderRadius: '50%',
-          background: COLORS[parseInt(post.id?.slice(-1) || '0') % COLORS.length],
-          color: '#fff', display: 'grid', placeItems: 'center',
-          fontWeight: 800, fontSize: 13, flexShrink: 0,
-        }}>
-          {post.author_avatar || getInitials(post.author_name)}
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+        <Link to={`/profile/${post.user_id}`} style={{ textDecoration: 'none' }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: '50%',
+            background: COLORS[parseInt(post.id?.slice(-1) || '0') % COLORS.length],
+            color: '#fff', display: 'grid', placeItems: 'center',
+            fontWeight: 800, fontSize: 13, flexShrink: 0, cursor: 'pointer',
+          }}>
+            {post.author_avatar || getInitials(post.author_name)}
+          </div>
+        </Link>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.author_name}</div>
-          <div style={{ fontSize: 11, color: 'var(--muted)' }}>{timeAgo(post.created_at)}</div>
+          <Link to={`/profile/${post.user_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}>{post.author_name}</div>
+          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 11, color: 'var(--muted)' }}>{timeAgo(post.created_at)}</span>
+            <span style={{ fontSize: 10, background: 'var(--bg)', padding: '2px 8px', borderRadius: 10, color: 'var(--muted)', fontWeight: 600 }}>{post.topic}</span>
+          </div>
         </div>
           {(isOwner || canReport) && (
           <div style={{ position: 'relative' }}>
@@ -205,17 +214,16 @@ function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comm
 
 export default function CommunityPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
-  const [groups, setGroups] = useState([]);
+  const [activeTopic, setActiveTopic] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
+  const [newPostTopic, setNewPostTopic] = useState('General');
   const [posting, setPosting] = useState(false);
   const [expandedComments, setExpandedComments] = useState({});
   const [postComments, setPostComments] = useState({});
   const [newComments, setNewComments] = useState({});
   const [savingComment, setSavingComment] = useState({});
-  const [createGroupName, setCreateGroupName] = useState('');
-  const [createGroupDesc, setCreateGroupDesc] = useState('');
-  const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [editingPostId, setEditingPostId] = useState(null);
   const [editContent, setEditContent] = useState('');
   const [showReportModal, setShowReportModal] = useState(false);
@@ -229,19 +237,17 @@ export default function CommunityPage() {
   const [reportedCommentIds, setReportedCommentIds] = useState([]);
 
   useEffect(() => {
-    api.community.posts.list(user?.id).then(data => {
+    api.community.posts.list(user?.id, activeTopic || undefined).then(data => {
       if (data?.length) setPosts(data);
-    }).catch(() => {});
-    api.community.groups.list(user?.id).then(data => {
-      if (data?.length) setGroups(data);
-    }).catch(() => {});
+      else setPosts([]);
+    }).catch(() => setPosts([]));
     api.community.reported.posts(user?.id).then(data => {
       if (data?.length) setReportedPostIds(data.map(r => r.post_id));
     }).catch(() => {});
     api.community.reported.comments(user?.id).then(data => {
       if (data?.length) setReportedCommentIds(data.map(r => r.comment_id));
     }).catch(() => {});
-  }, [user?.id]);
+  }, [user?.id, activeTopic]);
 
   useEffect(() => {
     const handler = () => { setOpenMenuPostId(null); setOpenCommentMenuId(null); };
@@ -253,9 +259,10 @@ export default function CommunityPage() {
     if (!newPostContent.trim() || posting || !user?.id) return;
     setPosting(true);
     const text = newPostContent.trim();
+    const topic = newPostTopic;
     setNewPostContent('');
     try {
-      const newPost = await api.community.posts.create(user.id, text);
+      const newPost = await api.community.posts.create(user.id, text, topic);
       setPosts(prev => [newPost, ...prev]);
     } catch {}
     setPosting(false);
@@ -408,29 +415,6 @@ export default function CommunityPage() {
     try { await api.community.comments.report(commentId, user.id, reportReason); } catch {}
   };
 
-  const handleJoinGroup = async (groupId) => {
-    if (!user?.id) return;
-    setGroups(prev => prev.map(g =>
-      g.id === groupId ? {
-        ...g,
-        member_count: g.is_member ? g.member_count - 1 : g.member_count + 1,
-        is_member: !g.is_member,
-      } : g
-    ));
-    try { await api.community.groups.joinToggle(groupId, user.id); } catch {}
-  };
-
-  const handleCreateGroup = async () => {
-    if (!createGroupName.trim() || !user?.id) return;
-    try {
-      const newGroup = await api.community.groups.create(user.id, createGroupName.trim(), createGroupDesc.trim());
-      setGroups(prev => [newGroup, ...prev]);
-      setCreateGroupName('');
-      setCreateGroupDesc('');
-      setShowCreateGroup(false);
-    } catch {}
-  };
-
   return (
     <div className="page-enter">
       <div className="page-title">
@@ -443,14 +427,16 @@ export default function CommunityPage() {
       {user && (
         <Card style={{ maxWidth: 800, marginBottom: 16, padding: 16 }}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: '50%',
-              background: 'var(--red)', color: '#fff',
-              display: 'grid', placeItems: 'center',
-              fontWeight: 800, fontSize: 12, flexShrink: 0,
-            }}>
-              {user.full_name ? getInitials(user.full_name) : 'U'}
-            </div>
+            <Link to={`/profile/${user.id}`} style={{ textDecoration: 'none' }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'var(--red)', color: '#fff',
+                display: 'grid', placeItems: 'center',
+                fontWeight: 800, fontSize: 12, flexShrink: 0,
+              }}>
+                {user.full_name ? getInitials(user.full_name) : 'U'}
+              </div>
+            </Link>
             <div style={{ flex: 1, minWidth: 0 }}>
               <textarea
                 value={newPostContent}
@@ -458,7 +444,15 @@ export default function CommunityPage() {
                 placeholder="Share something with the community..."
                 style={{ width: '100%', border: 'none', outline: 'none', resize: 'none', fontSize: 13, minHeight: 60, fontFamily: 'inherit', padding: 0 }}
               />
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                <select
+                  value={newPostTopic}
+                  onChange={e => setNewPostTopic(e.target.value)}
+                  style={{ fontSize: 12, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--line)', background: '#fff', cursor: 'pointer' }}
+                >
+                  {TOPICS.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <div style={{ flex: 1 }} />
                 <Button variant="primary" size="sm" onClick={handleCreatePost} isDisabled={!newPostContent.trim() || posting}>
                   {posting ? 'Posting...' : 'Post'}
                 </Button>
@@ -467,6 +461,32 @@ export default function CommunityPage() {
           </div>
         </Card>
       )}
+
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+        <span
+          onClick={() => setActiveTopic('')}
+          style={{
+            padding: '6px 14px', borderRadius: 16, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            background: !activeTopic ? 'var(--red)' : 'var(--bg)',
+            color: !activeTopic ? '#fff' : 'var(--muted)',
+            border: '1px solid', borderColor: !activeTopic ? 'var(--red)' : 'var(--line)',
+            transition: 'all .15s',
+          }}
+        >All</span>
+        {TOPICS.map(t => (
+          <span
+            key={t}
+            onClick={() => setActiveTopic(t)}
+            style={{
+              padding: '6px 14px', borderRadius: 16, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              background: activeTopic === t ? 'var(--red)' : 'var(--bg)',
+              color: activeTopic === t ? '#fff' : 'var(--muted)',
+              border: '1px solid', borderColor: activeTopic === t ? 'var(--red)' : 'var(--line)',
+              transition: 'all .15s',
+            }}
+          >{t}</span>
+        ))}
+      </div>
 
       <div className="community-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -510,59 +530,21 @@ export default function CommunityPage() {
         </div>
 
         <div>
-          <Card style={{ marginBottom: 16, padding: 20 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Icon.Book size={16} /> Groups
-            </h3>
-            {user && !showCreateGroup && (
-              <Button variant="ghost" size="sm" onClick={() => setShowCreateGroup(true)} style={{ marginBottom: 12, width: '100%', justifyContent: 'center' }}>
-                + Create Group
-              </Button>
-            )}
-            {showCreateGroup && (
-              <div style={{ marginBottom: 12, padding: 10, background: 'var(--bg)', borderRadius: 8 }}>
-                <input
-                  value={createGroupName}
-                  onChange={e => setCreateGroupName(e.target.value)}
-                  placeholder="Group name"
-                  style={{ width: '100%', border: '1px solid var(--line)', borderRadius: 6, padding: '6px 10px', fontSize: 12, marginBottom: 6 }}
-                />
-                <input
-                  value={createGroupDesc}
-                  onChange={e => setCreateGroupDesc(e.target.value)}
-                  placeholder="Description (optional)"
-                  style={{ width: '100%', border: '1px solid var(--line)', borderRadius: 6, padding: '6px 10px', fontSize: 12, marginBottom: 6 }}
-                />
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <Button variant="primary" size="sm" onClick={handleCreateGroup} isDisabled={!createGroupName.trim()}>Create</Button>
-                  <Button variant="ghost" size="sm" onClick={() => setShowCreateGroup(false)}>Cancel</Button>
-                </div>
-              </div>
-            )}
-            {groups.map((g, i) => (
-              <div key={g.id} style={{
-                padding: '10px 0',
-                borderBottom: i < groups.length - 1 ? '1px solid var(--line)' : 'none',
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.name}</div>
-                    <div style={{ fontSize: 11, color: 'var(--muted)' }}>{g.member_count?.toLocaleString()} members</div>
-                  </div>
-                  <button onClick={() => handleJoinGroup(g.id)}
-                    style={{
-                      flexShrink: 0, fontSize: 12, padding: '4px 12px', borderRadius: 16, border: '1px solid',
-                      borderColor: g.is_member ? 'var(--red)' : 'var(--line)',
-                      background: g.is_member ? 'var(--red)' : 'transparent',
-                      color: g.is_member ? '#fff' : 'var(--muted)',
-                      cursor: 'pointer', fontWeight: 600,
-                    }}>
-                    {g.is_member ? 'Joined' : 'Join'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </Card>
+          {user && (
+            <Card style={{ marginBottom: 16, padding: 20 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Icon.User size={16} /> Your Network
+              </h3>
+              <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>
+                Click on any user's name or avatar to view their profile, follow them, and remind them to keep their learning streak!
+              </p>
+              <Link to={`/profile/${user.id}`} style={{ textDecoration: 'none' }}>
+                <Button variant="ghost" size="sm" style={{ marginTop: 10, width: '100%', justifyContent: 'center' }}>
+                  View My Profile
+                </Button>
+              </Link>
+            </Card>
+          )}
 
           <Card style={{ padding: 20 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>

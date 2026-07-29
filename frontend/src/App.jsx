@@ -19,6 +19,7 @@ import AboutPage from './features/about/AboutPage';
 import CertificatePage from './features/certificate/CertificatePage';
 import RankingPage from './features/ranking/RankingPage';
 import CommunityPage from './features/community/CommunityPage';
+import UserProfilePage from './features/community/UserProfilePage';
 import BlogPage from './features/blog/BlogPage';
 import BookingPage from './features/booking/BookingPage';
 import RewardsPage from './features/rewards/RewardsPage';
@@ -56,6 +57,7 @@ export default function App() {
         <Route path="/certificate" element={<CertificatePage />} />
         <Route path="/ranking" element={<RankingPage />} />
         <Route path="/community" element={<CommunityPage />} />
+        <Route path="/profile/:userId" element={<UserProfilePage />} />
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/rewards" element={<RewardsPage />} />
