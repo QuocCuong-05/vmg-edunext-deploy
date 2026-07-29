@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Icon } from '../../lib/icons';
 import { api } from '../../lib/api';
 import { useAuth } from '../auth/AuthContext';
@@ -83,16 +84,20 @@ export default function RankingPage() {
           }}>
             {myRank || '--'}
           </div>
-          <div style={{
-            width: 44, height: 44, borderRadius: '50%',
-            background: 'var(--bg)', color: 'var(--red)',
-            display: 'grid', placeItems: 'center',
-            fontWeight: 800, fontSize: 16,
-          }}>
-            {getInitials(user?.full_name)}
-          </div>
+          <Link to={`/profile/${user.id}`} style={{ textDecoration: 'none' }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: '50%',
+              background: 'var(--bg)', color: 'var(--red)',
+              display: 'grid', placeItems: 'center',
+              fontWeight: 800, fontSize: 16, cursor: 'pointer',
+            }}>
+              {getInitials(user?.full_name)}
+            </div>
+          </Link>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.full_name}</div>
+            <Link to={`/profile/${user.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}>{user?.full_name}</div>
+            </Link>
             <div style={{ fontSize: 12, color: 'var(--muted)' }}>{user.school ? user.school + (user.ward ? ' · ' + user.ward : '') : 'Level ' + (Math.floor((user?.xp || 0) / 3000) + 1)}</div>
           </div>
           <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--red)' }}>
@@ -136,16 +141,20 @@ export default function RankingPage() {
           }}>
             {i + 1}
           </div>
-          <div style={{
-            width: 40, height: 40, borderRadius: '50%',
-            background: 'var(--bg)', color: INITIALS_COLORS[i % INITIALS_COLORS.length],
-            display: 'grid', placeItems: 'center',
-            fontWeight: 800, fontSize: 13, flexShrink: 0,
-          }}>
-            {getInitials(r.full_name)}
-          </div>
+          <Link to={`/profile/${r.id}`} style={{ textDecoration: 'none' }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: '50%',
+              background: 'var(--bg)', color: INITIALS_COLORS[i % INITIALS_COLORS.length],
+              display: 'grid', placeItems: 'center',
+              fontWeight: 800, fontSize: 13, flexShrink: 0, cursor: 'pointer',
+            }}>
+              {getInitials(r.full_name)}
+            </div>
+          </Link>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.full_name}</div>
+            <Link to={`/profile/${r.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}>{r.full_name}</div>
+            </Link>
             <div style={{ fontSize: 11, color: 'var(--muted)' }}>
               {r.school ? r.school + (r.ward ? ' · ' + r.ward : '') : 'Level ' + (Math.floor(r.xp / 3000) + 1)}
             </div>

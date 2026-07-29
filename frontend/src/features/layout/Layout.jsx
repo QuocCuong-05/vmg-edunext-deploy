@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import ViMiChat from '../vimi/ViMiChat';
 import AvatarDropdown from './AvatarDropdown';
+import NotificationBell from './NotificationBell';
 import { useAuth } from '../auth/AuthContext';
 import { Icon } from '../../lib/icons';
 import { ToastProvider } from '../../components/ui/Toast';
@@ -200,6 +201,7 @@ export default function Layout() {
               <button className="avatar-btn" onClick={() => navigate('/quiz')} title="Luyện tập">
                 <Icon.Quiz size={16} />
               </button>
+              <NotificationBell />
               <AvatarDropdown initials={initials} />
             </div>
           </header>
