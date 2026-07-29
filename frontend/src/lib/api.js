@@ -307,14 +307,16 @@ export const api = {
     },
     follow: async (followerId, followingId) => {
       try {
-        await supabase.from('user_follows').insert({ follower_id: followerId, following_id: followingId });
+        const { error } = await supabase.from('user_follows').insert({ follower_id: followerId, following_id: followingId });
+        if (error) throw error;
       } catch {
         followMockUser(followerId, followingId);
       }
     },
     unfollow: async (followerId, followingId) => {
       try {
-        await supabase.from('user_follows').delete().eq('follower_id', followerId).eq('following_id', followingId);
+        const { error } = await supabase.from('user_follows').delete().eq('follower_id', followerId).eq('following_id', followingId);
+        if (error) throw error;
       } catch {
         unfollowMockUser(followerId, followingId);
       }
@@ -344,7 +346,8 @@ export const api = {
     },
     remind: async (reminderId, targetId) => {
       try {
-        await supabase.from('notifications').insert({ user_id: targetId, from_user_id: reminderId, type: 'remind', message: `${reminderId} đã nhắc bạn học hôm nay.` });
+        const { error } = await supabase.from('notifications').insert({ user_id: targetId, from_user_id: reminderId, type: 'remind', message: `${reminderId} đã nhắc bạn học hôm nay.` });
+        if (error) throw error;
       } catch {
         sendMockRemind(reminderId, targetId);
       }
@@ -358,7 +361,8 @@ export const api = {
     },
     markNotificationsRead: async (userId) => {
       try {
-        await supabase.from('notifications').update({ read: true }).eq('user_id', userId);
+        const { error } = await supabase.from('notifications').update({ read: true }).eq('user_id', userId);
+        if (error) throw error;
       } catch {
         markMockNotificationsRead(userId);
       }
