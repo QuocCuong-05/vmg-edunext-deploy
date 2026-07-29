@@ -20,7 +20,7 @@ const GROUPS = [
     items: [
       { to: '/quiz', label: 'Luyện tập', icon: Icon.Quiz },
       { to: '/classroom', label: 'Classroom Phrases', icon: Icon.Mic },
-      { to: '/library', label: 'Cẩm nang lớp học', icon: Icon.Classroom },
+
     ],
   },
   {

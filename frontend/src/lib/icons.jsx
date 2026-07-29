@@ -8,6 +8,7 @@ import {
   BiDownload, BiPrinter, BiShareAlt, BiCartAlt, BiTime,
   BiUser, BiMoon, BiSun, BiGlobe, BiCog, BiLogOut, BiHeart,
   BiDotsVerticalRounded, BiFlag, BiTrash, BiSolidFlame,
+  BiBookmark, BiSolidBookmark,
 } from 'react-icons/bi';
 
 export const Icon = {
@@ -56,4 +57,6 @@ export const Icon = {
   Flag: ({ size }) => <BiFlag size={size || 20} />,
   Trash: ({ size }) => <BiTrash size={size || 20} />,
   Flame: ({ size }) => <BiSolidFlame size={size || 20} />,
+  Bookmark: ({ size }) => <BiBookmark size={size || 20} />,
+  BookmarkFill: ({ size }) => <BiSolidBookmark size={size || 20} />,
 };

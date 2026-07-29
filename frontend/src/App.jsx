@@ -13,7 +13,6 @@ import Classroom from './features/classroom/Classroom';
 import Quiz from './features/quiz/Quiz';
 import VimiPage from './features/vimi/VimiPage';
 import WordbookPage from './features/wordbook/WordbookPage';
-import LibraryPage from './features/library/LibraryPage';
 import PlannerPage from './features/planner/PlannerPage';
 import LevelPage from './features/level/LevelPage';
 import AboutPage from './features/about/AboutPage';
@@ -51,7 +50,6 @@ export default function App() {
         <Route path="/level/quiz/:slug" element={<Quiz />} />
         <Route path="/vimi" element={<VimiPage />} />
         <Route path="/wordbook" element={<WordbookPage />} />
-        <Route path="/library" element={<LibraryPage />} />
         <Route path="/planner" element={<PlannerPage />} />
         <Route path="/level" element={<LevelPage />} />
         <Route path="/about" element={<AboutPage />} />

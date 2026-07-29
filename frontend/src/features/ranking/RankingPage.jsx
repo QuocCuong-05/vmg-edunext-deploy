@@ -1,33 +1,28 @@
+import { useState, useEffect } from 'react';
 import { Icon } from '../../lib/icons';
+import { api } from '../../lib/api';
 import { useAuth } from '../auth/AuthContext';
 import Card from '../../components/ui/Card';
-
-const MOCK_RANKINGS = [
-  { rank: 1, name: 'Tran Van An', xp: 5200, level: 5 },
-  { rank: 2, name: 'Le Thi Hoa', xp: 4800, level: 4 },
-  { rank: 3, name: 'Pham Minh Duc', xp: 4100, level: 4 },
-  { rank: 4, name: 'Hoang Ngoc Lan', xp: 3700, level: 3 },
-  { rank: 5, name: 'Vu Thanh Ha', xp: 3200, level: 3 },
-  { rank: 6, name: 'Doan Quoc Hung', xp: 2900, level: 2 },
-  { rank: 7, name: 'Bui Thi Mai', xp: 2400, level: 2 },
-  { rank: 8, name: 'Dang Cong Son', xp: 2100, level: 2 },
-];
 
 const INITIALS_COLORS = ['var(--red)', 'var(--blue)', 'var(--gold)', 'var(--green)', 'var(--cyan)', '#8b5cf6', '#ec4899', '#f59e0b'];
 
 function getInitials(name) {
-  return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  return (name || '').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
 
 export default function RankingPage() {
   const { user } = useAuth();
+  const [rankings, setRankings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const myRank = {
-    rank: '--',
-    name: user?.full_name || 'Nguyen Thi Minh',
-    xp: user?.xp || 2450,
-    level: Math.floor((user?.xp || 2450) / 3000) + 1,
-  };
+  useEffect(() => {
+    api.ranking.list().then(data => {
+      setRankings(data || []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  const myRank = rankings.findIndex(r => r.id === user?.id) + 1;
 
   return (
     <div className="page-enter">
@@ -38,6 +33,7 @@ export default function RankingPage() {
         <p>Top teachers ranked by experience points</p>
       </div>
 
+      {user && (
       <Card style={{ marginBottom: 20, background: 'linear-gradient(160deg, var(--red-bg), var(--card))', border: '1px solid var(--red)', padding: '16px 20px' }}>
         <div style={{ fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>My Rank</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -47,7 +43,7 @@ export default function RankingPage() {
             display: 'grid', placeItems: 'center',
             fontWeight: 900, fontSize: 16,
           }}>
-            {myRank.rank}
+            {myRank || '--'}
           </div>
           <div style={{
             width: 44, height: 44, borderRadius: '50%',
@@ -55,25 +51,31 @@ export default function RankingPage() {
             display: 'grid', placeItems: 'center',
             fontWeight: 800, fontSize: 16,
           }}>
-            {getInitials(myRank.name)}
+            {getInitials(user?.full_name)}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{myRank.name}</div>
-            <div style={{ fontSize: 12, color: 'var(--muted)' }}>Level {myRank.level}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.full_name}</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)' }}>Level {Math.floor((user?.xp || 0) / 3000) + 1}</div>
           </div>
           <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--red)' }}>
-            {myRank.xp.toLocaleString()} XP
+            {(user?.xp || 0).toLocaleString()} XP
           </div>
         </div>
       </Card>
+      )}
 
       <div className="section-title">
         <h3>Top Teachers</h3>
       </div>
-      {MOCK_RANKINGS.map((r, i) => (
-        <Card key={r.rank} style={{
+      {loading ? (
+        <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>
+      ) : rankings.length === 0 ? (
+        <Card style={{ textAlign: 'center', padding: 48, color: 'var(--muted)', fontSize: 14 }}>Chưa có dữ liệu xếp hạng</Card>
+      ) : rankings.map((r, i) => (
+        <Card key={r.id} style={{
           padding: '16px 20px', marginBottom: 8,
           display: 'flex', alignItems: 'center', gap: 16,
+          ...(r.id === user?.id ? { border: '1px solid var(--red)' } : {}),
         }}>
           <div style={{
             width: 36, height: 36, borderRadius: 10,
@@ -82,7 +84,7 @@ export default function RankingPage() {
             display: 'grid', placeItems: 'center',
             fontWeight: 900, fontSize: 14, flexShrink: 0,
           }}>
-            {r.rank}
+            {i + 1}
           </div>
           <div style={{
             width: 40, height: 40, borderRadius: '50%',
@@ -90,11 +92,11 @@ export default function RankingPage() {
             display: 'grid', placeItems: 'center',
             fontWeight: 800, fontSize: 13, flexShrink: 0,
           }}>
-            {getInitials(r.name)}
+            {getInitials(r.full_name)}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
-            <div style={{ fontSize: 11, color: 'var(--muted)' }}>Level {r.level}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.full_name}</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)' }}>Level {Math.floor(r.xp / 3000) + 1}</div>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 16, fontWeight: 800 }}>{r.xp.toLocaleString()}</div>

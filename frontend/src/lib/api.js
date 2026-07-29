@@ -85,6 +85,11 @@ export const api = {
   },
   vocabulary: {
     list: async () => fromDb(await supabase.from('vocabulary_entries').select('*').eq('is_published', true)),
+    saved: {
+      list: async (userId) => fromDb(await supabase.from('user_vocabulary').select('*, vocabulary_entries(*)').eq('user_id', userId)),
+      add: async (userId, entryId) => fromDb(await supabase.from('user_vocabulary').insert({ user_id: userId, vocabulary_entry_id: entryId }).select().single()),
+      remove: async (userId, entryId) => fromDb(await supabase.from('user_vocabulary').delete().eq('user_id', userId).eq('vocabulary_entry_id', entryId)),
+    },
   },
   classroom: {
     list: async () => fromDb(await supabase.from('classroom_phrases').select('*, classroom_phrase_categories(slug, name_vi)').eq('is_published', true).order('sort_order')),
@@ -112,6 +117,9 @@ export const api = {
         return null;
       }
     },
+  },
+  ranking: {
+    list: async (limit = 50) => fromDb(await supabase.from('profiles').select('id, full_name, xp').order('xp', { ascending: false }).limit(limit)),
   },
   level: {
     challenges: async () => {
