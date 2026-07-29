@@ -141,8 +141,8 @@ export default function UserProfilePage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{profile.full_name}</h2>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 4, fontSize: 13, color: 'var(--muted)' }}>
-              {profile.school && <span><Icon.Book size={14} /> {profile.school}</span>}
-              {profile.ward && <span><Icon.Globe size={14} /> {profile.ward}</span>}
+              {profile.school && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon.Book size={14} /> {profile.school}</span>}
+              {profile.ward && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon.Globe size={14} /> {profile.ward}</span>}
             </div>
           </div>
           {!isOwnProfile && currentUser && (
