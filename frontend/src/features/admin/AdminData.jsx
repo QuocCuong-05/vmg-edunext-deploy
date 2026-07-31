@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../auth/AuthContext';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = __API_URL__ || '/api';
 
 const ALLOWED_TABLES = [
   'classroom_phrase_categories', 'classroom_phrases',
