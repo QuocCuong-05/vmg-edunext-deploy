@@ -1,37 +1,57 @@
-// Run with: node src/seed/seed.js
-// This seed script is for local/in-memory demo data
-// For production, use the SQL files in /supabase/
-
-import fs from 'fs';
+import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.resolve(__dirname, '../../supabase');
+const CSV_DIR = path.resolve(__dirname, '../../supabase/csv');
 
-console.log('\n  📦 VMG EduNext — Seed Data Generator');
-console.log('  =====================================\n');
+const args = process.argv.slice(2);
+const envArg = args.find(a => a.startsWith('--env='));
+const modeArg = args.find(a => a.startsWith('--mode='));
 
-const files = [
-  { name: 'schema.sql', description: 'Database schema (courses, lessons, enrollments)' },
-  { name: 'seed_lms.sql', description: 'LMS seed data (6 courses, 34 lessons)' },
-];
+const env = envArg ? envArg.split('=')[1] : null;
+const mode = modeArg ? modeArg.split('=')[1] : (args.includes('--export') ? 'export' : 'seed');
 
-files.forEach(f => {
-  const fullPath = path.join(DATA_DIR, f.name);
-  if (fs.existsSync(fullPath)) {
-    const stats = fs.statSync(fullPath);
-    console.log(`  ✅ ${f.name} (${(stats.size / 1024).toFixed(1)} KB) — ${f.description}`);
+if (!env || !['staging', 'production'].includes(env)) {
+  console.error('Usage: node src/seed/seed.js --env=staging|production [--mode=seed|export]');
+  console.error('  --env=staging     Target staging Supabase (.env.staging)');
+  console.error('  --env=production  Target production Supabase (.env.production)');
+  process.exit(1);
+}
+
+const envFile = path.resolve(__dirname, `../../.env.${env}`);
+const result = dotenv.config({ path: envFile, override: true });
+
+if (result.error) {
+  console.error(`Cannot load env file: ${envFile}`);
+  console.error('Create .env.staging and .env.production with SUPABASE_URL + SUPABASE_SERVICE_KEY');
+  process.exit(1);
+}
+
+console.log(`\n  📦 VMG EduNext — ${mode === 'export' ? 'Export' : 'Seed'} Data (${env.toUpperCase()})`);
+console.log(`  Supabase: ${process.env.SUPABASE_URL || '(not set)'}`);
+console.log('');
+
+try {
+  const { seedAll, exportAll } = await import('../lib/seedData.js');
+
+  if (mode === 'export') {
+    const results = await exportAll(CSV_DIR);
+    console.log('  ✅ Export complete:');
+    for (const r of results) {
+      console.log(`     ${r.table}: ${r.count} rows → ${r.table.replace(/_/g, '-')}.csv`);
+    }
   } else {
-    console.log(`  ❌ ${f.name} — File not found`);
+    const results = await seedAll(CSV_DIR);
+    console.log('  🧹 Cleared:', results.cleared.join(', '));
+    console.log('  ⬇ Imported:');
+    for (const r of results.imported) {
+      console.log(`     ${r.table}: ${r.count} rows`);
+    }
   }
-});
-
-console.log('\n  📋 To apply to Supabase:');
-console.log('   1. Open Supabase SQL Editor');
-console.log('   2. Run supabase/schema.sql first');
-console.log('   3. Then run supabase/seed_lms.sql');
-console.log('   4. Then run the existing content SQL files (04-08)\n');
-
-console.log('  📋 For local development without Supabase:');
-console.log('   cd frontend && npm run dev\n');
+  console.log('\n  ✨ Done.\n');
+} catch (err) {
+  console.error(`\n  ❌ ${mode === 'export' ? 'Export' : 'Seed'} failed:`);
+  console.error(`     ${err.message}`);
+  process.exit(1);
+}

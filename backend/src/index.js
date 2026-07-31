@@ -16,6 +16,8 @@ import tipsRoutes from './routes/tips.js';
 import questsRoutes from './routes/quests.js';
 import rewardsRoutes from './routes/rewards.js';
 import levelRoutes from './routes/level.js';
+import adminRoutes from './routes/admin.js';
+import { authenticate, requireAdmin } from './middleware/auth.js';
 
 const app = express();
 
@@ -40,6 +42,7 @@ app.use('/api/tips', tipsRoutes);
 app.use('/api/quests', questsRoutes);
 app.use('/api/rewards', rewardsRoutes);
 app.use('/api/level', levelRoutes);
+app.use('/api/admin', authenticate, requireAdmin, adminRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error('Unhandled error:', err);

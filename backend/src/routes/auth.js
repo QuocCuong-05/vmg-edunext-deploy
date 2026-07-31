@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { supabase } from '../config/database.js';
+import { supabase, supabaseAdmin } from '../config/database.js';
 
 const router = Router();
 
 router.post('/signup', async (req, res) => {
   try {
-    const { email, password, full_name } = req.body;
+    const { email, password, full_name, school, ward } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
@@ -17,6 +17,14 @@ router.post('/signup', async (req, res) => {
     });
 
     if (error) return res.status(400).json({ error: error.message });
+
+    if (data.user && (school || ward)) {
+      await supabaseAdmin
+        .from('profiles')
+        .update({ school: school || null, ward: ward || null })
+        .eq('id', data.user.id);
+    }
+
     res.json({ user: data.user, session: data.session });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -51,13 +59,19 @@ router.get('/me', async (req, res) => {
   const { data: { user }, error } = await supabase.auth.getUser(token);
   if (error) return res.status(401).json({ error: error.message });
 
-  const { data: profile } = await supabase
+  const { data: profile } = await supabaseAdmin
     .from('profiles')
-    .select('*')
+    .select('id, full_name, avatar_url, role, xp, streak_days, bio, school, ward')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
-  res.json({ user, profile });
+  res.json({
+    user: {
+      id: user.id,
+      email: user.email,
+      ...(profile || {})
+    }
+  });
 });
 
 export default router;

@@ -1,0 +1,35 @@
+course_id,title,slug,description,sort_order,content_type,video_url,video_duration_seconds,article_body,is_free
+7c1186fc-24fb-47c3-9f5f-7d3db76ab4db,Formative vs Summative,formative-vs-summative,Phân biệt đánh giá định hình và tổng kết.,1,video,https://www.youtube.com/embed/7oCLZGg0E4A,420,,true
+60d52fe4-d413-4147-8251-a0d80c986c20,What is CLIL?,what-is-clil,Giới thiệu phương pháp CLIL và lợi ích cho lớp học song ngữ.,1,video,https://www.youtube.com/embed/LXrh2AJa8nU,360,,true
+9f4d3825-0fd5-45dc-a091-a7133baf8e76,Cognitive Load Theory,cognitive-load-theory,Hiểu và quản lý tải nhận thức trong lớp học.,1,video,https://www.youtube.com/embed/UqxoNY0Y2k8,660,,true
+f66d5ff2-39a7-466d-8c1c-f686b1681966,1. Settling the Class,settling-the-class,"Bắt đầu lớp, ổn định và thu hút sự chú ý.",1,video,https://www.youtube.com/embed/7F1iJZr-p4E,480,,true
+3d105c48-1a06-42c9-bb85-30f06b81a9b1,Describing Data & Patterns,describing-data-patterns,Ngôn ngữ mô tả dữ liệu và quy luật.,1,video,https://www.youtube.com/embed/tZ-Pbwdqlt0,480,,true
+62abdb4b-af3e-4b16-b083-5bfd61bbaa7e,Teaching Collocations,teaching-collocations,Dạy từ vựng theo cụm thay vì từ đơn lẻ.,1,video,https://www.youtube.com/embed/W_yFHgHafKM,480,,true
+62abdb4b-af3e-4b16-b083-5bfd61bbaa7e,Contextualizing Vocabulary,contextualizing-vocabulary,Đặt từ vựng vào ngữ cảnh lớp học và môn học.,2,video,,540,,false
+9f4d3825-0fd5-45dc-a091-a7133baf8e76,Retrieval Practice,retrieval-practice,Kỹ thuật truy hồi giúp ghi nhớ dài hạn.,2,video,,540,,false
+f66d5ff2-39a7-466d-8c1c-f686b1681966,2. Warm-Up & Engagement,warm-up,"Kích hoạt kiến thức nền, động não, tạo môi trường an toàn.",2,video,,540,,false
+3d105c48-1a06-42c9-bb85-30f06b81a9b1,Cause & Effect Language,cause-effect-language,Ngôn ngữ nguyên nhân-kết quả cho Khoa học.,2,video,,540,,false
+60d52fe4-d413-4147-8251-a0d80c986c20,The 4Cs Framework,the-4cs-framework,"Content, Communication, Cognition, Culture — khung thiết kế bài CLIL.",2,video,,600,,false
+7c1186fc-24fb-47c3-9f5f-7d3db76ab4db,Exit Tickets & Quick Checks,exit-tickets,Cách dùng exit ticket và các kiểm tra nhanh trong lớp.,2,video,,480,,false
+f66d5ff2-39a7-466d-8c1c-f686b1681966,3. Assigning Tasks & Giving Instructions,assigning-tasks,"Hướng dẫn rõ ràng, ICQ, quản lý thời gian và phân hóa.",3,video,,600,,false
+9f4d3825-0fd5-45dc-a091-a7133baf8e76,Spacing & Interleaving,spacing-interleaving,Phân bổ và xen kẽ nội dung học tập.,3,video,,480,,false
+62abdb4b-af3e-4b16-b083-5bfd61bbaa7e,Word Walls & Visuals,word-walls-visuals,Sử dụng word wall và hình ảnh trực quan.,3,video,,360,,false
+7c1186fc-24fb-47c3-9f5f-7d3db76ab4db,Giving Actionable Feedback,actionable-feedback,Phản hồi hai bước: ghi nhận + bước tiếp theo cụ thể.,3,video,,600,,false
+3d105c48-1a06-42c9-bb85-30f06b81a9b1,Comparing & Classifying,comparing-classifying,So sánh và phân loại trong Toán và Khoa học.,3,video,,420,,false
+60d52fe4-d413-4147-8251-a0d80c986c20,Writing Dual Objectives,writing-dual-objectives,Cách viết mục tiêu nội dung và mục tiêu ngôn ngữ đi kèm.,3,video,,540,,false
+3d105c48-1a06-42c9-bb85-30f06b81a9b1,Arguing with Evidence,arguing-with-evidence,Lập luận bằng bằng chứng — ngôn ngữ học thuật.,4,video,,600,,false
+7c1186fc-24fb-47c3-9f5f-7d3db76ab4db,Rubric Design,rubric-design,Thiết kế rubric đơn giản với tiêu chí rõ ràng.,4,article,,0,"<h4>Thiết kế Rubric</h4><p>Một rubric tốt cần:</p><ul><li>3-5 tiêu chí chính</li><li>Mô tả cụ thể cho từng mức</li><li>Ngôn ngữ học sinh có thể hiểu</li></ul><p>Ví dụ rubric cho thuyết trình:</p><table border=""1"" cellpadding=""5""><tr><th>Tiêu chí</th><th>Xuất sắc</th><th>Đạt</th><th>Cần cải thiện</th></tr><tr><td>Nội dung</td><td>Đầy đủ, chính xác</td><td>Cơ bản đúng</td><td>Thiếu chính xác</td></tr><tr><td>Ngôn ngữ</td><td>Từ vựng phong phú</td><td>Đúng từ khóa</td><td>Sai nhiều từ</td></tr></table>",false
+62abdb4b-af3e-4b16-b083-5bfd61bbaa7e,Vocabulary Games,vocabulary-games,Trò chơi từ vựng tăng tương tác và ghi nhớ.,4,video,,420,,false
+60d52fe4-d413-4147-8251-a0d80c986c20,Scaffolding in CLIL,scaffolding-in-clil,"Chiến lược scaffolding: mẫu câu, sơ đồ, phân nhỏ nhiệm vụ.",4,video,,720,,false
+9f4d3825-0fd5-45dc-a091-a7133baf8e76,Metacognition in the Classroom,metacognition-classroom,Phát triển siêu nhận thức cho học sinh.,4,video,,600,,false
+f66d5ff2-39a7-466d-8c1c-f686b1681966,4. Grouping & Interaction,grouping,"Chia cặp/nhóm, giao vai trò, luân chuyển và kết nối ý tưởng.",4,video,,510,,false
+3d105c48-1a06-42c9-bb85-30f06b81a9b1,STEM Project Presentations,stem-project-presentations,Hướng dẫn học sinh trình bày dự án STEM.,5,video,,720,,false
+f66d5ff2-39a7-466d-8c1c-f686b1681966,5. Checking Understanding & Feedback,checking-understanding,"ICQ, CCQ, phản hồi hai bước và phát triển siêu nhận thức.",5,video,,720,,false
+7c1186fc-24fb-47c3-9f5f-7d3db76ab4db,Peer Assessment,peer-assessment,Hướng dẫn học sinh đánh giá đồng đẳng hiệu quả.,5,video,,540,,false
+9f4d3825-0fd5-45dc-a091-a7133baf8e76,Motivation & Engagement,motivation-engagement,Động lực bền vững và mức độ tham gia có mục đích.,5,video,,540,,false
+60d52fe4-d413-4147-8251-a0d80c986c20,Assessment in CLIL,assessment-in-clil,Đánh giá nội dung và ngôn ngữ đồng thời.,5,article,,0,"<h4>Đánh giá trong CLIL</h4><p>Khi đánh giá trong CLIL, cần phân biệt rõ giữa mục tiêu nội dung và mục tiêu ngôn ngữ.</p><ul><li><b>Content assessment:</b> Kiểm tra kiến thức môn học</li><li><b>Language assessment:</b> Kiểm tra việc sử dụng ngôn ngữ</li><li><b>Integrated assessment:</b> Cả hai cùng lúc với tiêu chí riêng</li></ul><p>Gợi ý: Dùng rubric với hai thang điểm riêng cho content và language.</p>",false
+f66d5ff2-39a7-466d-8c1c-f686b1681966,6. Transitions & Closing,transitions-closing,"Quản lý chuyển tiếp, time management, exit ticket và kết thúc bài.",6,video,,480,,false
+60d52fe4-d413-4147-8251-a0d80c986c20,Sample CLIL Lesson,sample-clil-lesson,Phân tích một bài học CLIL mẫu từ Khoa học lớp 6.,6,video,,900,,false
+9f4d3825-0fd5-45dc-a091-a7133baf8e76,Applying Science to Lesson Design,applying-science-to-lessons,Tích hợp 5 nguyên lý vào thiết kế bài học.,6,article,,0,,false
+60d52fe4-d413-4147-8251-a0d80c986c20,CLIL across Subjects,clil-across-subjects,"Áp dụng CLIL cho Toán, Khoa học, Lịch sử và Địa lý.",7,article,,0,"<h4>CLIL cho các môn học</h4><p>Mỗi môn học có discourse riêng. Dưới đây là một số gợi ý:</p><ul><li><b>Toán:</b> So sánh, phân loại, mô tả hình dạng</li><li><b>Khoa học:</b> Nguyên nhân-kết quả, mô tả quy trình</li><li><b>Lịch sử:</b> Trình tự thời gian, nguyên nhân và hậu quả</li></ul>",false
+60d52fe4-d413-4147-8251-a0d80c986c20,CLIL Lesson Planning Workshop,clil-planning-workshop,Thực hành thiết kế một bài CLIL hoàn chỉnh.,8,assignment,,0,<h4>Bài tập: Thiết kế bài CLIL</h4><p>Chọn một chủ đề môn học bạn đang dạy. Viết:</p><ol><li>Một mục tiêu nội dung</li><li>Một mục tiêu ngôn ngữ</li><li>Ba hoạt động theo trình tự</li><li>Một rubric đánh giá đơn giản</li></ol>,false

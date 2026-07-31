@@ -8,3 +8,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export async function getAuthToken() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token || localStorage.getItem('vmg_token');
+}

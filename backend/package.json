@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "seed": "node src/seed/seed.js"
+    "seed": "node src/seed/seed.js",
+    "export": "node src/seed/seed.js --mode=export"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.16",

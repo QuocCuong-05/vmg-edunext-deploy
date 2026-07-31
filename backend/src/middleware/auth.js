@@ -1,4 +1,4 @@
-import { supabase } from '../config/database.js';
+import { supabase, supabaseAdmin } from '../config/database.js';
 
 export async function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -14,6 +14,24 @@ export async function authenticate(req, res, next) {
   }
 
   req.user = user;
+  next();
+}
+
+export async function requireAdmin(req, res, next) {
+  const { data: profile, error } = await supabaseAdmin
+    .from('profiles')
+    .select('role')
+    .eq('id', req.user.id)
+    .maybeSingle();
+
+  if (error) {
+    return res.status(500).json({ error: 'Failed to check permissions' });
+  }
+
+  if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
   next();
 }
 

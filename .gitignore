@@ -3,6 +3,8 @@ dist/
 .env
 backend/.env
 *.local
+backend/.env.staging
+backend/.env.production
 package-lock.json
 *.log
 ngrok.log

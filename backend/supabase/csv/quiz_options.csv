@@ -1,21 +1,193 @@
 question_id,option_text,is_correct,feedback_correct,feedback_incorrect,sort_order
-9f356a97-77c3-46d7-be0e-765cd13bf1b5,"""Work in groups.""",false,,,1
-9f356a97-77c3-46d7-be0e-765cd13bf1b5,"""In groups of three, discuss the causes of deforestation. You have 8 minutes. Each person shares one idea.""",true,,,2
-9f356a97-77c3-46d7-be0e-765cd13bf1b5,"""Do the group task now.""",false,,,3
-9f356a97-77c3-46d7-be0e-765cd13bf1b5,"""Get into groups and talk.""",false,,,4
-933208ef-18b2-7a44-03b4-c00f8d454fa2,"To check if students understand what to do, not the content.",true,,,1
-933208ef-18b2-7a44-03b4-c00f8d454fa2,To check if students are happy with the task.,false,,,2
-933208ef-18b2-7a44-03b4-c00f8d454fa2,To review vocabulary from the lesson.,false,,,3
-933208ef-18b2-7a44-03b4-c00f8d454fa2,To assess the final product.,false,,,4
-a6a5c627-3daf-c5b1-49e3-966059c2e850,"""Good job. Next.""",false,,,1
-a6a5c627-3daf-c5b1-49e3-966059c2e850,"""That is wrong. Try again.""",false,,,2
-a6a5c627-3daf-c5b1-49e3-966059c2e850,"""You need to improve your grammar.""",false,,,3
-a6a5c627-3daf-c5b1-49e3-966059c2e850,"""I like your use of evidence. Next time, add a concluding sentence.""",true,,,4
-6ea48ed7-2f84-c758-4ce0-b8a1df14f56c,To simplify the content so it is easy.,false,,,1
-6ea48ed7-2f84-c758-4ce0-b8a1df14f56c,To replace the teacher's instruction.,false,,,2
-6ea48ed7-2f84-c758-4ce0-b8a1df14f56c,To provide structured access to challenging content while maintaining cognitive demand.,true,,,3
-6ea48ed7-2f84-c758-4ce0-b8a1df14f56c,To translate difficult words into the L1.,false,,,4
-966f09e3-2a4e-c931-bfe9-b9943a6b55ee,They are not paying attention.,false,,,1
-966f09e3-2a4e-c931-bfe9-b9943a6b55ee,They lack basic vocabulary.,false,,,2
-966f09e3-2a4e-c931-bfe9-b9943a6b55ee,"They are processing both content and language simultaneously, which increases cognitive load.",true,,,3
-966f09e3-2a4e-c931-bfe9-b9943a6b55ee,They have low motivation.,false,,,4
+471ec0ca-2e55-42c1-a573-d5cecc14e19c,A longer silent reading.,false,,Not quite. A model and frame make the discourse pattern visible so content knowledge can be expressed.,1
+4d85a865-ca9d-4d61-a396-cd26223a422a,Do you understand?,false,,"Not quite. An ICQ checks the procedure, not the target language or a student's feelings.",1
+fe0abb4f-5cdb-43f6-af69-24cddfefabac,Can a fragile glass break easily?,true,Correct. A CCQ tests the concept through meaning-based examples rather than asking “Do you understand?”,,1
+ba851928-b903-46db-a87b-585e50bfd7f4,Speak louder over the class.,false,,Not quite. A calm reset protects learning time and teaches a repeatable transition routine.,1
+d5e6f85b-0149-47ac-a885-ac8090d7852d,Operationalise the salient causal propositions.,false,,"Not quite. Short sentences, familiar verbs, a visible product and a time limit reduce avoidable language load.",1
+d5219bc4-3d5f-4425-aef6-04a21c1385c0,Wrong.,false,,Not quite. Specific acknowledgement plus one actionable next step supports learning and dignity.,1
+4f97039a-8ef1-463a-abbb-fd9f4e0c5077,Ask only the fastest group.,false,,Not quite. A shared signal and visible response give the teacher evidence from every group.,1
+2886efaa-99b4-4c2d-a5ca-7f7d2e32d1f5,That is a careless mistake.,false,,Not quite. Separating the learner's idea from the correctable language feature encourages participation.,1
+66b315cf-aebf-464c-a676-e41eb9707d86,Learn water; speak English well.,false,,Not quite. Dual objectives identify both the content learning and the language needed to demonstrate it.,1
+4f17bffe-cbeb-4476-a830-cb104f464ca6,Content,false,,Not quite. Comparing requires higher-order processing and therefore foregrounds Cognition.,1
+9e6604a2-54a6-40c4-a087-af86a44e443b,Replace analysis with copying definitions.,false,,Not quite. Scaffolds reduce linguistic barriers while preserving the thinking demand.,1
+e335b92d-c21f-4b6b-a116-31ec5e49976c,Casual language students use at break time.,false,,Not quite. Language of learning is the subject-specific language required to access the content.,1
+c154019f-2257-4ff2-aa43-3ed32a6c5cd4,It uses advanced vocabulary.,false,,"Not quite. Effective instructions make the grouping, roles, expected action and time limit explicit.",1
+3ac53e67-f0ca-4f75-a8b4-5f9338caf2c5,Independent test → explanation → model.,false,,Not quite. Support is gradually withdrawn as learners gain control.,1
+19a15a11-4450-4c72-ab28-dcd4e6a7a8d0,Only spelling accuracy.,false,,"Not quite. Assessment should capture content understanding, reasoning and purposeful language use.",1
+78232bf9-90e3-458d-a9e4-83d7452d7c6d,Use only unfamiliar foreign examples.,false,,Not quite. Connecting local knowledge with other perspectives supports Culture and critical comparison.,1
+33ee96d5-a974-4a09-a940-39d71f91f084,Be excellent.,false,,Not quite. Observable criteria describe evidence that teachers and learners can actually see or hear.,1
+ddcb9f30-b2a6-4509-a913-d7b80863944b,Continue because the lesson plan is fixed.,false,,Not quite. Formative evidence becomes useful when it changes the next teaching decision.,1
+d676cb9b-09db-4abe-aa93-e6a240a0acff,Good work.,false,,Not quite. Actionable feedback identifies what works and a specific next move linked to the criteria.,1
+15e9085c-cd93-4d60-ae4b-f18dbe15ed41,To produce a final grade.,false,,Not quite. A hinge question provides decision-quality evidence at a key transition point.,1
+7297cdf6-e0ef-4522-a79e-823123d6107d,Ask students to give any opinion.,false,,Not quite. Calibration with a shared sample improves consistency and focuses comments on evidence.,1
+3e291ade-d63a-42b8-a385-8f709e06c306,Whether the font is attractive.,false,,"Not quite. An item may be too easy for unintended reasons, such as implausible distractors or grammatical clues.",1
+3ee63040-8088-4195-a2d7-820fb098e653,It is obviously silly.,false,,Not quite. Good distractors diagnose likely misconceptions rather than merely making the item harder.,1
+559574a0-1be9-4883-a292-b288d1efed6f,Only after the final grade.,false,,Not quite. Self-assessment supports learning when learners can still act on what they notice.,1
+3e7e3633-f2e2-4364-a2bf-43e7994f5d07,Reread the same highlighted paragraph.,false,,Not quite. Retrieval practice requires bringing information to mind without looking at the source.,1
+a566c483-21d9-4a16-a5ed-5459c741e74d,Three hours of review the night before the test.,false,,"Not quite. Spacing distributes practice across time, allowing some forgetting before effortful retrieval.",1
+92b5fae6-1583-4e88-a42c-ae34035bdaef,Students receive too little information.,false,,Not quite. Duplicated verbal information can consume limited working-memory capacity without adding meaning.,1
+45156b1a-bc74-4c4e-a5ba-8c4f46fa7ca1,When experts need an open-ended challenge.,false,,Not quite. Worked examples reduce unnecessary search for novices and make expert steps visible.,1
+6651aacc-8a27-4bcd-aa7b-3c2393543599,Complete 30 identical problems before seeing another type.,false,,Not quite. Interleaving mixes related problem types so learners practise selecting an appropriate strategy.,1
+7ec888fd-2cf0-44de-a90c-28abfd5ca15d,Reread it once more.,false,,Not quite. Performance without support is better evidence of learning than familiarity during rereading.,1
+d32c16f5-d9e8-479c-a8f6-ec8afa03a68f,Add unrelated animations.,false,,Not quite. Coherent materials and segmented instructions protect working memory for the learning itself.,1
+84b1b2f3-5fb2-4ceb-adef-352b93a54b68,Feedback turns every quiz into a final exam.,false,,"Not quite. Retrieval strengthens what is recalled, so timely correction matters when recall is inaccurate.",1
+5bc2f0cd-75b4-4f59-a8ce-f10a5dd25b59,Some students analyse while others only copy.,false,,Not quite. Access support can vary while the essential learning goal remains shared.,1
+6d5a594c-1fd4-434e-a711-d0ba4184354f,Permanent labels such as smart or weak.,false,,Not quite. Flexible groups change in response to learning evidence and instructional purpose.,1
+17c94673-117c-42bc-a2c7-3ea781a40950,Use one format for every learner.,false,,"Not quite. Multiple means of access and expression can coexist with common, rigorous criteria.",1
+b71c758a-7e27-48e5-ae40-e36146ba7317,Give ten more identical questions.,false,,"Not quite. A good extension increases depth, complexity or transfer rather than workload alone.",1
+a3a1c82a-92c6-49b4-a07f-ce0591670b5b,The teacher completes every answer.,false,,Not quite. A designed frame can be progressively reduced as independence increases.,1
+c57cc34c-7c7e-4802-a2a5-a72cfa85ee4c,It always saves too much time.,false,,"Not quite. Difficulty may reflect language, prior knowledge or task design; reduced expectations can deny access to powerful learning.",1
+a3583310-a335-4fb1-a50b-ba9f07638cad,Replace writing with unrelated vocabulary copying.,false,,Not quite. Targeted support addresses the barrier in written organisation while preserving the intellectual goal.,1
+dabaf46e-621a-42cd-a005-dc6adbc55663,Count how many different worksheets were printed.,false,,"Not quite. Effective differentiation improves access, progress and eventual independence, not merely activity variety.",1
+3ee1138e-b5d8-4fbc-abf3-3dec29b6cf76,Replace the objective with vocabulary memorisation.,false,,Not quite. The redesign preserves cognitive ambition while supplying the language of and for learning.,1
+51a05df0-d211-4765-a9c0-7d212405192f,Wait until the final test.,false,,Not quite. A short responsive intervention addresses a widespread need and generates fresh evidence for the next move.,1
+66380126-0bc0-4cb7-acb7-98511aa3b8c9,Long lecture → final grade.,false,,"Not quite. The sequence retrieves prior knowledge, corrects it, targets instruction, checks transfer and collects evidence.",1
+e4216273-743f-4bd6-ad6e-84a44fbcbebe,Remove every support immediately.,false,,Not quite. Planned fading converts successful supported performance into independent performance.,1
+2543b208-c04f-4a97-a3e5-e4d59203cd5c,Ask for volunteers.,false,,Not quite. Simultaneous response systems increase participation ratio and reveal whole-class patterns quickly.,1
+5becc91c-bb4f-449f-a372-37dd229a15e5,The lesson was nice.,false,,"Not quite. Low-inference evidence records observable behaviour and timing, making reflection more precise.",1
+bf5729ca-7926-4ee1-a531-09cb3156a889,A decorative badge.,false,,"Not quite. Assessment supports learning when feedback is followed by action, not when scores merely report performance.",1
+dddb1929-2a07-4899-a365-3a3f01046cb0,Use one pathway regardless of barriers.,false,,Not quite. Equity means preserving access to ambitious goals while responding intelligently to learner variability.,1
+471ec0ca-2e55-42c1-a573-d5cecc14e19c,A model explanation with sequencing language and a speaking frame.,true,Correct. A model and frame make the discourse pattern visible so content knowledge can be expressed.,,2
+3e7e3633-f2e2-4364-a2bf-43e7994f5d07,Copy the definition three times.,false,,Not quite. Retrieval practice requires bringing information to mind without looking at the source.,2
+33ee96d5-a974-4a09-a940-39d71f91f084,Understand the topic deeply.,false,,Not quite. Observable criteria describe evidence that teachers and learners can actually see or hear.,2
+dddb1929-2a07-4899-a365-3a3f01046cb0,Lower expectations for predefined groups.,false,,Not quite. Equity means preserving access to ambitious goals while responding intelligently to learner variability.,2
+66380126-0bc0-4cb7-acb7-98511aa3b8c9,No-notes retrieval → feedback → targeted mini-lesson → new application → exit ticket.,true,"Correct. The sequence retrieves prior knowledge, corrects it, targets instruction, checks transfer and collects evidence.",,2
+a566c483-21d9-4a16-a5ed-5459c741e74d,"Brief reviews after 1 day, 1 week and 3 weeks.",true,"Correct. Spacing distributes practice across time, allowing some forgetting before effortful retrieval.",,2
+2886efaa-99b4-4c2d-a5ca-7f7d2e32d1f5,You should know this already.,false,,Not quite. Separating the learner's idea from the correctable language feature encourages participation.,2
+b71c758a-7e27-48e5-ae40-e36146ba7317,Let the learner wait silently.,false,,"Not quite. A good extension increases depth, complexity or transfer rather than workload alone.",2
+4f97039a-8ef1-463a-abbb-fd9f4e0c5077,Use a visible countdown and ask each group to display its final answer.,true,Correct. A shared signal and visible response give the teacher evidence from every group.,,2
+92b5fae6-1583-4e88-a42c-ae34035bdaef,Redundant information may overload working memory.,true,Correct. Duplicated verbal information can consume limited working-memory capacity without adding meaning.,,2
+3ee1138e-b5d8-4fbc-abf3-3dec29b6cf76,"Keep the objective; preteach essential language, model the discourse and provide temporary speaking frames.",true,Correct. The redesign preserves cognitive ambition while supplying the language of and for learning.,,2
+17c94673-117c-42bc-a2c7-3ea781a40950,"Offer text and audio input, then allow a written or recorded explanation against the same criteria.",true,"Correct. Multiple means of access and expression can coexist with common, rigorous criteria.",,2
+6d5a594c-1fd4-434e-a711-d0ba4184354f,Student height.,false,,Not quite. Flexible groups change in response to learning evidence and instructional purpose.,2
+45156b1a-bc74-4c4e-a5ba-8c4f46fa7ca1,When novices are first learning a complex multi-step process.,true,Correct. Worked examples reduce unnecessary search for novices and make expert steps visible.,,2
+ddcb9f30-b2a6-4509-a913-d7b80863944b,Reteach the distinction with contrasting examples before new content.,true,Correct. Formative evidence becomes useful when it changes the next teaching decision.,,2
+2543b208-c04f-4a97-a3e5-e4d59203cd5c,Call on the highest achiever.,false,,Not quite. Simultaneous response systems increase participation ratio and reveal whole-class patterns quickly.,2
+5bc2f0cd-75b4-4f59-a8ce-f10a5dd25b59,All students justify a claim; some use sentence frames while others write independently.,true,Correct. Access support can vary while the essential learning goal remains shared.,,2
+6651aacc-8a27-4bcd-aa7b-3c2393543599,Mix problems requiring different strategies and ask students to choose the method.,true,Correct. Interleaving mixes related problem types so learners practise selecting an appropriate strategy.,,2
+9e6604a2-54a6-40c4-a087-af86a44e443b,Provide a cause-effect graphic organiser and sentence frames.,true,Correct. Scaffolds reduce linguistic barriers while preserving the thinking demand.,,2
+84b1b2f3-5fb2-4ceb-adef-352b93a54b68,Feedback removes all effort.,false,,"Not quite. Retrieval strengthens what is recalled, so timely correction matters when recall is inaccurate.",2
+e4216273-743f-4bd6-ad6e-84a44fbcbebe,Keep the full frame forever.,false,,Not quite. Planned fading converts successful supported performance into independent performance.,2
+7ec888fd-2cf0-44de-a90c-28abfd5ca15d,Trust the feeling of familiarity.,false,,Not quite. Performance without support is better evidence of learning than familiarity during rereading.,2
+d5219bc4-3d5f-4425-aef6-04a21c1385c0,Good.,false,,Not quite. Specific acknowledgement plus one actionable next step supports learning and dignity.,2
+d32c16f5-d9e8-479c-a8f6-ec8afa03a68f,Give all instructions in one long paragraph.,false,,Not quite. Coherent materials and segmented instructions protect working memory for the learning itself.,2
+e335b92d-c21f-4b6b-a116-31ec5e49976c,"Key subject language such as migration, birth rate and population density.",true,Correct. Language of learning is the subject-specific language required to access the content.,,2
+d676cb9b-09db-4abe-aa93-e6a240a0acff,Needs improvement.,false,,Not quite. Actionable feedback identifies what works and a specific next move linked to the criteria.,2
+19a15a11-4450-4c72-ab28-dcd4e6a7a8d0,Only whether students finished early.,false,,"Not quite. Assessment should capture content understanding, reasoning and purposeful language use.",2
+c57cc34c-7c7e-4802-a2a5-a72cfa85ee4c,It can create an opportunity gap and confuse support needs with low potential.,true,"Correct. Difficulty may reflect language, prior knowledge or task design; reduced expectations can deny access to powerful learning.",,2
+d5e6f85b-0149-47ac-a885-ac8090d7852d,Underline two reasons in the text. You have three minutes.,true,"Correct. Short sentences, familiar verbs, a visible product and a time limit reduce avoidable language load.",,2
+15e9085c-cd93-4d60-ae4b-f18dbe15ed41,To fill spare time.,false,,Not quite. A hinge question provides decision-quality evidence at a key transition point.,2
+dabaf46e-621a-42cd-a005-dc6adbc55663,Ask whether the room felt busy.,false,,"Not quite. Effective differentiation improves access, progress and eventual independence, not merely activity variety.",2
+5becc91c-bb4f-449f-a372-37dd229a15e5,Students seemed fine.,false,,"Not quite. Low-inference evidence records observable behaviour and timing, making reflection more precise.",2
+bf5729ca-7926-4ee1-a531-09cb3156a889,A longer title.,false,,"Not quite. Assessment supports learning when feedback is followed by action, not when scores merely report performance.",2
+7297cdf6-e0ef-4522-a79e-823123d6107d,"Model the criteria, practise on an anonymous sample, then review a peer's work.",true,Correct. Calibration with a shared sample improves consistency and focuses comments on evidence.,,2
+4f17bffe-cbeb-4476-a830-cb104f464ca6,Communication,false,,Not quite. Comparing requires higher-order processing and therefore foregrounds Cognition.,2
+ba851928-b903-46db-a87b-585e50bfd7f4,Cancel all group work.,false,,Not quite. A calm reset protects learning time and teaches a repeatable transition routine.,2
+51a05df0-d211-4765-a9c0-7d212405192f,Correct only the nearest group.,false,,Not quite. A short responsive intervention addresses a widespread need and generates fresh evidence for the next move.,2
+3e291ade-d63a-42b8-a385-8f709e06c306,Whether clues or distractors make the answer obvious.,true,"Correct. An item may be too easy for unintended reasons, such as implausible distractors or grammatical clues.",,2
+a3583310-a335-4fb1-a50b-ba9f07638cad,Lower the content target.,false,,Not quite. Targeted support addresses the barrier in written organisation while preserving the intellectual goal.,2
+fe0abb4f-5cdb-43f6-af69-24cddfefabac,Can you spell fragile?,false,,Not quite. A CCQ tests the concept through meaning-based examples rather than asking “Do you understand?”,2
+78232bf9-90e3-458d-a9e4-83d7452d7c6d,Avoid all discussion of local knowledge.,false,,Not quite. Connecting local knowledge with other perspectives supports Culture and critical comparison.,2
+3ee63040-8088-4195-a2d7-820fb098e653,It is much longer than the answer.,false,,Not quite. Good distractors diagnose likely misconceptions rather than merely making the item harder.,2
+3ac53e67-f0ca-4f75-a8b4-5f9338caf2c5,Model → guided practice → collaborative attempt → independent performance.,true,Correct. Support is gradually withdrawn as learners gain control.,,2
+4d85a865-ca9d-4d61-a396-cd26223a422a,Is the task easy?,false,,"Not quite. An ICQ checks the procedure, not the target language or a student's feelings.",2
+a3a1c82a-92c6-49b4-a07f-ce0591670b5b,A paragraph frame that gradually removes prompts.,true,Correct. A designed frame can be progressively reduced as independence increases.,,2
+559574a0-1be9-4883-a292-b288d1efed6f,"Before submission, using criteria, with time to revise.",true,Correct. Self-assessment supports learning when learners can still act on what they notice.,,2
+66b315cf-aebf-464c-a676-e41eb9707d86,Explain evaporation and condensation; use because/therefore to show cause and effect.,true,Correct. Dual objectives identify both the content learning and the language needed to demonstrate it.,,2
+c154019f-2257-4ff2-aa43-3ed32a6c5cd4,"It specifies grouping, roles, task and timing.",true,"Correct. Effective instructions make the grouping, roles, expected action and time limit explicit.",,2
+33ee96d5-a974-4a09-a940-39d71f91f084,Give two evidence-based reasons and use one linking phrase between them.,true,Correct. Observable criteria describe evidence that teachers and learners can actually see or hear.,,3
+471ec0ca-2e55-42c1-a573-d5cecc14e19c,More difficult terminology without examples.,false,,Not quite. A model and frame make the discourse pattern visible so content knowledge can be expressed.,3
+3ac53e67-f0ca-4f75-a8b4-5f9338caf2c5,Translation only → memorisation only.,false,,Not quite. Support is gradually withdrawn as learners gain control.,3
+dabaf46e-621a-42cd-a005-dc6adbc55663,Compare learning evidence across groups and check whether supports increased independence.,true,"Correct. Effective differentiation improves access, progress and eventual independence, not merely activity variety.",,3
+19a15a11-4450-4c72-ab28-dcd4e6a7a8d0,The ranking plus reasons using relevant content evidence and target language.,true,"Correct. Assessment should capture content understanding, reasoning and purposeful language use.",,3
+78232bf9-90e3-458d-a9e4-83d7452d7c6d,Invite comparisons between local food practices and examples from other regions.,true,Correct. Connecting local knowledge with other perspectives supports Culture and critical comparison.,,3
+dddb1929-2a07-4899-a365-3a3f01046cb0,"Use common high expectations, varied access supports, transparent criteria and evidence-based regrouping.",true,Correct. Equity means preserving access to ambitious goals while responding intelligently to learner variability.,,3
+ddcb9f30-b2a6-4509-a913-d7b80863944b,Lower everyone's final grade.,false,,Not quite. Formative evidence becomes useful when it changes the next teaching decision.,3
+3ee1138e-b5d8-4fbc-abf3-3dec29b6cf76,Let only fluent students participate.,false,,Not quite. The redesign preserves cognitive ambition while supplying the language of and for learning.,3
+d676cb9b-09db-4abe-aa93-e6a240a0acff,Your claim is clear; add one quotation and explain how it supports the claim.,true,Correct. Actionable feedback identifies what works and a specific next move linked to the criteria.,,3
+15e9085c-cd93-4d60-ae4b-f18dbe15ed41,To decide whether the class is ready to move on or needs immediate support.,true,Correct. A hinge question provides decision-quality evidence at a key transition point.,,3
+7297cdf6-e0ef-4522-a79e-823123d6107d,Let friends assign final grades privately.,false,,Not quite. Calibration with a shared sample improves consistency and focuses comments on evidence.,3
+3e291ade-d63a-42b8-a385-8f709e06c306,Whether students deserve less time.,false,,"Not quite. An item may be too easy for unintended reasons, such as implausible distractors or grammatical clues.",3
+51a05df0-d211-4765-a9c0-7d212405192f,"Pause the class, surface contrasting examples, ask a hinge question, then regroup based on responses.",true,Correct. A short responsive intervention addresses a widespread need and generates fresh evidence for the next move.,,3
+3ee63040-8088-4195-a2d7-820fb098e653,It is plausible and reflects a predictable misconception.,true,Correct. Good distractors diagnose likely misconceptions rather than merely making the item harder.,,3
+559574a0-1be9-4883-a292-b288d1efed6f,Without showing the criteria.,false,,Not quite. Self-assessment supports learning when learners can still act on what they notice.,3
+bf5729ca-7926-4ee1-a531-09cb3156a889,Explanatory feedback and a required opportunity to apply the correction.,true,"Correct. Assessment supports learning when feedback is followed by action, not when scores merely report performance.",,3
+3e7e3633-f2e2-4364-a2bf-43e7994f5d07,Close the notes and write everything you remember about photosynthesis.,true,Correct. Retrieval practice requires bringing information to mind without looking at the source.,,3
+a566c483-21d9-4a16-a5ed-5459c741e74d,Repeat the item ten times in one minute.,false,,"Not quite. Spacing distributes practice across time, allowing some forgetting before effortful retrieval.",3
+66380126-0bc0-4cb7-acb7-98511aa3b8c9,Copy notes → copy notes → copy notes.,false,,"Not quite. The sequence retrieves prior knowledge, corrects it, targets instruction, checks transfer and collects evidence.",3
+92b5fae6-1583-4e88-a42c-ae34035bdaef,Retrieval becomes too difficult.,false,,Not quite. Duplicated verbal information can consume limited working-memory capacity without adding meaning.,3
+45156b1a-bc74-4c4e-a5ba-8c4f46fa7ca1,When students already perform fluently.,false,,Not quite. Worked examples reduce unnecessary search for novices and make expert steps visible.,3
+6651aacc-8a27-4bcd-aa7b-3c2393543599,Read one model answer repeatedly.,false,,Not quite. Interleaving mixes related problem types so learners practise selecting an appropriate strategy.,3
+7ec888fd-2cf0-44de-a90c-28abfd5ca15d,"Try explaining it without notes, then compare your explanation with the criteria.",true,Correct. Performance without support is better evidence of learning than familiarity during rereading.,,3
+e4216273-743f-4bd6-ad6e-84a44fbcbebe,Fade selected prompts and ask students to reconstruct the response with a checklist.,true,Correct. Planned fading converts successful supported performance into independent performance.,,3
+d32c16f5-d9e8-479c-a8f6-ec8afa03a68f,"Remove decorative details, chunk instructions and visually signal key information.",true,Correct. Coherent materials and segmented instructions protect working memory for the learning itself.,,3
+84b1b2f3-5fb2-4ceb-adef-352b93a54b68,Feedback corrects errors before they become strengthened through later practice.,true,"Correct. Retrieval strengthens what is recalled, so timely correction matters when recall is inaccurate.",,3
+5bc2f0cd-75b4-4f59-a8ce-f10a5dd25b59,Struggling students skip the lesson objective.,false,,Not quite. Access support can vary while the essential learning goal remains shared.,3
+6d5a594c-1fd4-434e-a711-d0ba4184354f,Current evidence and the specific purpose of the task.,true,Correct. Flexible groups change in response to learning evidence and instructional purpose.,,3
+2543b208-c04f-4a97-a3e5-e4d59203cd5c,Ask one diagnostic question and have all students respond simultaneously on mini-whiteboards.,true,Correct. Simultaneous response systems increase participation ratio and reveal whole-class patterns quickly.,,3
+17c94673-117c-42bc-a2c7-3ea781a40950,Remove challenging content for the whole class.,false,,"Not quite. Multiple means of access and expression can coexist with common, rigorous criteria.",3
+b71c758a-7e27-48e5-ae40-e36146ba7317,Ask the learner to apply the concept to a novel case and justify the transfer.,true,"Correct. A good extension increases depth, complexity or transfer rather than workload alone.",,3
+c154019f-2257-4ff2-aa43-3ed32a6c5cd4,It explains the entire grammar lesson.,false,,"Not quite. Effective instructions make the grouping, roles, expected action and time limit explicit.",3
+4d85a865-ca9d-4d61-a396-cd26223a422a,Do you write alone first or compare first?,true,"Correct. An ICQ checks the procedure, not the target language or a student's feelings.",,3
+a3a1c82a-92c6-49b4-a07f-ce0591670b5b,Permanent translation of every sentence.,false,,Not quite. A designed frame can be progressively reduced as independence increases.,3
+fe0abb4f-5cdb-43f6-af69-24cddfefabac,Do you understand fragile?,false,,Not quite. A CCQ tests the concept through meaning-based examples rather than asking “Do you understand?”,3
+ba851928-b903-46db-a87b-585e50bfd7f4,"Pause, regain attention, restate the grouping signal and restart.",true,Correct. A calm reset protects learning time and teaches a repeatable transition routine.,,3
+d5e6f85b-0149-47ac-a885-ac8090d7852d,Engage in autonomous textual interrogation.,false,,"Not quite. Short sentences, familiar verbs, a visible product and a time limit reduce avoidable language load.",3
+d5219bc4-3d5f-4425-aef6-04a21c1385c0,You identified the cause. Now add one effect from the text.,true,Correct. Specific acknowledgement plus one actionable next step supports learning and dignity.,,3
+c57cc34c-7c7e-4802-a2a5-a72cfa85ee4c,It makes grouping more flexible.,false,,"Not quite. Difficulty may reflect language, prior knowledge or task design; reduced expectations can deny access to powerful learning.",3
+4f97039a-8ef1-463a-abbb-fd9f4e0c5077,Assume silence means completion.,false,,Not quite. A shared signal and visible response give the teacher evidence from every group.,3
+2886efaa-99b4-4c2d-a5ca-7f7d2e32d1f5,That idea is useful. Let’s adjust the verb form together.,true,Correct. Separating the learner's idea from the correctable language feature encourages participation.,,3
+5becc91c-bb4f-449f-a372-37dd229a15e5,"At 09:18, 7 of 8 groups began within 20 seconds after the model and ICQ.",true,"Correct. Low-inference evidence records observable behaviour and timing, making reflection more precise.",,3
+66b315cf-aebf-464c-a676-e41eb9707d86,Complete page 12; memorise ten words.,false,,Not quite. Dual objectives identify both the content learning and the language needed to demonstrate it.,3
+4f17bffe-cbeb-4476-a830-cb104f464ca6,Cognition,true,Correct. Comparing requires higher-order processing and therefore foregrounds Cognition.,,3
+a3583310-a335-4fb1-a50b-ba9f07638cad,"Keep the same ideas and criteria; add an outline, linking bank and staged drafting.",true,Correct. Targeted support addresses the barrier in written organisation while preserving the intellectual goal.,,3
+9e6604a2-54a6-40c4-a087-af86a44e443b,Remove the complex concept from the lesson.,false,,Not quite. Scaffolds reduce linguistic barriers while preserving the thinking demand.,3
+e335b92d-c21f-4b6b-a116-31ec5e49976c,Any grammar taught in the coursebook.,false,,Not quite. Language of learning is the subject-specific language required to access the content.,3
+3e7e3633-f2e2-4364-a2bf-43e7994f5d07,Watch the same video with subtitles.,false,,Not quite. Retrieval practice requires bringing information to mind without looking at the source.,4
+559574a0-1be9-4883-a292-b288d1efed6f,Instead of all teacher feedback.,false,,Not quite. Self-assessment supports learning when learners can still act on what they notice.,4
+e335b92d-c21f-4b6b-a116-31ec5e49976c,Only pronunciation practice.,false,,Not quite. Language of learning is the subject-specific language required to access the content.,4
+c154019f-2257-4ff2-aa43-3ed32a6c5cd4,It asks students whether they like pair work.,false,,"Not quite. Effective instructions make the grouping, roles, expected action and time limit explicit.",4
+51a05df0-d211-4765-a9c0-7d212405192f,Give every student the answer key.,false,,Not quite. A short responsive intervention addresses a widespread need and generates fresh evidence for the next move.,4
+3ee63040-8088-4195-a2d7-820fb098e653,It introduces unrelated content.,false,,Not quite. Good distractors diagnose likely misconceptions rather than merely making the item harder.,4
+78232bf9-90e3-458d-a9e4-83d7452d7c6d,Treat one food practice as universally superior.,false,,Not quite. Connecting local knowledge with other perspectives supports Culture and critical comparison.,4
+4d85a865-ca9d-4d61-a396-cd26223a422a,What tense will you use?,false,,"Not quite. An ICQ checks the procedure, not the target language or a student's feelings.",4
+9e6604a2-54a6-40c4-a087-af86a44e443b,Give the final answer before discussion.,false,,Not quite. Scaffolds reduce linguistic barriers while preserving the thinking demand.,4
+3e291ade-d63a-42b8-a385-8f709e06c306,Whether the question is long enough.,false,,"Not quite. An item may be too easy for unintended reasons, such as implausible distractors or grammatical clues.",4
+66b315cf-aebf-464c-a676-e41eb9707d86,Watch a video; enjoy science.,false,,Not quite. Dual objectives identify both the content learning and the language needed to demonstrate it.,4
+fe0abb4f-5cdb-43f6-af69-24cddfefabac,Please repeat fragile.,false,,Not quite. A CCQ tests the concept through meaning-based examples rather than asking “Do you understand?”,4
+a3a1c82a-92c6-49b4-a07f-ce0591670b5b,Exemption from speaking tasks.,false,,Not quite. A designed frame can be progressively reduced as independence increases.,4
+7297cdf6-e0ef-4522-a79e-823123d6107d,Use peer assessment without criteria.,false,,Not quite. Calibration with a shared sample improves consistency and focuses comments on evidence.,4
+dabaf46e-621a-42cd-a005-dc6adbc55663,Assume choice always means success.,false,,"Not quite. Effective differentiation improves access, progress and eventual independence, not merely activity variety.",4
+ba851928-b903-46db-a87b-585e50bfd7f4,Ignore the issue for the rest of the lesson.,false,,Not quite. A calm reset protects learning time and teaches a repeatable transition routine.,4
+15e9085c-cd93-4d60-ae4b-f18dbe15ed41,To reward only fast students.,false,,Not quite. A hinge question provides decision-quality evidence at a key transition point.,4
+3ee1138e-b5d8-4fbc-abf3-3dec29b6cf76,Translate the entire lesson and remove English output.,false,,Not quite. The redesign preserves cognitive ambition while supplying the language of and for learning.,4
+19a15a11-4450-4c72-ab28-dcd4e6a7a8d0,A list of copied vocabulary.,false,,"Not quite. Assessment should capture content understanding, reasoning and purposeful language use.",4
+d5e6f85b-0149-47ac-a885-ac8090d7852d,Proceed accordingly with the aforementioned task.,false,,"Not quite. Short sentences, familiar verbs, a visible product and a time limit reduce avoidable language load.",4
+d676cb9b-09db-4abe-aa93-e6a240a0acff,B+,false,,Not quite. Actionable feedback identifies what works and a specific next move linked to the criteria.,4
+ddcb9f30-b2a6-4509-a913-d7b80863944b,Give the same ticket again without instruction.,false,,Not quite. Formative evidence becomes useful when it changes the next teaching decision.,4
+a3583310-a335-4fb1-a50b-ba9f07638cad,Give the final paragraph to copy.,false,,Not quite. Targeted support addresses the barrier in written organisation while preserving the intellectual goal.,4
+d5219bc4-3d5f-4425-aef6-04a21c1385c0,Let another student do it.,false,,Not quite. Specific acknowledgement plus one actionable next step supports learning and dignity.,4
+4f17bffe-cbeb-4476-a830-cb104f464ca6,Culture,false,,Not quite. Comparing requires higher-order processing and therefore foregrounds Cognition.,4
+7ec888fd-2cf0-44de-a90c-28abfd5ca15d,Highlight every sentence.,false,,Not quite. Performance without support is better evidence of learning than familiarity during rereading.,4
+33ee96d5-a974-4a09-a940-39d71f91f084,Try your best.,false,,Not quite. Observable criteria describe evidence that teachers and learners can actually see or hear.,4
+d32c16f5-d9e8-479c-a8f6-ec8afa03a68f,Increase the number of simultaneous tasks.,false,,Not quite. Coherent materials and segmented instructions protect working memory for the learning itself.,4
+e4216273-743f-4bd6-ad6e-84a44fbcbebe,Lower the content goal.,false,,Not quite. Planned fading converts successful supported performance into independent performance.,4
+6651aacc-8a27-4bcd-aa7b-3c2393543599,Study only the easiest topic.,false,,Not quite. Interleaving mixes related problem types so learners practise selecting an appropriate strategy.,4
+471ec0ca-2e55-42c1-a573-d5cecc14e19c,A score penalty.,false,,Not quite. A model and frame make the discourse pattern visible so content knowledge can be expressed.,4
+84b1b2f3-5fb2-4ceb-adef-352b93a54b68,Feedback makes spacing unnecessary.,false,,"Not quite. Retrieval strengthens what is recalled, so timely correction matters when recall is inaccurate.",4
+dddb1929-2a07-4899-a365-3a3f01046cb0,Grade participation by confidence.,false,,Not quite. Equity means preserving access to ambitious goals while responding intelligently to learner variability.,4
+bf5729ca-7926-4ee1-a531-09cb3156a889,More difficult passwords.,false,,"Not quite. Assessment supports learning when feedback is followed by action, not when scores merely report performance.",4
+4f97039a-8ef1-463a-abbb-fd9f4e0c5077,Start feedback without warning.,false,,Not quite. A shared signal and visible response give the teacher evidence from every group.,4
+5bc2f0cd-75b4-4f59-a8ce-f10a5dd25b59,Advanced students complete more of the same worksheet.,false,,Not quite. Access support can vary while the essential learning goal remains shared.,4
+45156b1a-bc74-4c4e-a5ba-8c4f46fa7ca1,When the goal is only entertainment.,false,,Not quite. Worked examples reduce unnecessary search for novices and make expert steps visible.,4
+66380126-0bc0-4cb7-acb7-98511aa3b8c9,Unrelated game → homework.,false,,"Not quite. The sequence retrieves prior knowledge, corrects it, targets instruction, checks transfer and collects evidence.",4
+c57cc34c-7c7e-4802-a2a5-a72cfa85ee4c,It automatically improves motivation.,false,,"Not quite. Difficulty may reflect language, prior knowledge or task design; reduced expectations can deny access to powerful learning.",4
+6d5a594c-1fd4-434e-a711-d0ba4184354f,The same friendship groups every lesson.,false,,Not quite. Flexible groups change in response to learning evidence and instructional purpose.,4
+5becc91c-bb4f-449f-a372-37dd229a15e5,The teacher has good energy.,false,,"Not quite. Low-inference evidence records observable behaviour and timing, making reflection more precise.",4
+92b5fae6-1583-4e88-a42c-ae34035bdaef,The content becomes automatically spaced.,false,,Not quite. Duplicated verbal information can consume limited working-memory capacity without adding meaning.,4
+3ac53e67-f0ca-4f75-a8b4-5f9338caf2c5,Lecture → lecture → lecture → test.,false,,Not quite. Support is gradually withdrawn as learners gain control.,4
+17c94673-117c-42bc-a2c7-3ea781a40950,Give different success criteria to each student.,false,,"Not quite. Multiple means of access and expression can coexist with common, rigorous criteria.",4
+2543b208-c04f-4a97-a3e5-e4d59203cd5c,Review homework from last month.,false,,Not quite. Simultaneous response systems increase participation ratio and reveal whole-class patterns quickly.,4
+a566c483-21d9-4a16-a5ed-5459c741e74d,Review only content students already know.,false,,"Not quite. Spacing distributes practice across time, allowing some forgetting before effortful retrieval.",4
+2886efaa-99b4-4c2d-a5ca-7f7d2e32d1f5,"No, completely wrong.",false,,Not quite. Separating the learner's idea from the correctable language feature encourages participation.,4
+b71c758a-7e27-48e5-ae40-e36146ba7317,Ask the learner to mark everyone's work.,false,,"Not quite. A good extension increases depth, complexity or transfer rather than workload alone.",4
