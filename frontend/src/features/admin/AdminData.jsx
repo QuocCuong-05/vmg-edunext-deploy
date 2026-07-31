@@ -10,6 +10,21 @@ const ALLOWED_TABLES = [
   'courses', 'lessons', 'level_challenges',
 ];
 
+const TABLE_COLUMNS = {
+  classroom_phrase_categories: { required: ['slug','name_vi','sort_order','icon'], optional: ['id'] },
+  classroom_phrases: { required: ['category_id','phrase_en','phrase_vi','purpose','level','sort_order','is_published'] },
+  quiz_sets: { required: ['title','slug','description','passing_score','xp_reward','level','question_count','is_published'], optional: ['id'] },
+  quiz_questions: { required: ['quiz_set_id','prompt','prompt_translation','correct_answer','explanation','explanation_vi','competency_code','level','sort_order'], optional: ['id'] },
+  quiz_options: { required: ['question_id','option_text','is_correct','feedback_correct','feedback_incorrect','sort_order'] },
+  vocabulary_entries: { required: ['word','part_of_speech','level','meaning_vi','definition_en','example_en','example_vi','collocation','topic','is_published'] },
+  tips: { required: ['title','content','category','is_published'] },
+  quests: { required: ['type','title','desc_text','xp','is_active'], optional: ['id'] },
+  rewards: { required: ['name','desc_text','price','icon_type','content_type','content_json','stock','is_active'] },
+  courses: { required: ['title','slug','description','level','category','duration_hours','lesson_count','instructor','is_published'], optional: ['id'] },
+  lessons: { required: ['course_id','title','slug','description','sort_order','content_type','video_url','video_duration_seconds','article_body','is_free'] },
+  level_challenges: { required: ['title','description','xp_reward','quiz_set_id','level_min','sort_order','is_active'] },
+};
+
 function parseCsvText(text) {
   const lines = text.replace(/\r\n/g, '\n').split('\n');
   if (lines.length === 0) return { headers: [], rows: [] };
@@ -158,6 +173,54 @@ export default function AdminData() {
           ))}
         </select>
       </div>
+
+      {table && (
+        <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8 }}>
+          <p style={{ margin: '0 0 0.5rem', fontWeight: 600, fontSize: '0.85rem' }}>
+            Các cột của <code style={{ background: 'var(--hover)', padding: '2px 6px', borderRadius: 4 }}>{table}</code>
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+            {TABLE_COLUMNS[table]?.required.map(col => (
+              <span key={col} style={{
+                padding: '3px 10px', borderRadius: 4, fontSize: '0.8rem',
+                background: 'var(--hover)', color: 'var(--text)',
+                border: '1px solid var(--border)',
+              }}>{col}</span>
+            ))}
+            {TABLE_COLUMNS[table]?.optional?.map(col => (
+              <span key={col} style={{
+                padding: '3px 10px', borderRadius: 4, fontSize: '0.8rem',
+                background: 'transparent', color: 'var(--text-muted)',
+                border: '1px dashed var(--border)',
+              }}>{col} <span style={{ fontSize: '0.7rem' }}>(tự sinh)</span></span>
+            ))}
+          </div>
+          {preview && (
+            (() => {
+              const requiredCols = TABLE_COLUMNS[table]?.required || [];
+              const csvCols = new Set(preview.headers);
+              const missing = requiredCols.filter(c => !csvCols.has(c));
+              const extra = preview.headers.filter(h => h && !requiredCols.includes(h) && !(TABLE_COLUMNS[table]?.optional || []).includes(h));
+              if (missing.length > 0 || extra.length > 0) {
+                return (
+                  <div style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>
+                    {missing.length > 0 && (
+                      <p style={{ margin: 0, color: 'var(--red)' }}>
+                        Thiếu cột: {missing.join(', ')}
+                      </p>
+                    )}
+                    {extra.length > 0 && (
+                      <p style={{ margin: 0, color: '#e67e22' }}>
+                        Cột thừa (sẽ bị bỏ qua): {extra.join(', ')}
+                      </p>
+                    )}
+                  </div>
+                );
+              }
+            })()
+          )}
+        </div>
+      )}
 
       <div style={{ marginBottom: '1rem' }}>
         <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.25rem' }}>CSV File</label>
