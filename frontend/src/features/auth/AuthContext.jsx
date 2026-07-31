@@ -57,6 +57,10 @@ export function AuthProvider({ children }) {
 
     const data = await res.json();
 
+    if (!data.session) {
+      throw new Error('Email chưa được xác nhận. Vui lòng kiểm tra hộp thư.');
+    }
+
     await supabase.auth.setSession({
       access_token: data.session.access_token,
       refresh_token: data.session.refresh_token,
@@ -92,6 +96,10 @@ export function AuthProvider({ children }) {
     }
 
     const data = await res.json();
+
+    if (!data.session) {
+      throw new Error('Tài khoản đã được tạo. Vui lòng kiểm tra email để xác nhận trước khi đăng nhập.');
+    }
 
     await supabase.auth.setSession({
       access_token: data.session.access_token,
