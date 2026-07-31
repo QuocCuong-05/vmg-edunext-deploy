@@ -88,6 +88,7 @@ export default function AdminData() {
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState('replace');
   const fileRef = useRef(null);
 
   function handleFileChange(e) {
@@ -133,7 +134,7 @@ export default function AdminData() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ table, rows: preview.rows }),
+        body: JSON.stringify({ table, rows: preview.rows, mode }),
       });
 
       if (!res.ok) {
@@ -142,7 +143,7 @@ export default function AdminData() {
       }
 
       const data = await res.json();
-      setStatus(`Imported ${data.imported} rows into ${data.table}`);
+      setStatus(`${data.mode === 'append' ? 'Appended' : 'Imported'} ${data.imported} rows into ${data.table}`);
       setPreview(null);
       setCsvText('');
     } catch (err) {
@@ -260,6 +261,16 @@ export default function AdminData() {
         )}
       </div>
 
+      <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>Mode:</label>
+        {['replace', 'append'].map(m => (
+          <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: '0.85rem', padding: '4px 12px', borderRadius: 6, background: mode === m ? 'var(--red)' : 'var(--card-bg)', color: mode === m ? '#fff' : 'var(--text)', border: '1px solid', borderColor: mode === m ? 'var(--red)' : 'var(--border)' }}>
+            <input type="radio" name="importMode" value={m} checked={mode === m} onChange={() => setMode(m)} style={{ display: 'none' }} />
+            {m === 'replace' ? 'Replace (xóa hết cũ, chèn mới)' : 'Append (thêm mới, bỏ qua trùng)'}
+          </label>
+        ))}
+      </div>
+
       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
         <button
           onClick={handleImport}
@@ -274,7 +285,7 @@ export default function AdminData() {
             fontWeight: 600,
           }}
         >
-          {busy ? 'Importing...' : 'Import (truncate + insert)'}
+          {busy ? 'Importing...' : mode === 'replace' ? 'Import (truncate + insert)' : 'Import (append, skip duplicates)'}
         </button>
 
         {csvText && (

@@ -77,6 +77,7 @@ export const TABLES = [
     deleteOrder: 1,
     importOrder: 1,
     idInCsv: true,
+    onConflict: 'slug',
     selectColumns: 'id, slug, name_vi, sort_order, icon',
   },
   {
@@ -85,6 +86,7 @@ export const TABLES = [
     deleteOrder: 2,
     importOrder: 2,
     idInCsv: false,
+    onConflict: 'phrase_en',
     selectColumns: 'category_id, phrase_en, phrase_vi, purpose, level, sort_order, is_published',
   },
   {
@@ -93,6 +95,7 @@ export const TABLES = [
     deleteOrder: 8,
     importOrder: 3,
     idInCsv: true,
+    onConflict: 'slug',
     selectColumns: 'id, title, slug, description, passing_score, xp_reward, level, question_count, is_published',
   },
   {
@@ -101,6 +104,7 @@ export const TABLES = [
     deleteOrder: 7,
     importOrder: 4,
     idInCsv: true,
+    onConflict: 'quiz_set_id,prompt',
     selectColumns: 'id, quiz_set_id, prompt, prompt_translation, correct_answer, explanation, explanation_vi, competency_code, level, sort_order',
   },
   {
@@ -109,6 +113,7 @@ export const TABLES = [
     deleteOrder: 6,
     importOrder: 5,
     idInCsv: false,
+    onConflict: 'question_id,option_text',
     selectColumns: 'question_id, option_text, is_correct, feedback_correct, feedback_incorrect, sort_order',
   },
   {
@@ -117,6 +122,7 @@ export const TABLES = [
     deleteOrder: 3,
     importOrder: 6,
     idInCsv: false,
+    onConflict: 'word,part_of_speech',
     selectColumns: 'word, part_of_speech, level, meaning_vi, definition_en, example_en, example_vi, collocation, topic, is_published',
   },
   {
@@ -125,6 +131,7 @@ export const TABLES = [
     deleteOrder: 4,
     importOrder: 7,
     idInCsv: false,
+    onConflict: 'title',
     selectColumns: 'title, content, category, is_published',
   },
   {
@@ -133,6 +140,7 @@ export const TABLES = [
     deleteOrder: 5,
     importOrder: 8,
     idInCsv: true,
+    onConflict: 'id',
     selectColumns: 'id, type, title, desc_text, xp, is_active',
   },
   {
@@ -141,6 +149,7 @@ export const TABLES = [
     deleteOrder: 9,
     importOrder: 9,
     idInCsv: false,
+    onConflict: 'name',
     selectColumns: 'name, desc_text, price, icon_type, content_type, content_json, stock, is_active',
   },
   {
@@ -149,6 +158,7 @@ export const TABLES = [
     deleteOrder: 11,
     importOrder: 10,
     idInCsv: true,
+    onConflict: 'slug',
     selectColumns: 'id, title, slug, description, level, category, duration_hours, lesson_count, instructor, is_published',
   },
   {
@@ -157,6 +167,7 @@ export const TABLES = [
     deleteOrder: 10,
     importOrder: 11,
     idInCsv: false,
+    onConflict: 'course_id,slug',
     selectColumns: 'course_id, title, slug, description, sort_order, content_type, video_url, video_duration_seconds, article_body, is_free',
   },
   {
@@ -165,6 +176,7 @@ export const TABLES = [
     deleteOrder: 12,
     importOrder: 12,
     idInCsv: false,
+    onConflict: 'title',
     selectColumns: 'title, description, xp_reward, quiz_set_id, level_min, sort_order, is_active',
   },
 ];
@@ -187,6 +199,31 @@ export async function insertRows(tableName, rows) {
     const { error } = await supabaseAdmin.from(tableName).insert(cleaned);
     if (error) throw error;
   }
+}
+
+export async function upsertRows(tableName, rows) {
+  const t = TABLES.find(t => t.name === tableName);
+  if (!t || !t.onConflict) throw new Error(`Table ${tableName} has no onConflict key`);
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const batch = rows.slice(i, i + BATCH_SIZE);
+    const cleaned = batch.map(row => cleanRow(row));
+    const { error } = await supabaseAdmin
+      .from(tableName)
+      .upsert(cleaned, { onConflict: t.onConflict, ignoreDuplicates: true });
+    if (error) throw error;
+  }
+}
+
+export async function importTable(tableName, rows, mode = 'replace') {
+  if (mode === 'replace') {
+    await clearTable(tableName);
+    await insertRows(tableName, rows);
+  } else if (mode === 'append') {
+    await upsertRows(tableName, rows);
+  } else {
+    throw new Error(`Unknown import mode: ${mode}`);
+  }
+  return { table: tableName, count: rows.length, mode };
 }
 
 function cleanRow(row) {

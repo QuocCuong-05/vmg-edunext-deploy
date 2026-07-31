@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { clearTable, insertRows, TABLES } from '../lib/seedData.js';
+import { importTable, TABLES } from '../lib/seedData.js';
 
 const router = Router();
 
@@ -7,7 +7,7 @@ const ALLOWED_TABLES = TABLES.map(t => t.name);
 
 router.post('/import', async (req, res) => {
   try {
-    const { table, rows } = req.body;
+    const { table, rows, mode } = req.body;
 
     if (!table || !rows || !Array.isArray(rows)) {
       return res.status(400).json({ error: 'table (string) and rows (array) are required' });
@@ -21,10 +21,10 @@ router.post('/import', async (req, res) => {
       return res.status(400).json({ error: 'rows array is empty' });
     }
 
-    await clearTable(table);
-    await insertRows(table, rows);
+    const importMode = mode === 'append' ? 'append' : 'replace';
+    const result = await importTable(table, rows, importMode);
 
-    res.json({ imported: rows.length, table });
+    res.json({ imported: result.count, table: result.table, mode: result.mode });
   } catch (err) {
     console.error('Admin import error:', err);
     res.status(500).json({ error: err.message });
