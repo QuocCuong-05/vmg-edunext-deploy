@@ -157,7 +157,7 @@ export default function RewardsPage() {
         ) : (
         <div>
           {Object.entries(grouped).map(([catKey, items]) => {
-            const cat = CATEGORIES[catKey];
+            const cat = CATEGORIES[catKey] || { label: catKey === 'undefined' ? 'Tất cả' : catKey, color: 'var(--red)' };
             return (
               <div key={catKey} style={{ marginBottom: 32 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>

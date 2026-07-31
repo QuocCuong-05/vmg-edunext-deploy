@@ -1,20 +1,20 @@
-name,desc_text,price,icon_type,content_type,content_json,stock,is_active
-Bộ prompt AI dành cho giáo viên,"Prompt hỗ trợ thiết kế bài giảng, hoạt động và phản hồi học viên",200,sparkles,info,[object Object],,true
-Bộ worksheet và trò chơi tương tác,Hoạt động theo độ tuổi và trình độ,300,book,info,[object Object],,true
-Bộ rubric Speaking/Writing,Tiêu chí đánh giá và mẫu phản hồi,400,bar-chart,info,[object Object],,true
-Bộ 10 giáo án song ngữ,"Giáo án có thể chỉnh sửa, phân loại theo môn và cấp độ",500,book-open,info,[object Object],,true
-Bộ đề kiểm tra Cambridge,"Đề, đáp án và hướng dẫn chấm",600,book,info,[object Object],,true
-Teaching Toolkit theo kỹ năng,"Tài nguyên dạy Listening, Speaking, Reading hoặc Writing",700,flask,info,[object Object],,true
-Bộ slide bài giảng hoàn chỉnh,Slide có thể chỉnh sửa và sử dụng trực tiếp,800,pen,info,[object Object],,true
-Vé tham gia workshop nội bộ,Một workshop chuyên môn tự chọn,500,calendar,info,[object Object],,true
-Khóa microlearning có chứng nhận,Khóa học ngắn trên EduNext kèm chứng nhận hoàn thành,800,play,info,[object Object],,true
-Webinar độc quyền cùng chuyên gia,Chuyên đề chuyên sâu và phần hỏi đáp,1000,monitor,info,[object Object],,true
-Coaching 1:1 với Academic Expert,Tư vấn chuyên môn hoặc xử lý vấn đề giảng dạy cụ thể,1500,user,info,[object Object],,true
-Masterclass hoặc dự giờ lớp mẫu,Quan sát thực tế và nhận tài liệu tổng kết,2000,book-open,info,[object Object],,true
-Khóa đào tạo chuyên sâu,Tham gia chương trình đào tạo nâng cao được lựa chọn,3000,brain,info,[object Object],,true
-Badge chuyên môn trên hồ sơ,Huy hiệu năng lực hiển thị trên EduNext,700,target,info,[object Object],,true
-Chứng nhận EduNext Active Educator,Ghi nhận mức độ tham gia và phát triển chuyên môn,1000,check,info,[object Object],,true
-Hồ sơ giáo viên nổi bật,Giới thiệu giáo viên trên EduNext hoặc kênh nội bộ VMG,1500,globe,info,[object Object],,true
-Quyền ưu tiên đăng ký chương trình,"Ưu tiên workshop, chương trình pilot hoặc lớp chuyên đề",2000,arrow-right,info,[object Object],,true
-Cơ hội trở thành Content Contributor,Tham gia phát triển học liệu và chia sẻ chuyên môn,3000,pen,info,[object Object],,true
-Đề cử EduNext Educator of the Quarter,Xét duyệt danh hiệu giáo viên nổi bật theo quý,5000,sparkles,info,[object Object],,true
+name,desc_text,price,icon_type,content_type,category,content_json,stock,is_active
+"Bộ prompt AI dành cho giáo viên","Prompt hỗ trợ thiết kế bài giảng, hoạt động và phản hồi học viên",200,sparkles,prompts,hoc_lieu,{},,true
+"Bộ worksheet và trò chơi tương tác","Hoạt động theo độ tuổi và trình độ",300,book,lessons,hoc_lieu,{},,true
+"Bộ rubric Speaking/Writing","Tiêu chí đánh giá và mẫu phản hồi",400,bar-chart,prompts,hoc_lieu,{},,true
+"Bộ 10 giáo án song ngữ","Giáo án có thể chỉnh sửa, phân loại theo môn và cấp độ",500,book-open,lessons,hoc_lieu,{},,true
+"Bộ đề kiểm tra Cambridge","Đề, đáp án và hướng dẫn chấm",600,book,lessons,hoc_lieu,{},,true
+"Teaching Toolkit theo kỹ năng","Tài nguyên dạy Listening, Speaking, Reading hoặc Writing",700,flask,lessons,hoc_lieu,{},,true
+"Bộ slide bài giảng hoàn chỉnh","Slide có thể chỉnh sửa và sử dụng trực tiếp",800,pen,lessons,hoc_lieu,{},,true
+"Vé tham gia workshop nội bộ","Một workshop chuyên môn tự chọn",500,calendar,webinar,phat_trien,{},,true
+"Khóa microlearning có chứng nhận","Khóa học ngắn trên EduNext kèm chứng nhận hoàn thành",800,play,lessons,phat_trien,{},,true
+"Webinar độc quyền cùng chuyên gia","Chuyên đề chuyên sâu và phần hỏi đáp",1000,monitor,webinar,phat_trien,{},,true
+"Coaching 1:1 với Academic Expert","Tư vấn chuyên môn hoặc xử lý vấn đề giảng dạy cụ thể",1500,user,webinar,phat_trien,{},,true
+"Masterclass hoặc dự giờ lớp mẫu","Quan sát thực tế và nhận tài liệu tổng kết",2000,book-open,webinar,phat_trien,{},,true
+"Khóa đào tạo chuyên sâu","Tham gia chương trình đào tạo nâng cao được lựa chọn",3000,brain,lessons,phat_trien,{},,true
+"Badge chuyên môn trên hồ sơ","Huy hiệu năng lực hiển thị trên EduNext",700,target,info,cong_nhan,{},,true
+"Chứng nhận EduNext Active Educator","Ghi nhận mức độ tham gia và phát triển chuyên môn",1000,check,info,cong_nhan,{},,true
+"Hồ sơ giáo viên nổi bật","Giới thiệu giáo viên trên EduNext hoặc kênh nội bộ VMG",1500,globe,info,cong_nhan,{},,true
+"Quyền ưu tiên đăng ký chương trình","Ưu tiên workshop, chương trình pilot hoặc lớp chuyên đề",2000,arrow-right,info,phat_trien,{},,true
+"Cơ hội trở thành Content Contributor","Tham gia phát triển học liệu và chia sẻ chuyên môn",3000,pen,info,phat_trien,{},,true
+"Đề cử EduNext Educator of the Quarter","Xét duyệt danh hiệu giáo viên nổi bật theo quý",5000,sparkles,info,cong_nhan,{},,true
