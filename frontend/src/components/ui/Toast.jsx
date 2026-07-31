@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 const ToastContext = createContext(null);
 
@@ -13,6 +13,11 @@ export function ToastProvider({ children }) {
     setToast({ message, type: type || 'success', key: Date.now() });
     setTimeout(() => setToast(null), duration || 3000);
   }, []);
+
+  useEffect(() => {
+    window.__vimi_toast = showToast;
+    return () => { delete window.__vimi_toast; };
+  }, [showToast]);
 
   return (
     <ToastContext.Provider value={showToast}>
