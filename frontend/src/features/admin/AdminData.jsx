@@ -266,7 +266,7 @@ export default function AdminData() {
         {['replace', 'append'].map(m => (
           <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: '0.85rem', padding: '4px 12px', borderRadius: 6, background: mode === m ? 'var(--red)' : 'var(--card-bg)', color: mode === m ? '#fff' : 'var(--text)', border: '1px solid', borderColor: mode === m ? 'var(--red)' : 'var(--border)' }}>
             <input type="radio" name="importMode" value={m} checked={mode === m} onChange={() => setMode(m)} style={{ display: 'none' }} />
-            {m === 'replace' ? 'Replace (xóa hết cũ, chèn mới)' : 'Append (thêm mới, bỏ qua trùng)'}
+            {m === 'replace' ? 'Replace (xóa hết, chèn mới)' : 'Append (thêm mới, bỏ qua trùng)'}
           </label>
         ))}
       </div>
@@ -285,7 +285,7 @@ export default function AdminData() {
             fontWeight: 600,
           }}
         >
-          {busy ? 'Importing...' : mode === 'replace' ? 'Import (truncate + insert)' : 'Import (append, skip duplicates)'}
+          {busy ? 'Importing...' : 'Import'}
         </button>
 
         {csvText && (
