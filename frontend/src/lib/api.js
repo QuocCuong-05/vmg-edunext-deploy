@@ -298,9 +298,9 @@ export const api = {
     profile: async (userId) => {
       try {
         const profile = fromDb(await supabase.from('profiles').select('id, full_name, xp, school, ward').eq('id', userId).single());
-        const follows = fromDb(await supabase.from('user_follows').select('id'));
-        const followers = follows ? follows.length : 0;
-        return { ...profile, followers_count: followers, following_count: 0, streak_days: 0, last_login: null };
+        const { count: followersCount } = await supabase.from('user_follows').select('*', { count: 'exact', head: true }).eq('following_id', userId);
+        const { count: followingCount } = await supabase.from('user_follows').select('*', { count: 'exact', head: true }).eq('follower_id', userId);
+        return { ...profile, followers_count: followersCount || 0, following_count: followingCount || 0, streak_days: 0, last_login: null };
       } catch {
         return getMockProfile(userId);
       }
@@ -324,8 +324,9 @@ export const api = {
     isFollowing: async (followerId, followingId) => {
       if (!followerId) return false;
       try {
-        const data = fromDb(await supabase.from('user_follows').select('id').eq('follower_id', followerId).eq('following_id', followingId));
-        return !!data?.length;
+        const { data, error } = await supabase.from('user_follows').select('follower_id').eq('follower_id', followerId).eq('following_id', followingId).maybeSingle();
+        if (error) throw error;
+        return !!data;
       } catch {
         return isMockFollowing(followerId, followingId);
       }
