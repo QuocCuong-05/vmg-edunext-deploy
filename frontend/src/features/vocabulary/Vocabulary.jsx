@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Icon } from '../../lib/icons';
 import { api } from '../../lib/api';
 import { dispatchAction } from '../../lib/quest-engine';
@@ -15,7 +15,10 @@ export default function Vocabulary() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savedIds, setSavedIds] = useState(new Set());
+  const [busyId, setBusyId] = useState(null);
   const [dispatched, setDispatched] = useState(false);
+  const savedIdsRef = useRef(savedIds);
+  savedIdsRef.current = savedIds;
 
   useEffect(() => {
     api.vocabulary.list().then(data => {
@@ -40,8 +43,9 @@ export default function Vocabulary() {
   }, [user?.id]);
 
   const toggleSave = useCallback(async (entryId) => {
-    if (!user?.id) return;
-    const wasSaved = savedIds.has(entryId);
+    if (!user?.id || busyId) return;
+    const wasSaved = savedIdsRef.current.has(entryId);
+    setBusyId(entryId);
     setSavedIds(prev => {
       const next = new Set(prev);
       wasSaved ? next.delete(entryId) : next.add(entryId);
@@ -59,8 +63,10 @@ export default function Vocabulary() {
         wasSaved ? next.add(entryId) : next.delete(entryId);
         return next;
       });
+    } finally {
+      setBusyId(null);
     }
-  }, [user?.id, savedIds]);
+  }, [user?.id, busyId]);
 
   const topics = useMemo(() => {
     const all = [...new Set(items.map(v => v.topic))].sort();
@@ -115,8 +121,11 @@ export default function Vocabulary() {
                 <span className="pill vocab-level">{vocab.level}</span>
                 <div style={{ marginLeft: 'auto' }}>
                   <button onClick={() => toggleSave(vocab.id)} className="vocab-bookmark-btn"
-                    title={savedIds.has(vocab.id) ? 'Bỏ lưu' : 'Lưu vào sổ từ'}>
-                    {savedIds.has(vocab.id) ? <Icon.BookmarkFill size={16} /> : <Icon.Bookmark size={16} />}
+                    disabled={busyId === vocab.id}
+                    title={busyId === vocab.id ? 'Đang xử lý...' : savedIds.has(vocab.id) ? 'Bỏ lưu' : 'Lưu vào sổ từ'}>
+                    {busyId === vocab.id
+                      ? <Icon.Loader size={16} />
+                      : savedIds.has(vocab.id) ? <Icon.BookmarkFill size={16} /> : <Icon.Bookmark size={16} />}
                   </button>
                 </div>
               </div>
