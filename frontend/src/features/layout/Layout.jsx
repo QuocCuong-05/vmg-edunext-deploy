@@ -156,6 +156,47 @@ export default function Layout() {
                 ))}
               </div>
             ))}
+
+            {user?.role === 'admin' && (
+              <div>
+                <div
+                  onClick={() => toggleGroup('Quản trị')}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                    letterSpacing: .6, color: 'var(--muted)',
+                    padding: '12px 12px 6px', cursor: 'pointer',
+                    userSelect: 'none',
+                  }}
+                >
+                  <span style={{
+                    fontSize: 8, transition: 'transform .15s',
+                    transform: collapsed['Quản trị'] ? 'rotate(-90deg)' : 'rotate(0deg)',
+                  }}>
+                    ▾
+                  </span>
+                  Quản trị
+                </div>
+                {!collapsed['Quản trị'] && (
+                  <div
+                    onClick={() => navigate('/admin/data')}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '7px 12px',
+                      borderRadius: 8, cursor: 'pointer', marginBottom: 1,
+                      fontSize: 13, fontWeight: isActive('/admin/data') ? 700 : 500,
+                      background: isActive('/admin/data') ? 'var(--surface)' : 'none',
+                      color: isActive('/admin/data') ? 'var(--red)' : 'var(--ink)',
+                      transition: 'all .12s', overflow: 'hidden',
+                    }}
+                  >
+                    <Icon.Cog size={18} style={{ flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      Quản lý dữ liệu
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
 
           {/* Sidebar footer with user info — fixed at bottom */}
