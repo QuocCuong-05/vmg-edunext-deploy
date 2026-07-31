@@ -182,7 +182,7 @@ export default function RewardsPage() {
                         ) : canAfford ? (
                           <Button variant="primary" size="sm" label="Đổi ngay" style={{ width: '100%', justifyContent: 'center' }} onClick={() => handleRedeem(item)} />
                         ) : (
-                          <Button size="sm" isDisabled style={{ width: '100%', justifyContent: 'center', opacity: .4, cursor: 'not-allowed', background: 'var(--surface)', overflow: 'hidden' }}>
+                          <Button size="sm" isDisabled style={{ width: '100%', justifyContent: 'center', background: 'var(--red-bg)', color: 'var(--red)', border: '1px dashed var(--red)', opacity: 1, cursor: 'not-allowed', overflow: 'hidden' }}>
                             Còn thiếu {item.price - xp} XP
                           </Button>
                         )}
