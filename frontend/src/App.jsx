@@ -25,6 +25,8 @@ import BookingPage from './features/booking/BookingPage';
 import RewardsPage from './features/rewards/RewardsPage';
 import AdminData from './features/admin/AdminData';
 import AdminRoute from './features/auth/AdminRoute';
+import AccountPage from './features/profile/AccountPage';
+import ChangePasswordPage from './features/profile/ChangePasswordPage';
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -63,6 +65,8 @@ export default function App() {
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/rewards" element={<RewardsPage />} />
+        <Route path="/account" element={<AccountPage />} />
+        <Route path="/password" element={<ChangePasswordPage />} />
       </Route>
       <Route element={<AdminRoute><Layout /></AdminRoute>}>
         <Route path="/admin/data" element={<AdminData />} />

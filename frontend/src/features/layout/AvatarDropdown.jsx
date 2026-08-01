@@ -36,10 +36,10 @@ export default function AvatarDropdown({ initials }) {
   }
 
   const items = [
-    { icon: Icon.User, label: 'Thông tin tài khoản', onClick: () => navigate('/level'), close: true },
+    { icon: Icon.User, label: 'Thông tin tài khoản', onClick: () => navigate('/account'), close: true },
     { icon: mode === 'dark' ? Icon.Sun : Icon.Moon, label: mode === 'dark' ? 'Giao diện sáng' : 'Giao diện tối', onClick: toggleTheme },
     { icon: Icon.Globe, label: lang === 'vi' ? 'English' : 'Tiếng Việt', onClick: toggleLang },
-    { icon: Icon.Cog, label: 'Cài đặt', onClick: () => navigate('/level'), close: true },
+    { icon: Icon.Cog, label: 'Đổi mật khẩu', onClick: () => navigate('/password'), close: true },
   ];
 
   return (
