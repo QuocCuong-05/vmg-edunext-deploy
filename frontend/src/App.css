@@ -858,13 +858,13 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 }
 .cert-logo { width: 170px; max-height: 76px; object-fit: contain; margin-bottom: 10px; }
 .cert-kicker { font-size: 12px; color: var(--text-gold); font-weight: 800; letter-spacing: 2.6px; }
-.certificate-page h2 { font-family: Georgia, serif; color: var(--red); font-size: 40px; letter-spacing: 1px; margin: 18px 0; }
+.certificate-page h2 { font-family: 'Playfair Display', Georgia, serif; color: var(--red); font-size: 40px; letter-spacing: 1px; margin: 18px 0; }
 .certificate-page h3 { font-size: 23px; color: var(--red); max-width: 720px; margin: 18px auto; line-height: 1.35; }
-.cert-name { font-family: Georgia, serif; font-size: 38px; font-weight: 800; color: var(--ink); margin: 18px 0; }
+.cert-name { font-family: 'Playfair Display', Georgia, serif; font-size: 38px; font-weight: 800; color: var(--ink); margin: 18px 0; }
 .cert-meta { font-size: 14px; }
 .cert-bottom { display: grid; grid-template-columns: 1fr 150px 1fr; align-items: end; gap: 24px; margin-top: 34px; }
 .cert-sign, .cert-verify { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 10px; color: var(--muted); }
-.signature { font-family: cursive; font-size: 24px; color: var(--blue); border-bottom: 1px solid var(--muted); padding: 0 18px 5px; }
+.signature { font-family: 'Dancing Script', cursive; font-size: 24px; color: var(--blue); border-bottom: 1px solid var(--muted); padding: 0 18px 5px; }
 .cert-seal { width: 122px; height: 122px; border: 4px solid var(--text-gold); border-radius: 50%; display: grid; place-items: center; margin: auto; background: var(--card); }
 .cert-seal img { width: 82px; height: 52px; object-fit: contain; }
 .qr-mock { width: 78px; height: 78px; display: grid; grid-template-columns: repeat(8, 1fr); gap: 1px; background: var(--card); border: 5px solid var(--card); box-shadow: 0 0 0 1px var(--line); }
