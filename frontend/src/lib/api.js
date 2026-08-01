@@ -30,6 +30,25 @@ function fromDb(result) {
   return result.data;
 }
 
+async function notifyPostOwner(postId, actorId, type) {
+  try {
+    const { data: post, error } = await supabase
+      .from('community_posts')
+      .select('user_id')
+      .eq('id', postId)
+      .maybeSingle();
+    if (error || !post?.user_id || post.user_id === actorId) return;
+    await supabase.from('notifications').insert({
+      user_id: post.user_id,
+      from_user_id: actorId,
+      type,
+      message: '',
+    });
+  } catch {
+    // notification failure must not break the main action
+  }
+}
+
 export const api = {
   auth: {
     login: async (email, password) => {
@@ -192,6 +211,7 @@ export const api = {
             return { liked: false };
           }
           await supabase.from('community_likes').insert({ post_id: postId, user_id: userId });
+          await notifyPostOwner(postId, userId, 'like');
           return { liked: true };
         } catch {
           return toggleMockLike(postId, userId);
@@ -242,6 +262,7 @@ export const api = {
         try {
           const { data, error } = await supabase.from('community_comments').insert({ post_id: postId, user_id: userId, content }).select().single();
           if (error) throw error;
+          await notifyPostOwner(postId, userId, 'comment');
           const profiles = fromDb(await supabase.from('profiles').select('id, full_name').eq('id', userId));
           const _initials = (name) => (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
           return {
@@ -309,6 +330,14 @@ export const api = {
       try {
         const { error } = await supabase.from('user_follows').insert({ follower_id: followerId, following_id: followingId });
         if (error) throw error;
+        if (followerId !== followingId) {
+          await supabase.from('notifications').insert({
+            user_id: followingId,
+            from_user_id: followerId,
+            type: 'follow',
+            message: '',
+          });
+        }
       } catch {
         followMockUser(followerId, followingId);
       }
@@ -347,7 +376,7 @@ export const api = {
     },
     remind: async (reminderId, targetId) => {
       try {
-        const { error } = await supabase.from('notifications').insert({ user_id: targetId, from_user_id: reminderId, type: 'remind', message: `${reminderId} đã nhắc bạn học hôm nay.` });
+        const { error } = await supabase.from('notifications').insert({ user_id: targetId, from_user_id: reminderId, type: 'remind', message: '' });
         if (error) throw error;
       } catch {
         sendMockRemind(reminderId, targetId);
