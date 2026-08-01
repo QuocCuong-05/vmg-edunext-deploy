@@ -1023,3 +1023,18 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
   from { opacity: 0; transform: translateX(40px); }
   to { opacity: 1; transform: translateX(0); }
 }
+
+/* Print — certificate only */
+@media print {
+  @page { margin: 12mm; size: A4 landscape; }
+  body * { visibility: hidden; }
+  #certificateCanvas,
+  #certificateCanvas * { visibility: visible; }
+  #certificateCanvas {
+    position: absolute; left: 0; top: 0;
+    width: 100%; border: none; box-shadow: none;
+    border-radius: 0;
+  }
+  .certificate-page:before { border: none; }
+  .cert-corner { display: none; }
+}
