@@ -30,7 +30,7 @@ function fromDb(result) {
   return result.data;
 }
 
-async function notifyPostOwner(postId, actorId, type) {
+export async function notifyPostOwner(postId, actorId, type) {
   try {
     const { data: post, error } = await supabase
       .from('community_posts')

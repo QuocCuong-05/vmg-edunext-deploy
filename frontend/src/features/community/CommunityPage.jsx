@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import { api } from '../../lib/api';
+import { api, notifyPostOwner } from '../../lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { TOPICS } from '../../mock/community';
 
@@ -322,6 +322,7 @@ export default function CommunityPage() {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
     shareToFacebook(post.content);
+    notifyPostOwner(postId, user?.id, 'share');
     setPosts(prev => prev.map(p =>
       p.id === postId ? { ...p, shares_count: (p.shares_count || 0) + 1 } : p
     ));

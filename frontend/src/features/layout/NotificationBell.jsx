@@ -10,6 +10,7 @@ const TYPE_TEXT = {
   like: 'đã thích bài viết của bạn.',
   comment: 'đã bình luận bài viết của bạn.',
   follow: 'đã theo dõi bạn.',
+  share: 'đã chia sẻ bài viết của bạn.',
 };
 
 function getInitials(name) {
