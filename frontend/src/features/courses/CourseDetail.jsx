@@ -97,7 +97,7 @@ export default function CourseDetail() {
             </Button>
           </div>
         ) : (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginTop: 20, marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600 }}>Tiến độ: {enroll.progress_pct}%</span>
               <span style={{ fontSize: 12, color: 'var(--muted)' }}>{completedIds.length}/{course.lesson_count} bài</span>
