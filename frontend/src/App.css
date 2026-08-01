@@ -620,7 +620,7 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 .back-btn:hover { color: var(--ink); }
 
 /* Enrollment */
-.enroll-bar { display: flex; align-items: center; justify-content: space-between; padding: 22px 26px; background: linear-gradient(145deg, #182131, #263b5d); color: #fff; border-radius: var(--radius); margin-bottom: 24px; gap: 20px; }
+.enroll-bar { display: flex; align-items: center; justify-content: space-between; padding: 22px 26px; background: linear-gradient(145deg, #182131, #263b5d); color: #fff; border-radius: var(--radius); margin-top: 20px; margin-bottom: 24px; gap: 20px; }
 .enroll-bar p { font-size: 12px; opacity: .85; line-height: 1.5; }
 
 /* Course detail header */
