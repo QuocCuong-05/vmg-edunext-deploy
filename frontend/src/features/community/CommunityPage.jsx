@@ -71,7 +71,7 @@ function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comm
             {openMenu === post.id && (
               <div style={{
                 position: 'absolute', right: 0, top: '100%', zIndex: 10,
-                background: '#fff', border: '1px solid var(--line)', borderRadius: 8,
+                background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 8,
                 boxShadow: '0 4px 12px rgba(0,0,0,.1)', minWidth: 140, padding: 4,
               }}>
                 {isOwner && (
@@ -151,7 +151,7 @@ function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comm
                       {openCommentMenu === cMenuId && (
                         <div style={{
                           position: 'absolute', left: 0, top: '100%', zIndex: 10,
-                          background: '#fff', border: '1px solid var(--line)', borderRadius: 6,
+                          background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 6,
                           boxShadow: '0 4px 12px rgba(0,0,0,.1)', minWidth: 120, padding: 4,
                         }}>
                           {cIsOwner && (
@@ -449,7 +449,7 @@ export default function CommunityPage() {
                 <select
                   value={newPostTopic}
                   onChange={e => setNewPostTopic(e.target.value)}
-                  style={{ fontSize: 12, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--line)', background: '#fff', cursor: 'pointer' }}
+                  style={{ fontSize: 12, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--line)', background: 'var(--surface-input)', cursor: 'pointer' }}
                 >
                   {TOPICS.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
@@ -468,7 +468,7 @@ export default function CommunityPage() {
           onClick={() => setActiveTopic('')}
           style={{
             padding: '6px 14px', borderRadius: 16, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-            background: !activeTopic ? 'var(--red)' : 'var(--bg)',
+            background: !activeTopic ? 'var(--red)' : 'var(--surface)',
             color: !activeTopic ? '#fff' : 'var(--muted)',
             border: '1px solid', borderColor: !activeTopic ? 'var(--red)' : 'var(--line)',
             transition: 'all .15s',
@@ -480,7 +480,7 @@ export default function CommunityPage() {
             onClick={() => setActiveTopic(t)}
             style={{
               padding: '6px 14px', borderRadius: 16, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-              background: activeTopic === t ? 'var(--red)' : 'var(--bg)',
+              background: activeTopic === t ? 'var(--red)' : 'var(--surface)',
               color: activeTopic === t ? '#fff' : 'var(--muted)',
               border: '1px solid', borderColor: activeTopic === t ? 'var(--red)' : 'var(--line)',
               transition: 'all .15s',
@@ -566,7 +566,7 @@ export default function CommunityPage() {
           display: 'grid', placeItems: 'center', zIndex: 1000,
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background: '#fff', borderRadius: 12, padding: 24, width: 340,
+            background: 'var(--card)', borderRadius: 12, padding: 24, width: 340,
             boxShadow: '0 8px 30px rgba(0,0,0,.15)',
           }}>
             <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Report Post</h3>

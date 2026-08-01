@@ -113,9 +113,9 @@
   .enroll-bar, .landing-cta { color: #fff; }
   .landing-cta h2, .landing-cta p { color: #fff; }
   .hero-slogan, .hero-sub, .hero-heading { color: #fff; }
-  .certificate-page h2, .certificate-page h3 { color: var(--red); }
-  .cert-name { color: #f1f5f9; }
-  .cert-kicker { color: var(--text-gold); }
+  .certificate-page h2, .certificate-page h3 { color: #bd1730; }
+  .cert-name { color: #182131; }
+  .cert-kicker { color: #8a6d2d; }
   .blog-cover { color: rgba(255,255,255,.7); }
   .reward-card-price { color: var(--gold); }
   .history-item-price { color: var(--red); }
@@ -130,13 +130,22 @@
 
   /* Component overrides */
   .landing-nav { background: rgba(15,23,42,.85); }
+  /* Certificate — luôn giữ dạng sáng dù bật dark mode */
   .certificate-page {
-    background: linear-gradient(145deg, #1e293b, #0f172a);
-    border-color: var(--gold);
-    box-shadow: 0 20px 55px rgba(0,0,0,.5);
+    background: linear-gradient(145deg, #fdf6e8, #ffffff);
+    border-color: #b99447;
+    box-shadow: 0 20px 55px rgba(72,54,24,.12);
+    color: #182131;
   }
-  .certificate-page:before { border-color: var(--gold); }
-  .cert-seal { background: #0f172a; border-color: var(--gold); }
+  .certificate-page p, .certificate-page div, .certificate-page span,
+  .certificate-page b, .certificate-page small { color: #182131; }
+  .certificate-page:before { border-color: #8a6d2d; }
+  .cert-seal { background: #ffffff; border-color: #8a6d2d; }
+  .cert-meta, .cert-sign, .cert-verify { color: #687386; }
+  .signature { color: #225bc1; border-bottom-color: #687386; }
+  .qr-mock { background: #ffffff; border-color: #ffffff; box-shadow: 0 0 0 1px #e4e9f1; }
+  .qr-mock i { background: #ffffff; }
+  .qr-mock i.fill { background: #182131; }
   .skeleton {
     background: linear-gradient(90deg, rgba(255,255,255,.04) 25%, rgba(255,255,255,.08) 50%, rgba(255,255,255,.04) 75%);
   }
