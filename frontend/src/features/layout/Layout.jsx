@@ -73,6 +73,18 @@ export default function Layout() {
     });
   };
 
+  const [rail, setRail] = useState(() => {
+    try { return localStorage.getItem('vmg_sidebar_rail') === '1'; }
+    catch { return false; }
+  });
+
+  const toggleRail = () => {
+    setRail(prev => {
+      localStorage.setItem('vmg_sidebar_rail', !prev ? '1' : '0');
+      return !prev;
+    });
+  };
+
   const isActive = (path) =>
     location.pathname === path || location.pathname.startsWith(path + '/');
 
@@ -81,31 +93,37 @@ export default function Layout() {
       <div style={{ display: 'flex', flex: 1 }}>
         {/* Sidebar */}
         <aside style={{
-          width: 260, flexShrink: 0,
+          width: rail ? 64 : 260, flexShrink: 0,
           borderRight: '1px solid var(--line)',
           background: 'var(--card)',
           display: 'flex', flexDirection: 'column',
           position: 'sticky', top: 0, height: '100vh',
           overflow: 'hidden',
+          transition: 'width .2s',
         }}>
           {/* Sidebar header */}
-          <div className="brand" style={{ padding: '16px 16px 20px', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
+          <div className="brand" style={{ padding: rail ? '16px 0' : '16px 16px 20px', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', justifyContent: rail ? 'center' : 'flex-start' }} onClick={() => navigate('/dashboard')}>
               <img src="/vmg.png" alt="VMG" style={{ height: 24, maxWidth: 60 }} />
-              <div className="brand-title">
-                <b>VMG EduNext</b>
-                <small>Nền tảng phát triển giáo viên</small>
-              </div>
+              {!rail && (
+                <div className="brand-title">
+                  <b>VMG EduNext</b>
+                  <small>Nền tảng phát triển giáo viên</small>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Navigation */}
-          <nav style={{ flex: 1, minHeight: 0, padding: '8px', overflowY: 'auto', overflowX: 'hidden', scrollbarGutter: 'stable' }}>
+          <nav style={{ flex: 1, minHeight: 0, padding: rail ? '8px 0' : '8px', overflowY: 'auto', overflowX: 'hidden', scrollbarGutter: 'stable' }}>
             {/* Dashboard first */}
             <div
               onClick={() => navigate('/dashboard')}
+              title={rail ? 'Tổng quan' : undefined}
               style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
+                display: 'flex', alignItems: 'center', gap: 10,
+                justifyContent: rail ? 'center' : 'flex-start',
+                padding: rail ? '10px 0' : '8px 12px',
                 borderRadius: 8, cursor: 'pointer', marginBottom: 4,
                 fontSize: 13, fontWeight: isActive('/dashboard') ? 700 : 500,
                 background: isActive('/dashboard') ? 'var(--surface)' : 'none',
@@ -114,35 +132,42 @@ export default function Layout() {
               }}
             >
               <Icon.Dashboard size={18} style={{ flexShrink: 0 }} />
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Tổng quan</span>
+              {!rail && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Tổng quan</span>}
             </div>
 
             {GROUPS.map((group, gi) => (
               <div key={gi}>
-                <div
-                  onClick={() => toggleGroup(group.label)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-                    letterSpacing: .6, color: 'var(--muted)',
-                    padding: '12px 12px 6px', cursor: 'pointer',
-                    userSelect: 'none',
-                  }}
-                >
-                  <span style={{
-                    fontSize: 8, transition: 'transform .15s',
-                    transform: collapsed[group.label] ? 'rotate(-90deg)' : 'rotate(0deg)',
-                  }}>
-                    ▾
-                  </span>
-                  {group.label}
-                </div>
+                {rail ? (
+                  <div style={{ height: 1, margin: '8px 10px', background: 'var(--line)' }} />
+                ) : (
+                  <div
+                    onClick={() => toggleGroup(group.label)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                      letterSpacing: .6, color: 'var(--muted)',
+                      padding: '12px 12px 6px', cursor: 'pointer',
+                      userSelect: 'none',
+                    }}
+                  >
+                    <span style={{
+                      fontSize: 8, transition: 'transform .15s',
+                      transform: collapsed[group.label] ? 'rotate(-90deg)' : 'rotate(0deg)',
+                    }}>
+                      ▾
+                    </span>
+                    {group.label}
+                  </div>
+                )}
                 {!collapsed[group.label] && group.items.map(item => (
                   <div
                     key={item.to}
                     onClick={() => navigate(item.to)}
+                    title={rail ? item.label : undefined}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 10, padding: '7px 12px',
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      justifyContent: rail ? 'center' : 'flex-start',
+                      padding: rail ? '10px 0' : '7px 12px',
                       borderRadius: 8, cursor: 'pointer', marginBottom: 1,
                       fontSize: 13, fontWeight: isActive(item.to) ? 700 : 500,
                       background: isActive(item.to) ? 'var(--surface)' : 'none',
@@ -151,7 +176,7 @@ export default function Layout() {
                     }}
                   >
                     <item.icon size={18} style={{ flexShrink: 0 }} />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
+                    {!rail && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>}
                   </div>
                 ))}
               </div>
@@ -159,29 +184,36 @@ export default function Layout() {
 
             {user?.role === 'admin' && (
               <div>
-                <div
-                  onClick={() => toggleGroup('Quản trị')}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-                    letterSpacing: .6, color: 'var(--muted)',
-                    padding: '12px 12px 6px', cursor: 'pointer',
-                    userSelect: 'none',
-                  }}
-                >
-                  <span style={{
-                    fontSize: 8, transition: 'transform .15s',
-                    transform: collapsed['Quản trị'] ? 'rotate(-90deg)' : 'rotate(0deg)',
-                  }}>
-                    ▾
-                  </span>
-                  Quản trị
-                </div>
+                {rail ? (
+                  <div style={{ height: 1, margin: '8px 10px', background: 'var(--line)' }} />
+                ) : (
+                  <div
+                    onClick={() => toggleGroup('Quản trị')}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                      letterSpacing: .6, color: 'var(--muted)',
+                      padding: '12px 12px 6px', cursor: 'pointer',
+                      userSelect: 'none',
+                    }}
+                  >
+                    <span style={{
+                      fontSize: 8, transition: 'transform .15s',
+                      transform: collapsed['Quản trị'] ? 'rotate(-90deg)' : 'rotate(0deg)',
+                    }}>
+                      ▾
+                    </span>
+                    Quản trị
+                  </div>
+                )}
                 {!collapsed['Quản trị'] && (
                   <div
                     onClick={() => navigate('/admin/data')}
+                    title={rail ? 'Quản lý dữ liệu' : undefined}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 10, padding: '7px 12px',
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      justifyContent: rail ? 'center' : 'flex-start',
+                      padding: rail ? '10px 0' : '7px 12px',
                       borderRadius: 8, cursor: 'pointer', marginBottom: 1,
                       fontSize: 13, fontWeight: isActive('/admin/data') ? 700 : 500,
                       background: isActive('/admin/data') ? 'var(--surface)' : 'none',
@@ -190,9 +222,9 @@ export default function Layout() {
                     }}
                   >
                     <Icon.Cog size={18} style={{ flexShrink: 0 }} />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {!rail && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       Quản lý dữ liệu
-                    </span>
+                    </span>}
                   </div>
                 )}
               </div>
@@ -201,28 +233,36 @@ export default function Layout() {
 
           {/* Sidebar footer with user info — fixed at bottom */}
           <div style={{
-            padding: '12px 8px', borderTop: '1px solid var(--line)', flexShrink: 0,
+            padding: rail ? '12px 0' : '12px 8px', borderTop: '1px solid var(--line)', flexShrink: 0,
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px' }}>
-              <div className="avatar-btn" style={{ width: 36, height: 36, fontSize: 12, flexShrink: 0 }}>{initials}</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {user?.full_name || 'User'}
-                </div>
-                <div style={{ fontSize: 10, color: 'var(--muted)' }}>{user?.xp || 0} XP</div>
-              </div>
-              <button
-                onClick={logout}
-                style={{
-                  fontSize: 11, color: 'var(--muted)', padding: '4px 8px',
-                  borderRadius: 8, border: '1px solid var(--line)',
-                  cursor: 'pointer', background: 'none', transition: 'all .15s', flexShrink: 0,
-                }}
-                onMouseEnter={e => { e.target.style.borderColor = 'var(--red)'; e.target.style.color = 'var(--red)'; }}
-                onMouseLeave={e => { e.target.style.borderColor = 'var(--line)'; e.target.style.color = 'var(--muted)'; }}
-              >
-                Logout
-              </button>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              justifyContent: rail ? 'center' : 'flex-start',
+              padding: '8px 12px',
+            }}>
+              <div className="avatar-btn" title={user?.full_name} style={{ width: 36, height: 36, fontSize: 12, flexShrink: 0 }}>{initials}</div>
+              {!rail && (
+                <>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {user?.full_name || 'User'}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--muted)' }}>{user?.xp || 0} XP</div>
+                  </div>
+                  <button
+                    onClick={logout}
+                    style={{
+                      fontSize: 11, color: 'var(--muted)', padding: '4px 8px',
+                      borderRadius: 8, border: '1px solid var(--line)',
+                      cursor: 'pointer', background: 'none', transition: 'all .15s', flexShrink: 0,
+                    }}
+                    onMouseEnter={e => { e.target.style.borderColor = 'var(--red)'; e.target.style.color = 'var(--red)'; }}
+                    onMouseLeave={e => { e.target.style.borderColor = 'var(--line)'; e.target.style.color = 'var(--muted)'; }}
+                  >
+                    Logout
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </aside>
@@ -239,7 +279,12 @@ export default function Layout() {
             padding: '0 24px',
             position: 'sticky', top: 0, zIndex: 50,
           }}>
-            <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: -.3 }}>VMG EduNext</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <button className="avatar-btn" onClick={toggleRail} title={rail ? 'Mở rộng menu' : 'Thu gọn menu'}>
+                <Icon.Menu size={16} />
+              </button>
+              <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: -.3 }}>VMG EduNext</div>
+            </div>
             <div className="top-actions" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <button className="avatar-btn" onClick={() => navigate('/vimi')} title="ViMi AI Tutor">
                 <Icon.ViMi size={16} />
