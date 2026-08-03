@@ -154,7 +154,7 @@ export default function Quiz() {
           {!isChallenge && <p>Kiểm tra kiến thức về Classroom English, CLIL, đánh giá và phương pháp giảng dạy</p>}
           {isChallenge && <p>Làm bài thi để vượt qua thử thách này</p>}
         </div>
-        <Card style={{ maxWidth: 600, textAlign: 'center', padding: 40 }}>
+        <Card style={{ maxWidth: 600, textAlign: 'center', padding: 'min(40px, 9vw)' }}>
           <div style={{ marginBottom: 16 }}><Icon.Target size={48} /></div>
           <h2 style={{ marginBottom: 8 }}>{quiz.title}</h2>
           <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 16, lineHeight: 1.6 }}>
@@ -181,7 +181,7 @@ export default function Quiz() {
         <div className="page-title">
           <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}><Icon.Stats size={24} /> {isChallenge ? 'Kết quả thử thách' : 'Kết quả luyện tập'}</h1>
         </div>
-        <Card style={{ maxWidth: 600, textAlign: 'center', padding: 40 }}>
+        <Card style={{ maxWidth: 600, textAlign: 'center', padding: 'min(40px, 9vw)' }}>
           <div style={{ marginBottom: 16 }}>{passed ? <Icon.Sparkles size={48} /> : <Icon.Target size={48} />}</div>
           <h2 style={{ marginBottom: 8 }}>{passed ? 'Chúc mừng!' : 'Cố gắng hơn nhé!'}</h2>
           <div style={{ fontSize: 48, fontWeight: 800, color: passed ? 'var(--green)' : 'var(--red)', margin: '16px 0' }}>

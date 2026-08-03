@@ -237,7 +237,7 @@ export default function VimiPage() {
       </div>
 
       {!speakingMode && (
-        <div style={{ marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <button className="btn btn-sm btn-outline" onClick={handleStartSpeaking} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <Icon.Mic size={16} /> Bắt đầu luyện nói
           </button>
@@ -254,7 +254,7 @@ export default function VimiPage() {
         </div>
       )}
 
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 260px)', minHeight: 450 }}>
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 260px)', minHeight: 'min(450px, 45vh)' }}>
         <div ref={bodyRef} style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {filteredMessages.map((msg, i) =>
             msg.role === 'user' ? (

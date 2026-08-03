@@ -4,6 +4,7 @@ import ProtectedRoute from './features/auth/ProtectedRoute';
 import Layout from './features/layout/Layout';
 import Landing from './features/landing/Landing';
 import Login from './features/auth/Login';
+import ResetPassword from './features/auth/ResetPassword';
 import Dashboard from './features/dashboard/Dashboard';
 import Courses from './features/courses/Courses';
 import CourseDetail from './features/courses/CourseDetail';
@@ -43,6 +44,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/courses" element={<Courses />} />

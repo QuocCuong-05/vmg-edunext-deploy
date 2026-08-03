@@ -1,0 +1,1622 @@
+[
+  {
+    "page": "landing",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 0,
+    "mainW": 0,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "login",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 0,
+    "mainW": 0,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "dashboard-dark",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 0,
+    "mainW": 0,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "courses",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 0,
+    "mainW": 0,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "quiz",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 260,
+    "mainW": 320,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "community-dark",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 260,
+    "mainW": 320,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "vimi",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 260,
+    "mainW": 320,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "certificate-dark",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 260,
+    "mainW": 320,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "rewards",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 260,
+    "mainW": 320,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "ranking",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 0,
+    "mainW": 0,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "level",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 260,
+    "mainW": 320,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "wordbook",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 260,
+    "mainW": 320,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "planner",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 260,
+    "mainW": 320,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "booking",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 260,
+    "mainW": 320,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "blog",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 260,
+    "mainW": 320,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "about",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 260,
+    "mainW": 320,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "account",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 260,
+    "mainW": 320,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "password",
+    "viewport": "320",
+    "vw": 320,
+    "asideW": 260,
+    "mainW": 320,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "landing",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "login",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "dashboard-dark",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "courses",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "quiz",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "community-dark",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "vimi",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "certificate-dark",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "rewards",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "ranking",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "level",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "wordbook",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "planner",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "booking",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "blog",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "about",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "account",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "password",
+    "viewport": "375",
+    "vw": 375,
+    "asideW": 260,
+    "mainW": 375,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "landing",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "login",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "dashboard-dark",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 0,
+    "mainW": 0,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "courses",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "quiz",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "community-dark",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "vimi",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "certificate-dark",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "rewards",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "ranking",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "level",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "wordbook",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "planner",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 0,
+    "mainW": 0,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "booking",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "blog",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "about",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "account",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 0,
+    "mainW": 0,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "password",
+    "viewport": "390",
+    "vw": 390,
+    "asideW": 260,
+    "mainW": 390,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "landing",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "login",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "dashboard-dark",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "courses",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "quiz",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "community-dark",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "vimi",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "certificate-dark",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "rewards",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "ranking",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "level",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "wordbook",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "planner",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "booking",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "blog",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "about",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "account",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "password",
+    "viewport": "412",
+    "vw": 412,
+    "asideW": 260,
+    "mainW": 412,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "landing",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "login",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "dashboard-dark",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "courses",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "quiz",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "community-dark",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "vimi",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "certificate-dark",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "rewards",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "ranking",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "level",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "wordbook",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "planner",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "booking",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 0,
+    "mainW": 0,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "blog",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "about",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "account",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "password",
+    "viewport": "430",
+    "vw": 430,
+    "asideW": 260,
+    "mainW": 430,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "landing",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "login",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "dashboard-dark",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "courses",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "quiz",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "community-dark",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "vimi",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "certificate-dark",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "rewards",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "ranking",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "level",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "wordbook",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "planner",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "booking",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "blog",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "about",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "account",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "password",
+    "viewport": "600",
+    "vw": 600,
+    "asideW": 260,
+    "mainW": 600,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "landing",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "login",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "dashboard-dark",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "courses",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "quiz",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "community-dark",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "vimi",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "certificate-dark",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "rewards",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "ranking",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "level",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "wordbook",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "planner",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "booking",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "blog",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "about",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "account",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "password",
+    "viewport": "768",
+    "vw": 768,
+    "asideW": 260,
+    "mainW": 768,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "landing",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "login",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "dashboard-dark",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "courses",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "quiz",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "community-dark",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "vimi",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "certificate-dark",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "rewards",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "ranking",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "level",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "wordbook",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "planner",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "booking",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "blog",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "about",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "account",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "password",
+    "viewport": "1024",
+    "vw": 1024,
+    "asideW": 260,
+    "mainW": 764,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "landing",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "login",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "dashboard-dark",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "courses",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "quiz",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "community-dark",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "vimi",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "certificate-dark",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "rewards",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "ranking",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "level",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "wordbook",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "planner",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "booking",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "blog",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "about",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "account",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "password",
+    "viewport": "1280",
+    "vw": 1280,
+    "asideW": 260,
+    "mainW": 1020,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "landing",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "login",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "dashboard-dark",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "courses",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "quiz",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "community-dark",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "vimi",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "certificate-dark",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "rewards",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "ranking",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "level",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "wordbook",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "planner",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "booking",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "blog",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "about",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "account",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  },
+  {
+    "page": "password",
+    "viewport": "1440",
+    "vw": 1440,
+    "asideW": 260,
+    "mainW": 1180,
+    "offenders": [],
+    "crushed": false
+  }
+]

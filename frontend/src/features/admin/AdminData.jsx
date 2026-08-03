@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../auth/AuthContext';
 
-const API_BASE = __API_URL__ || '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const ALLOWED_TABLES = [
   'classroom_phrase_categories', 'classroom_phrases',
@@ -237,7 +237,7 @@ export default function AdminData() {
             <p style={{ margin: '0 0 0.5rem', fontWeight: 600 }}>
               Preview ({Math.min(5, preview.rows.length)} of {preview.rows.length} rows)
             </p>
-            <table style={{ fontSize: '0.8rem', width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ fontSize: '0.8rem', width: '100%', minWidth: 720, borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
                   {preview.headers.map(h => (
@@ -261,7 +261,7 @@ export default function AdminData() {
         )}
       </div>
 
-      <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+      <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
         <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>Mode:</label>
         {['replace', 'append'].map(m => (
           <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: '0.85rem', padding: '4px 12px', borderRadius: 6, background: mode === m ? 'var(--red)' : 'var(--card-bg)', color: mode === m ? '#fff' : 'var(--text)', border: '1px solid', borderColor: mode === m ? 'var(--red)' : 'var(--border)' }}>

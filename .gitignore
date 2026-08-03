@@ -12,3 +12,5 @@ ngrok.log
 .opencode/
 .DS_Store
 Thumbs.db
+tools/screenshots/shots/
+tools/screenshots/.state.json

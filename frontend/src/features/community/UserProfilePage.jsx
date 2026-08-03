@@ -209,7 +209,7 @@ export default function UserProfilePage() {
 
       {showFollowers && (
         <div onClick={() => setShowFollowers(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'grid', placeItems: 'center', zIndex: 1000 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, padding: 20, width: 340, maxHeight: '70vh', overflow: 'auto' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--card)', borderRadius: 12, padding: 20, width: 'min(340px, calc(100vw - 32px))', maxHeight: '70vh', overflow: 'auto' }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Followers</h3>
             {followers.length === 0 && <p style={{ fontSize: 13, color: 'var(--muted)' }}>No followers yet.</p>}
             {followers.map(f => (
@@ -227,7 +227,7 @@ export default function UserProfilePage() {
 
       {showFollowing && (
         <div onClick={() => setShowFollowing(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'grid', placeItems: 'center', zIndex: 1000 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, padding: 20, width: 340, maxHeight: '70vh', overflow: 'auto' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--card)', borderRadius: 12, padding: 20, width: 'min(340px, calc(100vw - 32px))', maxHeight: '70vh', overflow: 'auto' }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Following</h3>
             {following.length === 0 && <p style={{ fontSize: 13, color: 'var(--muted)' }}>Not following anyone yet.</p>}
             {following.map(f => (

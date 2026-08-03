@@ -4,6 +4,7 @@ import { BiBell } from 'react-icons/bi';
 import { useAuth } from '../auth/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { api } from '../../lib/api';
+import { useMediaQuery } from '../../lib/useMediaQuery';
 
 const TYPE_TEXT = {
   remind: 'đã nhắc bạn học hôm nay.',
@@ -30,6 +31,7 @@ function renderMessage(n, nameMap) {
 
 export default function NotificationBell() {
   const { user } = useAuth();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [notifications, setNotifications] = useState([]);
   const [nameMap, setNameMap] = useState({});
   const [open, setOpen] = useState(false);
@@ -135,11 +137,17 @@ export default function NotificationBell() {
 
       {open && (
         <div style={{
-          position: 'absolute', right: 0, top: '100%', marginTop: 4,
-          width: 340, maxHeight: 400, overflow: 'auto',
+          position: isMobile ? 'fixed' : 'absolute',
+          left: isMobile ? 12 : undefined,
+          right: isMobile ? 12 : 0,
+          top: isMobile ? 60 : '100%',
+          marginTop: isMobile ? 0 : 4,
+          width: isMobile ? 'auto' : 340,
+          maxHeight: isMobile ? 'calc(100dvh - 72px)' : 400,
+          overflow: 'auto',
           background: 'var(--card)', border: '1px solid var(--line)',
           borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,.12)',
-          zIndex: 100,
+          zIndex: 300,
         }}>
           <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', fontSize: 13, fontWeight: 700 }}>
             Thông báo

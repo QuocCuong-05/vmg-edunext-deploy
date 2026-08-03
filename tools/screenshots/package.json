@@ -1,0 +1,11 @@
+{
+  "name": "vmg-screenshots",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "shots": "node index.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.54.0"
+  }
+}

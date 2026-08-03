@@ -9,7 +9,7 @@ import {
   sendMockRemind, getMockNotifications, markMockNotificationsRead,
 } from '../mock/community';
 
-const API_BASE = __API_URL__ || '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 async function request(url, options = {}) {
   const token = localStorage.getItem('vmg_token');

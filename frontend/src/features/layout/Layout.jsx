@@ -3,9 +3,11 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import ViMiChat from '../vimi/ViMiChat';
 import AvatarDropdown from './AvatarDropdown';
 import NotificationBell from './NotificationBell';
+import BottomNav from './BottomNav';
 import { useAuth } from '../auth/AuthContext';
 import { Icon } from '../../lib/icons';
 import { ToastProvider } from '../../components/ui/Toast';
+import { useMediaQuery } from '../../lib/useMediaQuery';
 
 const GROUPS = [
   {
@@ -78,12 +80,33 @@ export default function Layout() {
     catch { return false; }
   });
 
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const showRail = !isMobile && rail;
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isMobile) setDrawerOpen(false);
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKey = e => { if (e.key === 'Escape') setDrawerOpen(false); };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [drawerOpen]);
+
   const toggleRail = () => {
     setRail(prev => {
       localStorage.setItem('vmg_sidebar_rail', !prev ? '1' : '0');
       return !prev;
     });
   };
+
+  const closeDrawer = () => { if (isMobile) setDrawerOpen(false); };
 
   const isActive = (path) =>
     location.pathname === path || location.pathname.startsWith(path + '/');
@@ -93,19 +116,31 @@ export default function Layout() {
       <div style={{ display: 'flex', flex: 1 }}>
         {/* Sidebar */}
         <aside style={{
-          width: rail ? 64 : 260, flexShrink: 0,
+          width: isMobile ? 260 : (showRail ? 64 : 260),
+          flexShrink: 0,
           borderRight: '1px solid var(--line)',
           background: 'var(--card)',
           display: 'flex', flexDirection: 'column',
-          position: 'sticky', top: 0, height: '100vh',
+          position: isMobile ? 'fixed' : 'sticky',
+          top: 0,
+          height: isMobile ? '100dvh' : '100vh',
           overflow: 'hidden',
-          transition: 'width .2s',
+          transition: isMobile ? 'transform .2s ease' : 'width .2s',
+          transform: isMobile ? (drawerOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
+          zIndex: isMobile ? 210 : 'auto',
+          boxShadow: isMobile && drawerOpen ? 'var(--shadow)' : 'none',
         }}>
+          {isMobile && drawerOpen && (
+            <div onClick={() => setDrawerOpen(false)} style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: -1,
+              animation: 'fadeIn .15s ease-out',
+            }} />
+          )}
           {/* Sidebar header */}
-          <div className="brand" style={{ padding: rail ? '16px 0' : '16px 16px 20px', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', justifyContent: rail ? 'center' : 'flex-start' }} onClick={() => navigate('/dashboard')}>
+          <div className="brand" style={{ padding: showRail ? '16px 0' : '16px 16px 20px', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', justifyContent: showRail ? 'center' : 'flex-start' }} onClick={() => { navigate('/dashboard'); closeDrawer(); }}>
               <img src="/vmg.png" alt="VMG" style={{ height: 24, maxWidth: 60 }} />
-              {!rail && (
+              {!showRail && (
                 <div className="brand-title">
                   <b>VMG EduNext</b>
                   <small>Nền tảng phát triển giáo viên</small>
@@ -115,15 +150,15 @@ export default function Layout() {
           </div>
 
           {/* Navigation */}
-          <nav style={{ flex: 1, minHeight: 0, padding: rail ? '8px 0' : '8px', overflowY: 'auto', overflowX: 'hidden', scrollbarGutter: 'stable' }}>
+          <nav style={{ flex: 1, minHeight: 0, padding: showRail ? '8px 0' : '8px', overflowY: 'auto', overflowX: 'hidden', scrollbarGutter: 'stable' }}>
             {/* Dashboard first */}
             <div
-              onClick={() => navigate('/dashboard')}
-              title={rail ? 'Tổng quan' : undefined}
+              onClick={() => { navigate('/dashboard'); closeDrawer(); }}
+              title={showRail ? 'Tổng quan' : undefined}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
-                justifyContent: rail ? 'center' : 'flex-start',
-                padding: rail ? '10px 0' : '8px 12px',
+                justifyContent: showRail ? 'center' : 'flex-start',
+                padding: showRail ? '10px 0' : '8px 12px',
                 borderRadius: 8, cursor: 'pointer', marginBottom: 4,
                 fontSize: 13, fontWeight: isActive('/dashboard') ? 700 : 500,
                 background: isActive('/dashboard') ? 'var(--surface)' : 'none',
@@ -132,12 +167,12 @@ export default function Layout() {
               }}
             >
               <Icon.Dashboard size={18} style={{ flexShrink: 0 }} />
-              {!rail && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Tổng quan</span>}
+              {!showRail && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Tổng quan</span>}
             </div>
 
             {GROUPS.map((group, gi) => (
               <div key={gi}>
-                {rail ? (
+                {showRail ? (
                   <div style={{ height: 1, margin: '8px 10px', background: 'var(--line)' }} />
                 ) : (
                   <div
@@ -162,12 +197,12 @@ export default function Layout() {
                 {!collapsed[group.label] && group.items.map(item => (
                   <div
                     key={item.to}
-                    onClick={() => navigate(item.to)}
-                    title={rail ? item.label : undefined}
+                    onClick={() => { navigate(item.to); closeDrawer(); }}
+                    title={showRail ? item.label : undefined}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 10,
-                      justifyContent: rail ? 'center' : 'flex-start',
-                      padding: rail ? '10px 0' : '7px 12px',
+                      justifyContent: showRail ? 'center' : 'flex-start',
+                      padding: showRail ? '10px 0' : '7px 12px',
                       borderRadius: 8, cursor: 'pointer', marginBottom: 1,
                       fontSize: 13, fontWeight: isActive(item.to) ? 700 : 500,
                       background: isActive(item.to) ? 'var(--surface)' : 'none',
@@ -176,7 +211,7 @@ export default function Layout() {
                     }}
                   >
                     <item.icon size={18} style={{ flexShrink: 0 }} />
-                    {!rail && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>}
+                    {!showRail && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>}
                   </div>
                 ))}
               </div>
@@ -184,7 +219,7 @@ export default function Layout() {
 
             {user?.role === 'admin' && (
               <div>
-                {rail ? (
+                {showRail ? (
                   <div style={{ height: 1, margin: '8px 10px', background: 'var(--line)' }} />
                 ) : (
                   <div
@@ -208,12 +243,12 @@ export default function Layout() {
                 )}
                 {!collapsed['Quản trị'] && (
                   <div
-                    onClick={() => navigate('/admin/data')}
-                    title={rail ? 'Quản lý dữ liệu' : undefined}
+                    onClick={() => { navigate('/admin/data'); closeDrawer(); }}
+                    title={showRail ? 'Quản lý dữ liệu' : undefined}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 10,
-                      justifyContent: rail ? 'center' : 'flex-start',
-                      padding: rail ? '10px 0' : '7px 12px',
+                      justifyContent: showRail ? 'center' : 'flex-start',
+                      padding: showRail ? '10px 0' : '7px 12px',
                       borderRadius: 8, cursor: 'pointer', marginBottom: 1,
                       fontSize: 13, fontWeight: isActive('/admin/data') ? 700 : 500,
                       background: isActive('/admin/data') ? 'var(--surface)' : 'none',
@@ -222,7 +257,7 @@ export default function Layout() {
                     }}
                   >
                     <Icon.Cog size={18} style={{ flexShrink: 0 }} />
-                    {!rail && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {!showRail && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       Quản lý dữ liệu
                     </span>}
                   </div>
@@ -233,15 +268,15 @@ export default function Layout() {
 
           {/* Sidebar footer with user info — fixed at bottom */}
           <div style={{
-            padding: rail ? '12px 0' : '12px 8px', borderTop: '1px solid var(--line)', flexShrink: 0,
+            padding: showRail ? '12px 0' : '12px 8px', borderTop: '1px solid var(--line)', flexShrink: 0,
           }}>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 10,
-              justifyContent: rail ? 'center' : 'flex-start',
+              justifyContent: showRail ? 'center' : 'flex-start',
               padding: '8px 12px',
             }}>
               <div className="avatar-btn" title={user?.full_name} style={{ width: 36, height: 36, fontSize: 12, flexShrink: 0 }}>{initials}</div>
-              {!rail && (
+              {!showRail && (
                 <>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -280,10 +315,14 @@ export default function Layout() {
             position: 'sticky', top: 0, zIndex: 50,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <button className="avatar-btn" onClick={toggleRail} title={rail ? 'Mở rộng menu' : 'Thu gọn menu'}>
+              <button
+                className="avatar-btn"
+                onClick={() => (isMobile ? setDrawerOpen(true) : toggleRail())}
+                title={isMobile ? 'Mở menu' : (rail ? 'Mở rộng menu' : 'Thu gọn menu')}
+              >
                 <Icon.Menu size={16} />
               </button>
-              <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: -.3 }}>VMG EduNext</div>
+              <div className="header-title" style={{ fontWeight: 800, fontSize: 15, letterSpacing: -.3 }}>VMG EduNext</div>
             </div>
             <div className="top-actions" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <button className="avatar-btn" onClick={() => navigate('/vimi')} title="ViMi AI Tutor">
@@ -326,6 +365,7 @@ export default function Layout() {
           </footer>
         </div>
       </div>
+      <BottomNav />
       <ViMiChat />
     </div>
   );

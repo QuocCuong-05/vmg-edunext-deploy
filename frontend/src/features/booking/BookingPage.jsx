@@ -3,6 +3,7 @@ import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Dialog from '../../components/ui/Dialog';
+import { useMediaQuery } from '../../lib/useMediaQuery';
 
 const EXPERTS = [
   {
@@ -54,6 +55,7 @@ const MONTHS = [
 ];
 
 export default function BookingPage() {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [selectedExpert, setSelectedExpert] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [bookingType, setBookingType] = useState(BOOKING_TYPES[0]);
@@ -76,7 +78,7 @@ export default function BookingPage() {
       </div>
 
       <Card style={{ padding: 24 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 24 }}>
           <div>
             <label style={{ display: 'block', fontSize: 10, fontWeight: 800, marginBottom: 6, color: 'var(--muted)' }}>
               Loại buổi học
@@ -234,6 +236,7 @@ export default function BookingPage() {
 const COLORS_PICKER = ['#e74c3c', '#3498db', '#f39c12', '#2ecc71', '#9b59b6', '#1abc9c', '#e67e22', '#34495e'];
 
 function ExpertProfile({ expert, onBook }) {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   return (
     <>
       <div style={{
@@ -268,7 +271,7 @@ function ExpertProfile({ expert, onBook }) {
         </div>
       </div>
 
-      <div style={{ padding: '20px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px', fontSize: 13, borderBottom: '1px solid var(--line)', marginBottom: 16 }}>
+      <div style={{ padding: '20px 0', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px 20px', fontSize: 13, borderBottom: '1px solid var(--line)', marginBottom: 16 }}>
         <div><span style={{ opacity: .5, display: 'block', fontSize: 10, fontWeight: 700, marginBottom: 2 }}>KINH NGHIỆM</span>{expert.experience}</div>
         <div><span style={{ opacity: .5, display: 'block', fontSize: 10, fontWeight: 700, marginBottom: 2 }}>HỌC VẤN</span>{expert.education}</div>
         <div><span style={{ opacity: .5, display: 'block', fontSize: 10, fontWeight: 700, marginBottom: 2 }}>NGÔN NGỮ</span>{expert.languages.join(', ')}</div>

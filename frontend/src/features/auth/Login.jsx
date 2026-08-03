@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import { supabase } from '../../lib/supabase';
 import Button from '../../components/ui/Button';
 import { getWards } from '../../mock/wards';
 import { getSchools } from '../../mock/schools';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgot, setIsForgot] = useState(false);
   const [email, setEmail] = useState('teacher@vmg-edunext.com');
   const [password, setPassword] = useState('2026demo');
   const [fullName, setFullName] = useState('');
   const [ward, setWard] = useState('');
   const [school, setSchool] = useState('');
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [busy, setBusy] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [wards, setWards] = useState([]);
@@ -34,14 +37,21 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setInfo('');
     setBusy(true);
     try {
-      if (isLogin) {
+      if (isForgot) {
+        const redirectTo = `${window.location.origin}/reset-password`;
+        const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+        if (error) throw error;
+        setInfo('Đã gửi link đặt lại mật khẩu vào email của bạn. Vui lòng kiểm tra hộp thư.');
+      } else if (isLogin) {
         await login(email, password);
+        navigate('/dashboard');
       } else {
         await signup(email, password, fullName, school, ward);
+        navigate('/dashboard');
       }
-      navigate('/dashboard');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -71,17 +81,22 @@ export default function Login() {
       </div>
       <div className="auth-form-wrap">
         <div className="auth-form-inner">
-          <h2>{isLogin ? 'Đăng nhập' : 'Đăng ký'}</h2>
-          <p>{isLogin ? 'Chào mừng bạn quay trở lại!' : 'Tạo tài khoản mới để bắt đầu học tập.'}</p>
+          <h2>{isForgot ? 'Quên mật khẩu' : (isLogin ? 'Đăng nhập' : 'Đăng ký')}</h2>
+          <p>{isForgot ? 'Nhập email của bạn, chúng tôi sẽ gửi link đặt lại mật khẩu.' : (isLogin ? 'Chào mừng bạn quay trở lại!' : 'Tạo tài khoản mới để bắt đầu học tập.')}</p>
 
           {error && (
             <div style={{ padding: '12px 16px', background: 'var(--red-bg)', color: 'var(--red)', borderRadius: 12, fontSize: 13, marginBottom: 16 }}>
               {error}
             </div>
           )}
+          {info && (
+            <div style={{ padding: '12px 16px', background: 'var(--green-bg)', color: 'var(--green)', borderRadius: 12, fontSize: 13, marginBottom: 16 }}>
+              {info}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
-            {!isLogin && (<>
+            {!isForgot && !isLogin && (<>
               <div className="form-group">
                 <label>Họ và tên</label>
                 <input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nguyễn Văn A" />
@@ -109,6 +124,7 @@ export default function Login() {
               <label>Email</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="teacher@vmg-edunext.com" required />
             </div>
+            {!isForgot && (
             <div className="form-group">
               <label>Mật khẩu</label>
               <div className="pw-wrap">
@@ -119,15 +135,30 @@ export default function Login() {
                     : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
                 </button>
               </div>
+              {isLogin && (
+                <div style={{ textAlign: 'right', marginTop: 6 }}>
+                  <a
+                    onClick={() => { setIsForgot(true); setError(''); setInfo(''); }}
+                    style={{ fontSize: 12, color: 'var(--red)', cursor: 'pointer', fontWeight: 600 }}
+                  >Quên mật khẩu?</a>
+                </div>
+              )}
             </div>
+            )}
             <Button type="submit" variant="primary" style={{ width: '100%', justifyContent: 'center', padding: '16px 24px', fontSize: 15 }} isDisabled={busy}>
-              {busy ? 'Đang xử lý...' : isLogin ? 'Đăng nhập' : 'Đăng ký'}
+              {busy ? 'Đang xử lý...' : isForgot ? 'Gửi link đặt lại mật khẩu' : (isLogin ? 'Đăng nhập' : 'Đăng ký')}
             </Button>
           </form>
 
           <div className="auth-toggle">
-            {isLogin ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}
-            <a onClick={() => { setIsLogin(!isLogin); setError(''); }}>{isLogin ? 'Đăng ký ngay' : 'Đăng nhập'}</a>
+            {isForgot ? (
+              <a onClick={() => { setIsForgot(false); setError(''); setInfo(''); }}>Quay lại đăng nhập</a>
+            ) : (
+              <>
+                {isLogin ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}
+                <a onClick={() => { setIsLogin(!isLogin); setError(''); setInfo(''); }}>{isLogin ? 'Đăng ký ngay' : 'Đăng nhập'}</a>
+              </>
+            )}
           </div>
         </div>
       </div>

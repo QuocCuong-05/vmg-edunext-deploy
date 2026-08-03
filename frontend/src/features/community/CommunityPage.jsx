@@ -6,6 +6,7 @@ import Card from '../../components/ui/Card';
 import { api, notifyPostOwner } from '../../lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { TOPICS } from '../../mock/community';
+import { useMediaQuery } from '../../lib/useMediaQuery';
 
 const COLORS = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--gold)'];
 
@@ -214,6 +215,7 @@ function PostCard({ post, onLike, onToggleComments, onAddComment, expanded, comm
 
 export default function CommunityPage() {
   const { user } = useAuth();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [activeTopic, setActiveTopic] = useState('');
@@ -489,7 +491,7 @@ export default function CommunityPage() {
         ))}
       </div>
 
-      <div className="community-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
+      <div className="community-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: 24, alignItems: 'start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {posts.map(post => (
             <PostCard
@@ -566,7 +568,7 @@ export default function CommunityPage() {
           display: 'grid', placeItems: 'center', zIndex: 1000,
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background: 'var(--card)', borderRadius: 12, padding: 24, width: 340,
+            background: 'var(--card)', borderRadius: 12, padding: 24, width: 'min(340px, calc(100vw - 32px))',
             boxShadow: '0 8px 30px rgba(0,0,0,.15)',
           }}>
             <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Report Post</h3>

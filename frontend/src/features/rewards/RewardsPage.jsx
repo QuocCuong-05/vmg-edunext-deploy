@@ -164,7 +164,7 @@ export default function RewardsPage() {
                   <div style={{ width: 4, height: 24, borderRadius: 2, background: cat.color }} />
                   <h2 style={{ fontSize: 16, fontWeight: 700, color: cat.color }}>{cat.label}</h2>
                 </div>
-                <div className="reward-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+                <div className="reward-grid" style={{ gap: 16 }}>
                   {items.map(item => {
                     const ItemIcon = ICON_MAP[item.icon_type] || Icon.Book;
                     const isOwned = owned.includes(item.id);

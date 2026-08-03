@@ -70,7 +70,7 @@ export default function CourseDetail() {
 
       <Card style={{ padding: 28, marginBottom: 24 }}>
         <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-          <div className={`course-cover ${cover.color}`} style={{ width: 120, height: 120, fontSize: 40 }}>
+          <div className={`course-cover ${cover.color}`} style={{ width: 'min(120px, 22vw)', height: 'min(120px, 22vw)', fontSize: 40 }}>
             <C size={36} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>

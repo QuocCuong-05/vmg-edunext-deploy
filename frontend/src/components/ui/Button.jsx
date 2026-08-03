@@ -6,7 +6,7 @@ export default function Button({ variant, size, isDisabled, label, children, onC
     borderRadius: 10,
     fontWeight: 700,
     fontSize: size === 'sm' ? 12 : 13,
-    padding: size === 'sm' ? '8px 14px' : '12px 22px',
+    padding: size === 'sm' ? '9px 16px' : '12px 22px',
     border: 'none',
     cursor: isDisabled ? 'not-allowed' : 'pointer',
     opacity: isDisabled ? 0.5 : 1,
