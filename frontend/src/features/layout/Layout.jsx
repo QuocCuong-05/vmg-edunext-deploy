@@ -115,7 +115,7 @@ export default function Layout() {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <div style={{ display: 'flex', flex: 1 }}>
         {/* Sidebar */}
-        <aside style={{
+        <aside className="app-sidebar" style={{
           width: isMobile ? 260 : (showRail ? 64 : 260),
           flexShrink: 0,
           borderRight: '1px solid var(--line)',
@@ -123,7 +123,6 @@ export default function Layout() {
           display: 'flex', flexDirection: 'column',
           position: isMobile ? 'fixed' : 'sticky',
           top: 0,
-          height: isMobile ? '100dvh' : '100vh',
           overflow: 'hidden',
           transition: isMobile ? 'transform .2s ease' : 'width .2s',
           transform: isMobile ? (drawerOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
@@ -150,18 +149,20 @@ export default function Layout() {
           </div>
 
           {/* Navigation */}
-          <nav style={{ flex: 1, minHeight: 0, padding: showRail ? '8px 0' : '8px', overflowY: 'auto', overflowX: 'hidden', scrollbarGutter: 'stable' }}>
+          <nav style={{ flex: 1, minHeight: 0, padding: showRail ? '8px 0' : '8px', overflowY: 'auto', overflowX: 'hidden', scrollbarGutter: 'stable', overscrollBehavior: 'contain' }}>
             {/* Dashboard first */}
             <div
               onClick={() => { navigate('/dashboard'); closeDrawer(); }}
               title={showRail ? 'Tổng quan' : undefined}
+              onMouseEnter={e => { if (!isActive('/dashboard')) e.target.style.background = 'var(--surface)'; }}
+              onMouseLeave={e => { if (!isActive('/dashboard')) e.target.style.background = 'none'; }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 justifyContent: showRail ? 'center' : 'flex-start',
                 padding: showRail ? '10px 0' : '8px 12px',
                 borderRadius: 8, cursor: 'pointer', marginBottom: 4,
                 fontSize: 13, fontWeight: isActive('/dashboard') ? 700 : 500,
-                background: isActive('/dashboard') ? 'var(--surface)' : 'none',
+                background: isActive('/dashboard') ? 'var(--red-bg)' : 'none',
                 color: isActive('/dashboard') ? 'var(--red)' : 'var(--ink)',
                 transition: 'all .12s',
               }}
@@ -199,13 +200,15 @@ export default function Layout() {
                     key={item.to}
                     onClick={() => { navigate(item.to); closeDrawer(); }}
                     title={showRail ? item.label : undefined}
+                    onMouseEnter={e => { if (!isActive(item.to)) e.target.style.background = 'var(--surface)'; }}
+                    onMouseLeave={e => { if (!isActive(item.to)) e.target.style.background = 'none'; }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 10,
                       justifyContent: showRail ? 'center' : 'flex-start',
                       padding: showRail ? '10px 0' : '7px 12px',
                       borderRadius: 8, cursor: 'pointer', marginBottom: 1,
                       fontSize: 13, fontWeight: isActive(item.to) ? 700 : 500,
-                      background: isActive(item.to) ? 'var(--surface)' : 'none',
+                      background: isActive(item.to) ? 'var(--red-bg)' : 'none',
                       color: isActive(item.to) ? 'var(--red)' : 'var(--ink)',
                       transition: 'all .12s', overflow: 'hidden',
                     }}
@@ -245,13 +248,15 @@ export default function Layout() {
                   <div
                     onClick={() => { navigate('/admin/data'); closeDrawer(); }}
                     title={showRail ? 'Quản lý dữ liệu' : undefined}
+                    onMouseEnter={e => { if (!isActive('/admin/data')) e.target.style.background = 'var(--surface)'; }}
+                    onMouseLeave={e => { if (!isActive('/admin/data')) e.target.style.background = 'none'; }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 10,
                       justifyContent: showRail ? 'center' : 'flex-start',
                       padding: showRail ? '10px 0' : '7px 12px',
                       borderRadius: 8, cursor: 'pointer', marginBottom: 1,
                       fontSize: 13, fontWeight: isActive('/admin/data') ? 700 : 500,
-                      background: isActive('/admin/data') ? 'var(--surface)' : 'none',
+                      background: isActive('/admin/data') ? 'var(--red-bg)' : 'none',
                       color: isActive('/admin/data') ? 'var(--red)' : 'var(--ink)',
                       transition: 'all .12s', overflow: 'hidden',
                     }}

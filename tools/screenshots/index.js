@@ -19,6 +19,7 @@ const OUT = path.join(__dirname, 'shots');
 const PUBLIC_PAGES = [
   { path: '/', name: 'landing' },
   { path: '/login', name: 'login' },
+  { path: '/reset-password', name: 'reset' },
 ];
 
 const AUTH_PAGES = [
@@ -131,13 +132,22 @@ async function main() {
     });
     const page = await context.newPage();
 
+    const pubContext = await browser.newContext({
+      viewport: { width: vp.w, height: vp.h },
+      deviceScaleFactor: vp.mobile ? 2 : 1,
+      isMobile: vp.mobile,
+      hasTouch: vp.mobile,
+    });
+    const pubPage = await pubContext.newPage();
+
     for (const p of PUBLIC_PAGES) {
-      await page.goto(`${BASE_URL}${p.path}`, { waitUntil: 'load' }).catch(() => {});
-      await page.waitForTimeout(700);
-      await page.screenshot({ path: path.join(OUT, `${p.name}-${vp.label}.png`) });
-      await auditLayout(page, vp.label, p.name);
+      await pubPage.goto(`${BASE_URL}${p.path}`, { waitUntil: 'load' }).catch(() => {});
+      await pubPage.waitForTimeout(700);
+      await pubPage.screenshot({ path: path.join(OUT, `${p.name}-${vp.label}.png`) });
+      await auditLayout(pubPage, vp.label, p.name);
       shots++;
     }
+    await pubContext.close();
 
     for (const p of AUTH_PAGES) {
       const dark = DARK_PAGES.includes(p.name);
