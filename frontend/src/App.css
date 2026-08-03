@@ -1071,6 +1071,8 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
   .bottom-nav-item.active { color: var(--red); }
   .main { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
   .header-title { display: none; }
+  .vimi-float { bottom: calc(72px + env(safe-area-inset-bottom)); right: 16px; }
+  .vimi-panel { bottom: calc(160px + env(safe-area-inset-bottom)); }
 }
 
 /* Print — certificate only */
