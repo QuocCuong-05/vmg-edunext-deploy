@@ -114,6 +114,13 @@ export default function Layout() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <div style={{ display: 'flex', flex: 1 }}>
+        {/* Scrim — covers the page behind the mobile drawer */}
+        {isMobile && drawerOpen && (
+          <div onClick={() => setDrawerOpen(false)} style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 200,
+            animation: 'fadeIn .15s ease-out',
+          }} />
+        )}
         {/* Sidebar */}
         <aside className="app-sidebar" style={{
           width: isMobile ? 260 : (showRail ? 64 : 260),
@@ -129,12 +136,6 @@ export default function Layout() {
           zIndex: isMobile ? 210 : 'auto',
           boxShadow: isMobile && drawerOpen ? 'var(--shadow)' : 'none',
         }}>
-          {isMobile && drawerOpen && (
-            <div onClick={() => setDrawerOpen(false)} style={{
-              position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: -1,
-              animation: 'fadeIn .15s ease-out',
-            }} />
-          )}
           {/* Sidebar header */}
           <div className="brand" style={{ padding: showRail ? '16px 0' : '16px 16px 20px', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', justifyContent: showRail ? 'center' : 'flex-start' }} onClick={() => { navigate('/dashboard'); closeDrawer(); }}>
