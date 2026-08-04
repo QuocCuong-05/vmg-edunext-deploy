@@ -404,7 +404,7 @@ export const api = {
     confirmTransfer: async (orderId) =>
       request(`/orders/${orderId}/confirm-transfer`, { method: 'POST' }),
     mine: async () => request('/orders/mine'),
-    bankInfo: async () => request('/orders/bank-info'),
+    publicSettings: async () => request('/orders/public-settings'),
     approveInfo: async (orderId, token) =>
       request(`/orders/${orderId}/approve-info?token=${encodeURIComponent(token)}`),
     approve: async (orderId, token) =>

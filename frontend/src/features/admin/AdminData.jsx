@@ -87,7 +87,7 @@ const TABS = [
   { key: 'import', label: 'Nhập CSV', icon: Icon.Download },
   { key: 'orders', label: 'Đơn hàng', icon: Icon.CartAlt },
   { key: 'courses', label: 'Khóa trả phí', icon: Icon.Courses },
-  { key: 'settings', label: 'Cấu hình QR', icon: Icon.Cog },
+  { key: 'settings', label: 'Cấu hình', icon: Icon.Cog },
 ];
 
 const badge = (status) => {
@@ -232,6 +232,7 @@ export default function AdminData() {
 
   async function handleSaveSettings() {
     try {
+      await api.admin.saveSetting('preview_seconds', Number(settings.preview_seconds) || 120);
       await api.admin.saveSetting('bank_transfer', {
         bank_name: settings.bank_name || '',
         account_number: settings.account_number || '',
@@ -504,11 +505,21 @@ export default function AdminData() {
 
       {tab === 'settings' && (
         <div className="admin-panel" style={{ maxWidth: 520 }}>
-          <h3>Cấu hình QR chuyển khoản</h3>
+          <h3>Cấu hình</h3>
           <p className="admin-note" style={{ marginBottom: 16 }}>
-            Thông tin này hiển thị trên trang đăng ký khóa học để giáo viên chuyển khoản. QR VietQR sẽ được tạo từ thông tin này.
+            Thông tin chuyển khoản hiển thị trên trang đăng ký khóa học. QR VietQR sẽ được tạo từ thông tin này.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', fontWeight: 700, fontSize: 12, marginBottom: 5, color: 'var(--muted)' }}>Số giây xem trước bài học</label>
+              <input
+                type="number" min="10" max="600"
+                className="admin-input"
+                value={settings.preview_seconds ?? 120}
+                onChange={e => setSettings({ ...settings, preview_seconds: e.target.value })}
+              />
+              <p className="admin-note" style={{ marginTop: 4 }}>Video bài preview sẽ tự dừng sau số giây này (mặc định 120 = 2 phút).</p>
+            </div>
             <div>
               <label style={{ display: 'block', fontWeight: 700, fontSize: 12, marginBottom: 5, color: 'var(--muted)' }}>Ngân hàng</label>
               <input className="admin-input" value={settings.bank_name || ''} onChange={e => setSettings({ ...settings, bank_name: e.target.value })} placeholder="VD: Vietcombank" />

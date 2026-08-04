@@ -110,18 +110,43 @@ export default function LessonView() {
 
   const dur = lesson.video_duration_seconds || lesson.duration || 0;
   const content = lesson.article_body || '<p>Nội dung bài học đang được cập nhật...</p>';
+  const isPreviewMode = course.access_type === 'paid' && !canAccess && lesson.is_free;
+
+  const [previewSeconds, setPreviewSeconds] = useState(120);
+
+  useEffect(() => {
+    if (course?.access_type === 'paid') {
+      api.orders.publicSettings()
+        .then(s => setPreviewSeconds(Number(s?.preview_seconds) || 120))
+        .catch(() => {});
+    }
+  }, [course]);
+
+  const videoSrc = (() => {
+    if (!lesson.video_url) return null;
+    if (!isPreviewMode) return lesson.video_url;
+    const sep = lesson.video_url.includes('?') ? '&' : '?';
+    return `${lesson.video_url}${sep}start=0&end=${previewSeconds}`;
+  })();
 
   return (
     <div className="lesson-content page-enter">
       <div className="back-btn" onClick={() => navigate(`/courses/${slug}`)}><Icon.ArrowLeft size={14} /> {course.title}</div>
 
-      <h1 style={{ fontSize: 22, marginBottom: 8 }}>{lesson.title}</h1>
+      <h1 style={{ fontSize: 22, marginBottom: 8 }}>
+        {lesson.title}{' '}
+        {isPreviewMode && (
+          <span className="pill" style={{ background: 'var(--gold-bg)', color: 'var(--gold)', fontSize: 10, verticalAlign: 'middle' }}>
+            Xem trước {Math.round(previewSeconds / 60)} phút đầu
+          </span>
+        )}
+      </h1>
       <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>{lesson.description}</p>
 
       {lesson.content_type === 'video' && (
         <div className="video-player">
-          {lesson.video_url ? (
-            <iframe src={lesson.video_url} allowFullScreen title={lesson.title} />
+          {videoSrc ? (
+            <iframe src={videoSrc} allowFullScreen title={lesson.title} />
           ) : (
             <div className="placeholder">
               <div style={{ marginBottom: 12 }}><Icon.Play size={48} /></div>
@@ -131,6 +156,26 @@ export default function LessonView() {
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {isPreviewMode && (
+        <div style={{
+          marginBottom: 20, padding: '14px 18px',
+          background: 'var(--red-bg)', border: '1px solid var(--red)', borderRadius: 12,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
+        }}>
+          <div>
+            <b style={{ fontSize: 14 }}>Bạn đang xem {Math.round(previewSeconds / 60)} phút đầu của bài học</b>
+            {dur > 0 && (
+              <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
+                Đăng ký khóa học để xem toàn bộ {Math.floor(dur / 60)} phút.
+              </p>
+            )}
+          </div>
+          <Button size="sm" variant="primary" onClick={() => navigate(`/courses/${slug}/register`)}>
+            Đăng ký khóa học
+          </Button>
         </div>
       )}
 

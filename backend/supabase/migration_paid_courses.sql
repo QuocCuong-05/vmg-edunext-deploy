@@ -62,5 +62,6 @@ create policy "app_settings_select" on public.app_settings
 -- Cấu hình mặc định
 insert into public.app_settings (key, value) values
   ('order_ttl_minutes', '10'::jsonb),
+  ('preview_seconds', '120'::jsonb),
   ('bank_transfer', '{"bank_name":"","account_number":"","account_holder":"","content_prefix":"VMG"}'::jsonb)
 on conflict (key) do nothing;

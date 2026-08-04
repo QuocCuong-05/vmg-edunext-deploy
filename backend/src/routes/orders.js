@@ -175,14 +175,17 @@ router.get('/mine', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/bank-info', async (_req, res, next) => {
+router.get('/public-settings', async (_req, res, next) => {
   try {
     const { data } = await supabaseAdmin
       .from('app_settings')
-      .select('value')
-      .eq('key', 'bank_transfer')
-      .maybeSingle();
-    res.json(data?.value || {});
+      .select('key, value');
+    const map = {};
+    (data || []).forEach(r => { map[r.key] = r.value; });
+    res.json({
+      bank_transfer: map.bank_transfer || {},
+      preview_seconds: Number(map.preview_seconds) || 120,
+    });
   } catch (err) {
     next(err);
   }

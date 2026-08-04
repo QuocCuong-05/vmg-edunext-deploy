@@ -45,7 +45,7 @@ export default function RegisterCoursePage() {
           navigate(`/courses/${slug}`, { replace: true });
           return;
         }
-        setBankInfo(await api.orders.bankInfo().catch(() => ({})));
+        setBankInfo((await api.orders.publicSettings().catch(() => ({}))).bank_transfer || {});
       } catch {}
       setLoading(false);
     })();
