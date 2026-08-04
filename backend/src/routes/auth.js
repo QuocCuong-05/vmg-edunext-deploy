@@ -74,4 +74,28 @@ router.get('/me', async (req, res) => {
   });
 });
 
+router.post('/sync-xp', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'No token' });
+
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error) return res.status(401).json({ error: error.message });
+
+    const sent = Math.max(0, Math.min(10000000, Math.round(req.body?.xp) || 0));
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('xp')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const next = Math.max(profile?.xp || 0, sent);
+    await supabase.from('profiles').update({ xp: next }).eq('id', user.id);
+    res.json({ xp: next });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

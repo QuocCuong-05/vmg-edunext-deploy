@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
+import { syncXp } from '../../lib/xp';
 
 const AuthContext = createContext(null);
 
@@ -31,6 +32,7 @@ export function AuthProvider({ children }) {
         const data = await res.json();
         setUser(data.user);
         localStorage.setItem('vmg_token', session.access_token);
+        syncXp();
       } else {
         localStorage.removeItem('vmg_token');
       }
@@ -78,6 +80,7 @@ export function AuthProvider({ children }) {
 
     const meData = await meRes.json();
     setUser(meData.user);
+    syncXp();
     return meData.user;
   }, []);
 
@@ -118,6 +121,7 @@ export function AuthProvider({ children }) {
 
     const meData = await meRes.json();
     setUser(meData.user);
+    syncXp();
     return meData.user;
   }, []);
 
