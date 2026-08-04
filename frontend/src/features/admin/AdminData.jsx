@@ -434,7 +434,7 @@ export default function AdminData() {
                   {orders.map(o => (
                     <tr key={o.id}>
                       <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.order_no}</td>
-                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.profiles?.full_name || o.user_id?.slice(0, 8)}</td>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.full_name || o.profiles?.full_name || o.user_id?.slice(0, 8)}</td>
                       <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.courses?.title}</td>
                       <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{(o.amount || 0).toLocaleString('vi-VN')} đ</td>
                       <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.method}</td>

@@ -34,13 +34,25 @@ router.post('/import', async (req, res) => {
 
 router.get('/orders', async (_req, res, next) => {
   try {
-    let q = supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('orders')
-      .select('*, courses(title, slug), profiles(full_name)')
-      .order('created_at', { ascending: false });
-    const { data, error } = await q.limit(200);
+      .select('*, courses(title, slug)')
+      .order('created_at', { ascending: false })
+      .limit(200);
     if (error) throw error;
-    res.json(data || []);
+
+    const orders = data || [];
+    const userIds = [...new Set(orders.map(o => o.user_id))];
+    let profileMap = {};
+    if (userIds.length) {
+      const { data: profiles } = await supabaseAdmin
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+      profileMap = {};
+      (profiles || []).forEach(p => { profileMap[p.id] = p.full_name; });
+    }
+    res.json(orders.map(o => ({ ...o, full_name: profileMap[o.user_id] || null })));
   } catch (err) {
     next(err);
   }
