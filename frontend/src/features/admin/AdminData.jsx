@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { api } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
+import { Icon } from '../../lib/icons';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -82,17 +83,19 @@ function splitLine(line) {
   return result;
 }
 
-const inputStyle = {
-  width: '100%', padding: '0.5rem', borderRadius: 6,
-  border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text)',
-};
-
 const TABS = [
-  { key: 'import', label: 'Nhập CSV' },
-  { key: 'orders', label: 'Đơn hàng' },
-  { key: 'courses', label: 'Khóa trả phí' },
-  { key: 'settings', label: 'Cấu hình QR' },
+  { key: 'import', label: 'Nhập CSV', icon: Icon.Download },
+  { key: 'orders', label: 'Đơn hàng', icon: Icon.CartAlt },
+  { key: 'courses', label: 'Khóa trả phí', icon: Icon.Courses },
+  { key: 'settings', label: 'Cấu hình QR', icon: Icon.Cog },
 ];
+
+const badge = (status) => {
+  if (status === 'paid') return <span className="admin-badge green">Đã thanh toán</span>;
+  if (status === 'pending') return <span className="admin-badge gold">Chờ xác nhận</span>;
+  if (status === 'cancelled') return <span className="admin-badge gray">Đã hủy</span>;
+  return <span className="admin-badge red">{status}</span>;
+};
 
 export default function AdminData() {
   const { user } = useAuth();
@@ -239,24 +242,18 @@ export default function AdminData() {
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '2rem 1rem' }}>
-      <h2 style={{ marginBottom: '0.5rem' }}>Admin — Quản lý</h2>
-      <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-        Logged in as <strong>{user?.email}</strong> (role: {user?.role})
-      </p>
+    <div className="page-enter" style={{ maxWidth: 960, margin: '0 auto' }}>
+      <div className="page-title">
+        <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icon.Cog size={24} /> Quản trị</h1>
+        <p>Quản lý dữ liệu, đơn hàng và khóa trả phí</p>
+      </div>
 
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+      <div className="admin-tabs">
         {TABS.map(t => (
           <button
             key={t.key}
+            className={`admin-tab${tab === t.key ? ' active' : ''}`}
             onClick={() => setTab(t.key)}
-            style={{
-              padding: '6px 14px', borderRadius: 8, border: '1px solid',
-              borderColor: tab === t.key ? 'var(--red)' : 'var(--border)',
-              background: tab === t.key ? 'var(--red)' : 'var(--card-bg)',
-              color: tab === t.key ? '#fff' : 'var(--text)',
-              cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
-            }}
           >
             {t.label}
           </button>
@@ -264,21 +261,23 @@ export default function AdminData() {
       </div>
 
       {error && (
-        <p style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--card-bg)', borderRadius: 8, color: 'var(--red)' }}>
+        <div style={{ padding: '10px 14px', background: 'var(--red-bg)', color: 'var(--red)', borderRadius: 10, fontSize: 13, marginBottom: 16 }}>
           {error}
-        </p>
+        </div>
       )}
 
       {tab === 'import' && (
-        <>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.25rem' }}>Table</label>
+        <div className="admin-panel">
+          <h3>Nhập dữ liệu từ CSV</h3>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontWeight: 700, fontSize: 12, marginBottom: 6, color: 'var(--muted)' }}>Bảng dữ liệu</label>
             <select
               value={table}
               onChange={e => { setTable(e.target.value); handleClearFile(); }}
-              style={inputStyle}
+              className="admin-input"
             >
-              <option value="">-- Select table --</option>
+              <option value="">-- Chọn bảng --</option>
               {ALLOWED_TABLES.map(t => (
                 <option key={t} value={t}>{t}</option>
               ))}
@@ -286,24 +285,24 @@ export default function AdminData() {
           </div>
 
           {table && (
-            <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8 }}>
-              <p style={{ margin: '0 0 0.5rem', fontWeight: 600, fontSize: '0.85rem' }}>
-                Các cột của <code style={{ background: 'var(--hover)', padding: '2px 6px', borderRadius: 4 }}>{table}</code>
+            <div style={{ marginBottom: 16, padding: '12px 14px', background: 'var(--surface-hover)', border: '1px solid var(--line)', borderRadius: 10 }}>
+              <p style={{ margin: '0 0 8px', fontWeight: 700, fontSize: 13 }}>
+                Các cột của <code style={{ background: 'var(--card)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--line)' }}>{table}</code>
               </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                 {TABLE_COLUMNS[table]?.required.map(col => (
                   <span key={col} style={{
-                    padding: '3px 10px', borderRadius: 4, fontSize: '0.8rem',
-                    background: 'var(--hover)', color: 'var(--text)',
-                    border: '1px solid var(--border)',
+                    padding: '3px 10px', borderRadius: 6, fontSize: 12,
+                    background: 'var(--card)', color: 'var(--ink)',
+                    border: '1px solid var(--line)',
                   }}>{col}</span>
                 ))}
                 {TABLE_COLUMNS[table]?.optional?.map(col => (
                   <span key={col} style={{
-                    padding: '3px 10px', borderRadius: 4, fontSize: '0.8rem',
-                    background: 'transparent', color: 'var(--text-muted)',
-                    border: '1px dashed var(--border)',
-                  }}>{col} <span style={{ fontSize: '0.7rem' }}>(tự sinh)</span></span>
+                    padding: '3px 10px', borderRadius: 6, fontSize: 12,
+                    background: 'transparent', color: 'var(--muted)',
+                    border: '1px dashed var(--line)',
+                  }}>{col} <span style={{ fontSize: 10 }}>(tự sinh)</span></span>
                 ))}
               </div>
               {preview && (
@@ -314,16 +313,12 @@ export default function AdminData() {
                   const extra = preview.headers.filter(h => h && !requiredCols.includes(h) && !(TABLE_COLUMNS[table]?.optional || []).includes(h));
                   if (missing.length > 0 || extra.length > 0) {
                     return (
-                      <div style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>
+                      <div style={{ marginTop: 8, fontSize: 12 }}>
                         {missing.length > 0 && (
-                          <p style={{ margin: 0, color: 'var(--red)' }}>
-                            Thiếu cột: {missing.join(', ')}
-                          </p>
+                          <p style={{ margin: 0, color: 'var(--red)' }}>Thiếu cột: {missing.join(', ')}</p>
                         )}
                         {extra.length > 0 && (
-                          <p style={{ margin: 0, color: '#e67e22' }}>
-                            Cột thừa (sẽ bị bỏ qua): {extra.join(', ')}
-                          </p>
+                          <p style={{ margin: 0, color: 'var(--gold)' }}>Cột thừa (sẽ bị bỏ qua): {extra.join(', ')}</p>
                         )}
                       </div>
                     );
@@ -333,25 +328,22 @@ export default function AdminData() {
             </div>
           )}
 
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.25rem' }}>CSV File</label>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontWeight: 700, fontSize: 12, marginBottom: 6, color: 'var(--muted)' }}>File CSV</label>
             <input
               ref={fileRef}
               type="file"
               accept=".csv"
               onChange={handleFileChange}
-              style={{ display: 'block', marginBottom: '0.5rem' }}
+              style={{ fontSize: 13, marginBottom: 8 }}
             />
             {preview && (
-              <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '1rem', maxHeight: 250, overflow: 'auto' }}>
-                <p style={{ margin: '0 0 0.5rem', fontWeight: 600 }}>
-                  Preview ({Math.min(5, preview.rows.length)} of {preview.rows.length} rows)
-                </p>
-                <table style={{ fontSize: '0.8rem', width: '100%', minWidth: 720, borderCollapse: 'collapse' }}>
+              <div className="admin-table-wrap" style={{ maxHeight: 260, overflowY: 'auto' }}>
+                <table className="admin-table" style={{ minWidth: 720 }}>
                   <thead>
                     <tr>
                       {preview.headers.map(h => (
-                        <th key={h} style={{ textAlign: 'left', padding: '4px 8px', borderBottom: '1px solid var(--border)', background: 'var(--hover)' }}>{h}</th>
+                        <th key={h}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -359,9 +351,7 @@ export default function AdminData() {
                     {preview.rows.slice(0, 5).map((row, i) => (
                       <tr key={i}>
                         {preview.headers.map(h => (
-                          <td key={h} style={{ padding: '4px 8px', borderBottom: '1px solid var(--border)' }}>
-                            {String(row[h] || '').substring(0, 80)}
-                          </td>
+                          <td key={h}>{String(row[h] || '').substring(0, 80)}</td>
                         ))}
                       </tr>
                     ))}
@@ -371,91 +361,73 @@ export default function AdminData() {
             )}
           </div>
 
-          <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>Mode:</label>
+          <div style={{ marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--muted)' }}>Chế độ:</span>
             {['replace', 'append'].map(m => (
-              <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: '0.85rem', padding: '4px 12px', borderRadius: 6, background: mode === m ? 'var(--red)' : 'var(--card-bg)', color: mode === m ? '#fff' : 'var(--text)', border: '1px solid', borderColor: mode === m ? 'var(--red)' : 'var(--border)' }}>
+              <label key={m} style={{
+                display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: 12,
+                padding: '5px 12px', borderRadius: 999, background: mode === m ? 'var(--red)' : 'var(--surface)',
+                color: mode === m ? '#fff' : 'var(--muted)', fontWeight: 600,
+              }}>
                 <input type="radio" name="importMode" value={m} checked={mode === m} onChange={() => setMode(m)} style={{ display: 'none' }} />
                 {m === 'replace' ? 'Replace (xóa hết, chèn mới)' : 'Append (thêm mới, bỏ qua trùng)'}
               </label>
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-            <button
-              onClick={handleImport}
-              disabled={busy || !preview || !table}
-              style={{
-                padding: '0.6rem 1.5rem', borderRadius: 8, border: 'none',
-                background: busy ? 'var(--text-muted)' : 'var(--red)', color: '#fff',
-                cursor: busy || !preview || !table ? 'not-allowed' : 'pointer', fontWeight: 600,
-              }}
-            >
-              {busy ? 'Importing...' : 'Import'}
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button className="admin-btn" onClick={handleImport} disabled={busy || !preview || !table}>
+              {busy ? 'Đang import...' : 'Import'}
             </button>
-
             {csvText && (
-              <button onClick={handleClearFile} style={{
-                padding: '0.6rem 1rem', borderRadius: 8, border: '1px solid var(--border)',
-                background: 'var(--card-bg)', color: 'var(--text)', cursor: 'pointer',
-              }}>
-                Clear
-              </button>
+              <button className="admin-btn-ghost" onClick={handleClearFile}>Bỏ file</button>
             )}
           </div>
 
           {status && (
-            <p style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--card-bg)', borderRadius: 8, color: 'var(--accent-green)' }}>
+            <p style={{ marginTop: 14, padding: '10px 14px', background: 'var(--green-bg)', borderRadius: 10, color: 'var(--green)', fontSize: 13 }}>
               {status}
             </p>
           )}
-        </>
+        </div>
       )}
 
       {tab === 'orders' && (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <div className="admin-panel">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <h3 style={{ margin: 0 }}>Đơn hàng</h3>
-            <button onClick={loadOrders} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer' }}>Làm mới</button>
+            <button className="admin-btn-ghost" onClick={loadOrders}>Làm mới</button>
           </div>
           {orders.length === 0 ? (
-            <p style={{ color: 'var(--text-muted)' }}>Chưa có đơn hàng</p>
+            <p className="admin-note">Chưa có đơn hàng nào.</p>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ fontSize: '0.8rem', width: '100%', minWidth: 640, borderCollapse: 'collapse' }}>
+            <div className="admin-table-wrap">
+              <table className="admin-table" style={{ minWidth: 720 }}>
                 <thead>
                   <tr>
-                    {['Mã đơn', 'Người mua', 'Khóa học', 'Số tiền', 'Phương thức', 'Trạng thái', 'Thời gian', ''].map(h => (
-                      <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid var(--border)', background: 'var(--hover)' }}>{h}</th>
-                    ))}
+                    <th>Mã đơn</th>
+                    <th>Người mua</th>
+                    <th>Khóa học</th>
+                    <th>Số tiền</th>
+                    <th>Phương thức</th>
+                    <th>Trạng thái</th>
+                    <th>Thời gian</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {orders.map(o => (
                     <tr key={o.id}>
-                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.order_no}</td>
-                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.full_name || o.profiles?.full_name || o.user_id?.slice(0, 8)}</td>
-                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.courses?.title}</td>
-                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{(o.amount || 0).toLocaleString('vi-VN')} đ</td>
-                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.method}</td>
-                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>
-                        <span style={{
-                          padding: '2px 8px', borderRadius: 10, fontSize: '0.75rem',
-                          background: o.status === 'paid' ? 'var(--green-bg)' : o.status === 'pending' ? 'var(--gold-bg)' : 'var(--red-bg)',
-                          color: o.status === 'paid' ? 'var(--green)' : o.status === 'pending' ? 'var(--gold)' : 'var(--red)',
-                        }}>
-                          {o.status === 'paid' ? 'Đã thanh toán' : o.status === 'pending' ? 'Chờ xác nhận' : o.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.created_at ? new Date(o.created_at).toLocaleString('vi-VN') : ''}</td>
-                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{o.order_no}</td>
+                      <td>{o.full_name || o.profiles?.full_name || o.user_id?.slice(0, 8)}</td>
+                      <td>{o.courses?.title}</td>
+                      <td style={{ fontWeight: 700 }}>{(o.amount || 0).toLocaleString('vi-VN')} đ</td>
+                      <td style={{ fontSize: 12 }}>{o.method === 'bank_transfer' ? 'Chuyển khoản' : o.method}</td>
+                      <td>{badge(o.status)}</td>
+                      <td style={{ fontSize: 12, color: 'var(--muted)' }}>{o.created_at ? new Date(o.created_at).toLocaleString('vi-VN') : ''}</td>
+                      <td>
                         {o.status === 'pending' && (
-                          <button onClick={() => handleApproveOrder(o.id)} style={{
-                            padding: '4px 10px', borderRadius: 6, border: 'none',
-                            background: 'var(--red)', color: '#fff', cursor: 'pointer', fontSize: '0.75rem',
-                          }}>
-                            Xác nhận
-                          </button>
+                          <button className="admin-btn" onClick={() => handleApproveOrder(o.id)}>Xác nhận</button>
                         )}
                       </td>
                     </tr>
@@ -468,61 +440,60 @@ export default function AdminData() {
       )}
 
       {tab === 'courses' && (
-        <div>
-          <h3 style={{ margin: '0 0 12px' }}>Khóa trả phí — đặt giá & preview</h3>
+        <div className="admin-panel">
+          <h3>Khóa trả phí — đặt giá &amp; preview</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {courses.map(c => {
               const f = courseForm[c.id] || {};
               const paid = c.access_type === 'paid';
               return (
-                <div key={c.id} style={{ padding: 14, background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
-                    <b style={{ fontSize: '0.9rem' }}>{c.title}</b>
-                    <span style={{
-                      padding: '2px 10px', borderRadius: 10, fontSize: '0.75rem',
-                      background: paid ? 'var(--red)' : 'var(--hover)', color: paid ? '#fff' : 'var(--text)',
-                    }}>
+                <div key={c.id} style={{ padding: 16, background: 'var(--surface-hover)', border: '1px solid var(--line)', borderRadius: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+                    <b style={{ fontSize: 14 }}>{c.title}</b>
+                    <span className={`admin-badge ${paid ? 'red' : 'gray'}`}>
                       {paid ? 'Trả phí' : 'Miễn phí'}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 8 }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 12 }}>
                     <div>
-                      <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8rem', marginBottom: 4 }}>Giá (đ)</label>
-                      <input type="number" value={f.price ?? c.price ?? ''} onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, price: e.target.value } })} style={{ ...inputStyle, width: 130 }} />
+                      <label style={{ display: 'block', fontWeight: 700, fontSize: 11, marginBottom: 5, color: 'var(--muted)' }}>Giá (đ)</label>
+                      <input type="number" className="admin-input" style={{ width: 140 }}
+                        value={f.price ?? c.price ?? ''}
+                        onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, price: e.target.value } })} />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8rem', marginBottom: 4 }}>Giá khuyến mãi (đ, tùy chọn)</label>
-                      <input type="number" value={f.sale_price ?? c.sale_price ?? ''} onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, sale_price: e.target.value } })} style={{ ...inputStyle, width: 130 }} />
+                      <label style={{ display: 'block', fontWeight: 700, fontSize: 11, marginBottom: 5, color: 'var(--muted)' }}>Giá khuyến mãi (đ)</label>
+                      <input type="number" className="admin-input" style={{ width: 140 }}
+                        value={f.sale_price ?? c.sale_price ?? ''}
+                        onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, sale_price: e.target.value } })} />
                     </div>
-                    <button onClick={() => handleSavePaid(c.id)} style={{ padding: '0.45rem 1rem', borderRadius: 6, border: 'none', background: 'var(--red)', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>
-                      Đặt trả phí
-                    </button>
+                    <button className="admin-btn" onClick={() => handleSavePaid(c.id)}>Đặt trả phí</button>
                     {paid && (
-                      <button onClick={() => handleSetFree(c.id)} style={{ padding: '0.45rem 1rem', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer' }}>
-                        Chuyển miễn phí
-                      </button>
+                      <button className="admin-btn-ghost" onClick={() => handleSetFree(c.id)}>Chuyển miễn phí</button>
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
                     <div style={{ flex: 1, minWidth: 180 }}>
-                      <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8rem', marginBottom: 4 }}>Bài học preview</label>
-                      <select value={f.preview_lesson_id ?? ''} onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, preview_lesson_id: e.target.value } })} style={inputStyle}>
+                      <label style={{ display: 'block', fontWeight: 700, fontSize: 11, marginBottom: 5, color: 'var(--muted)' }}>Bài học preview</label>
+                      <select
+                        className="admin-input"
+                        value={f.preview_lesson_id ?? ''}
+                        onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, preview_lesson_id: e.target.value } })}
+                      >
                         <option value="">-- Chọn bài --</option>
                         {(lessons.filter(l => l.course_id === c.id)).map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
                       </select>
                     </div>
-                    <div style={{ flex: 2, minWidth: 200 }}>
-                      <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8rem', marginBottom: 4 }}>Đoạn xem trước</label>
+                    <div style={{ flex: 2, minWidth: 220 }}>
+                      <label style={{ display: 'block', fontWeight: 700, fontSize: 11, marginBottom: 5, color: 'var(--muted)' }}>Đoạn xem trước</label>
                       <input
+                        className="admin-input"
                         value={f.preview_text ?? ''}
                         onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, preview_text: e.target.value } })}
                         placeholder="Đoạn trích hiển thị cho người chưa mua..."
-                        style={inputStyle}
                       />
                     </div>
-                    <button onClick={() => handleSavePreview(c.id)} style={{ padding: '0.45rem 1rem', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer' }}>
-                      Lưu preview
-                    </button>
+                    <button className="admin-btn-ghost" onClick={() => handleSavePreview(c.id)}>Lưu preview</button>
                   </div>
                 </div>
               );
@@ -532,31 +503,29 @@ export default function AdminData() {
       )}
 
       {tab === 'settings' && (
-        <div style={{ maxWidth: 480 }}>
-          <h3 style={{ margin: '0 0 12px' }}>Cấu hình QR chuyển khoản</h3>
+        <div className="admin-panel" style={{ maxWidth: 520 }}>
+          <h3>Cấu hình QR chuyển khoản</h3>
+          <p className="admin-note" style={{ marginBottom: 16 }}>
+            Thông tin này hiển thị trên trang đăng ký khóa học để giáo viên chuyển khoản. QR VietQR sẽ được tạo từ thông tin này.
+          </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Ngân hàng</label>
-              <input value={settings.bank_name || ''} onChange={e => setSettings({ ...settings, bank_name: e.target.value })} placeholder="VD: Vietcombank" style={inputStyle} />
+              <label style={{ display: 'block', fontWeight: 700, fontSize: 12, marginBottom: 5, color: 'var(--muted)' }}>Ngân hàng</label>
+              <input className="admin-input" value={settings.bank_name || ''} onChange={e => setSettings({ ...settings, bank_name: e.target.value })} placeholder="VD: Vietcombank" />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Số tài khoản</label>
-              <input value={settings.account_number || ''} onChange={e => setSettings({ ...settings, account_number: e.target.value })} style={inputStyle} />
+              <label style={{ display: 'block', fontWeight: 700, fontSize: 12, marginBottom: 5, color: 'var(--muted)' }}>Số tài khoản</label>
+              <input className="admin-input" value={settings.account_number || ''} onChange={e => setSettings({ ...settings, account_number: e.target.value })} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Chủ tài khoản</label>
-              <input value={settings.account_holder || ''} onChange={e => setSettings({ ...settings, account_holder: e.target.value })} style={inputStyle} />
+              <label style={{ display: 'block', fontWeight: 700, fontSize: 12, marginBottom: 5, color: 'var(--muted)' }}>Chủ tài khoản</label>
+              <input className="admin-input" value={settings.account_holder || ''} onChange={e => setSettings({ ...settings, account_holder: e.target.value })} />
             </div>
             <div>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Tiền tố nội dung chuyển khoản</label>
-              <input value={settings.content_prefix || ''} onChange={e => setSettings({ ...settings, content_prefix: e.target.value })} style={inputStyle} />
+              <label style={{ display: 'block', fontWeight: 700, fontSize: 12, marginBottom: 5, color: 'var(--muted)' }}>Tiền tố nội dung chuyển khoản</label>
+              <input className="admin-input" value={settings.content_prefix || ''} onChange={e => setSettings({ ...settings, content_prefix: e.target.value })} />
             </div>
-            <button onClick={handleSaveSettings} style={{
-              padding: '0.6rem 1.5rem', borderRadius: 8, border: 'none',
-              background: 'var(--red)', color: '#fff', cursor: 'pointer', fontWeight: 600,
-            }}>
-              Lưu cấu hình
-            </button>
+            <button className="admin-btn" onClick={handleSaveSettings} style={{ alignSelf: 'flex-start' }}>Lưu cấu hình</button>
           </div>
         </div>
       )}
