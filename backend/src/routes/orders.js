@@ -166,63 +166,14 @@ router.get('/mine', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/redeem', authenticate, async (req, res, next) => {
+router.get('/bank-info', async (_req, res, next) => {
   try {
-    const { code, course_id: courseId } = req.body;
-    if (!code || !courseId) return res.status(400).json({ error: 'code và course_id là bắt buộc' });
-
-    const { data: course } = await supabase
-      .from('courses')
-      .select('id, title, access_type, price')
-      .eq('id', courseId)
-      .single();
-    if (!course) return res.status(404).json({ error: 'Khóa học không tồn tại' });
-
-    const { data: record, error: codeErr } = await supabaseAdmin
-      .from('activation_codes')
-      .select('*')
-      .eq('code', code.trim())
+    const { data } = await supabaseAdmin
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'bank_transfer')
       .maybeSingle();
-    if (codeErr) throw codeErr;
-    if (!record) return res.status(400).json({ error: 'Mã kích hoạt không hợp lệ' });
-    if (!record.is_active) return res.status(400).json({ error: 'Mã kích hoạt đã bị khóa' });
-    if (record.expires_at && new Date(record.expires_at) < new Date()) {
-      return res.status(400).json({ error: 'Mã kích hoạt đã hết hạn' });
-    }
-    if (record.used_count >= record.max_uses) {
-      return res.status(400).json({ error: 'Mã kích hoạt đã hết lượt sử dụng' });
-    }
-    if (record.course_id && record.course_id !== courseId) {
-      return res.status(400).json({ error: 'Mã kích hoạt không áp dụng cho khóa học này' });
-    }
-    if (await isUnlocked(req.user.id, courseId)) {
-      return res.status(409).json({ error: 'Bạn đã mở khóa khóa học này rồi' });
-    }
-
-    const { error: useErr } = await supabaseAdmin
-      .from('activation_codes')
-      .update({ used_count: record.used_count + 1 })
-      .eq('id', record.id);
-    if (useErr) throw useErr;
-
-    const { data: order, error: orderErr } = await supabaseAdmin
-      .from('orders')
-      .insert({
-        order_no: genOrderNo(),
-        user_id: req.user.id,
-        course_id: courseId,
-        amount: course.sale_price ?? course.price ?? 0,
-        method: 'code',
-        status: 'paid',
-        paid_at: new Date().toISOString(),
-        expires_at: new Date().toISOString(),
-      })
-      .select('id')
-      .single();
-    if (orderErr) throw orderErr;
-
-    await unlockCourse(req.user.id, courseId, order.id, req.user.id);
-    res.json({ unlocked: true, course_id: courseId });
+    res.json(data?.value || {});
   } catch (err) {
     next(err);
   }

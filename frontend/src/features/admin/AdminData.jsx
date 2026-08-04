@@ -90,7 +90,6 @@ const inputStyle = {
 const TABS = [
   { key: 'import', label: 'Nhập CSV' },
   { key: 'orders', label: 'Đơn hàng' },
-  { key: 'codes', label: 'Mã kích hoạt' },
   { key: 'courses', label: 'Khóa trả phí' },
   { key: 'settings', label: 'Cấu hình QR' },
 ];
@@ -109,11 +108,8 @@ export default function AdminData() {
   const fileRef = useRef(null);
 
   const [orders, setOrders] = useState([]);
-  const [codes, setCodes] = useState([]);
   const [courses, setCourses] = useState([]);
   const [lessons, setLessons] = useState([]);
-  const [genForm, setGenForm] = useState({ course_id: '', count: 5, max_uses: 1, expires_days: '' });
-  const [generated, setGenerated] = useState('');
   const [courseForm, setCourseForm] = useState({});
   const [settings, setSettings] = useState({});
 
@@ -183,9 +179,6 @@ export default function AdminData() {
   async function loadOrders() {
     try { setOrders(await api.admin.orders()); } catch {}
   }
-  async function loadCodes() {
-    try { setCodes(await api.admin.codes()); } catch {}
-  }
   async function loadCourses() {
     try {
       setCourses(await api.courses.list());
@@ -199,7 +192,6 @@ export default function AdminData() {
 
   useEffect(() => {
     if (tab === 'orders') loadOrders();
-    if (tab === 'codes') loadCodes();
     if (tab === 'courses') loadCourses();
     if (tab === 'settings') loadSettings();
   }, [tab]);
@@ -208,21 +200,6 @@ export default function AdminData() {
     try {
       await api.admin.approveOrder(id);
       await loadOrders();
-    } catch (err) { setError(err.message); }
-  }
-
-  async function handleGenerate() {
-    setError('');
-    setGenerated('');
-    try {
-      const res = await api.admin.generateCodes({
-        course_id: genForm.course_id || null,
-        count: Number(genForm.count) || 1,
-        max_uses: Number(genForm.max_uses) || 1,
-        expires_days: genForm.expires_days ? Number(genForm.expires_days) : undefined,
-      });
-      setGenerated((res.codes || []).map(c => c.code).join('\n'));
-      await loadCodes();
     } catch (err) { setError(err.message); }
   }
 
@@ -487,78 +464,6 @@ export default function AdminData() {
               </table>
             </div>
           )}
-        </div>
-      )}
-
-      {tab === 'codes' && (
-        <div>
-          <h3 style={{ margin: '0 0 12px' }}>Sinh mã kích hoạt</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Khóa học</label>
-              <select
-                value={genForm.course_id}
-                onChange={e => setGenForm({ ...genForm, course_id: e.target.value })}
-                style={inputStyle}
-              >
-                <option value="">-- Mọi khóa trả phí --</option>
-                {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Số lượng</label>
-              <input type="number" value={genForm.count} min="1" max="100" onChange={e => setGenForm({ ...genForm, count: e.target.value })} style={inputStyle} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Số lần dùng tối đa / mã</label>
-              <input type="number" value={genForm.max_uses} min="1" onChange={e => setGenForm({ ...genForm, max_uses: e.target.value })} style={inputStyle} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Hết hạn sau (ngày) — để trống nếu không hết hạn</label>
-              <input type="number" value={genForm.expires_days} min="1" onChange={e => setGenForm({ ...genForm, expires_days: e.target.value })} style={inputStyle} />
-            </div>
-          </div>
-          <button onClick={handleGenerate} style={{
-            padding: '0.6rem 1.5rem', borderRadius: 8, border: 'none',
-            background: 'var(--red)', color: '#fff', cursor: 'pointer', fontWeight: 600,
-          }}>
-            Sinh mã
-          </button>
-
-          {generated && (
-            <div style={{ marginTop: 12 }}>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Mã mới (copy để gửi):</label>
-              <textarea readOnly value={generated} rows={4} style={{ ...inputStyle, fontFamily: 'monospace' }} />
-            </div>
-          )}
-
-          <h3 style={{ margin: '20px 0 12px' }}>Danh sách mã ({codes.length})</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ fontSize: '0.8rem', width: '100%', minWidth: 560, borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  {['Mã', 'Khóa học', 'Đã dùng', 'Tối đa', 'Hết hạn', 'Trạng thái'].map(h => (
-                    <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid var(--border)', background: 'var(--hover)' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {codes.map(c => (
-                  <tr key={c.id}>
-                    <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)', fontFamily: 'monospace' }}>{c.code}</td>
-                    <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{c.courses?.title || 'Mọi khóa'}</td>
-                    <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{c.used_count}/{c.max_uses}</td>
-                    <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{c.expires_at ? new Date(c.expires_at).toLocaleDateString('vi-VN') : '—'}</td>
-                    <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>
-                      <span style={{ color: c.is_active && c.used_count < c.max_uses ? 'var(--green)' : 'var(--red)' }}>
-                        {c.is_active && c.used_count < c.max_uses ? 'Hoạt động' : 'Hết'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       )}
 

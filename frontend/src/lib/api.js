@@ -401,11 +401,10 @@ export const api = {
   orders: {
     create: async (courseId, method = 'bank_transfer') =>
       request('/orders/create', { method: 'POST', body: JSON.stringify({ course_id: courseId, method }) }),
-    redeem: async (code, courseId) =>
-      request('/orders/redeem', { method: 'POST', body: JSON.stringify({ code, course_id: courseId }) }),
     confirmTransfer: async (orderId) =>
       request(`/orders/${orderId}/confirm-transfer`, { method: 'POST' }),
     mine: async () => request('/orders/mine'),
+    bankInfo: async () => request('/orders/bank-info'),
     approveInfo: async (orderId, token) =>
       request(`/orders/${orderId}/approve-info?token=${encodeURIComponent(token)}`),
     approve: async (orderId, token) =>
@@ -421,9 +420,6 @@ export const api = {
   admin: {
     orders: async () => request('/admin/orders'),
     approveOrder: async (id) => request(`/admin/orders/${id}/approve`, { method: 'POST' }),
-    codes: async () => request('/admin/codes'),
-    generateCodes: async (payload) =>
-      request('/admin/codes/generate', { method: 'POST', body: JSON.stringify(payload) }),
     setPaidCourse: async (courseId, price, salePrice) =>
       request('/admin/courses/paid', { method: 'POST', body: JSON.stringify({ course_id: courseId, price, sale_price: salePrice }) }),
     setFreeCourse: async (courseId) =>

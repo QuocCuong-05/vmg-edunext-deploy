@@ -38,20 +38,6 @@ create index if not exists idx_orders_user   on public.orders(user_id);
 create index if not exists idx_orders_status on public.orders(status);
 create index if not exists idx_orders_course on public.orders(course_id);
 
--- Mã kích hoạt (user KHÔNG đọc được — chỉ service role)
-create table if not exists public.activation_codes (
-  id         uuid primary key default gen_random_uuid(),
-  code       text not null unique,
-  course_id  uuid references public.courses(id) on delete cascade,
-  max_uses   integer not null default 1,
-  used_count integer not null default 0,
-  expires_at timestamptz,
-  is_active  boolean not null default true,
-  created_by uuid references auth.users(id),
-  created_at timestamptz not null default now()
-);
-create index if not exists idx_activation_codes_course on public.activation_codes(course_id);
-
 -- Cấu hình chung (QR chuyển khoản, thời gian đơn...)
 create table if not exists public.app_settings (
   key        text primary key,
@@ -67,9 +53,6 @@ create policy "orders_select_own" on public.orders
 drop policy if exists "orders_insert_own" on public.orders;
 create policy "orders_insert_own" on public.orders
   for insert with check (user_id = auth.uid());
-
-alter table public.activation_codes enable row level security;
--- không policy nào: user không đọc được mã
 
 alter table public.app_settings enable row level security;
 drop policy if exists "app_settings_select" on public.app_settings;

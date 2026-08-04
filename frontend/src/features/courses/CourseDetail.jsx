@@ -5,7 +5,6 @@ import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import { useAuth } from '../auth/AuthContext';
-import RegisterCourseModal from './RegisterCourseModal';
 
 function loadEnroll(slug) {
   try {
@@ -33,7 +32,6 @@ export default function CourseDetail() {
   const [loading, setLoading] = useState(true);
   const [enrolled, setEnrolled] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
 
   const isPaid = course?.access_type === 'paid';
   const canAccess = isPaid ? unlocked : enrolled;
@@ -74,8 +72,6 @@ export default function CourseDetail() {
     saveEnroll(slug, { enrolled: true, progress_pct: 0, status: 'active', completed_lessons: [] });
     setEnrolled(true);
   };
-
-  const handleUnlocked = () => setUnlocked(true);
 
   const cover = COVER_MAP[course.category] || { color: 'red', icon: Icon.Courses };
   const C = cover.icon;
@@ -129,7 +125,7 @@ export default function CourseDetail() {
             </div>
             {isPaid ? (
               <Button style={{ background: 'var(--card)', color: 'var(--red)', fontWeight: 800, padding: '12px 28px' }}
-                onClick={() => setShowRegister(true)}>
+                onClick={() => navigate(`/courses/${slug}/register`)}>
                 Đăng ký khóa học <Icon.ArrowRight size={16} />
               </Button>
             ) : (
@@ -166,7 +162,7 @@ export default function CourseDetail() {
               if (canAccess || lesson.is_free) {
                 navigate(`/courses/${course.slug}/lessons/${lesson.id}`);
               } else {
-                setShowRegister(true);
+                navigate(`/courses/${course.slug}/register`);
               }
             }}
           >
@@ -198,15 +194,6 @@ export default function CourseDetail() {
           </div>
         );
       })}
-
-      {showRegister && (
-        <RegisterCourseModal
-          course={course}
-          isAdmin={user?.role === 'admin' || user?.role === 'super_admin'}
-          onClose={() => setShowRegister(false)}
-          onUnlocked={handleUnlocked}
-        />
-      )}
     </div>
   );
 }

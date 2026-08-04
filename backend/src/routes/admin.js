@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import crypto from 'node:crypto';
 import { supabaseAdmin } from '../config/database.js';
 import { importTable, TABLES } from '../lib/seedData.js';
 
@@ -74,45 +73,6 @@ router.post('/orders/:id/approve', async (req, res, next) => {
         message: `Bạn đã mua khóa học "${course?.title || ''}" thành công.`,
       });
     res.json({ ok: true });
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.get('/codes', async (_req, res, next) => {
-  try {
-    const { data, error } = await supabaseAdmin
-      .from('activation_codes')
-      .select('*, courses(title)')
-      .order('created_at', { ascending: false })
-      .limit(200);
-    if (error) throw error;
-    res.json(data || []);
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.post('/codes/generate', async (req, res, next) => {
-  try {
-    const { course_id: courseId, count = 1, max_uses = 1, expires_days } = req.body;
-    const n = Math.max(1, Math.min(100, Number(count) || 1));
-    const uses = Math.max(1, Number(max_uses) || 1);
-    const expiresAt = expires_days ? new Date(Date.now() + Number(expires_days) * 86400000).toISOString() : null;
-
-    const codes = [];
-    for (let i = 0; i < n; i++) {
-      codes.push({
-        code: crypto.randomBytes(4).toString('hex').toUpperCase(),
-        course_id: courseId || null,
-        max_uses: uses,
-        expires_at: expiresAt,
-        created_by: req.user.id,
-      });
-    }
-    const { data, error } = await supabaseAdmin.from('activation_codes').insert(codes).select('code, course_id, max_uses, expires_at');
-    if (error) throw error;
-    res.json({ codes: data || [] });
   } catch (err) {
     next(err);
   }
