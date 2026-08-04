@@ -30,6 +30,7 @@ export default function LessonView() {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
+  const [previewSeconds, setPreviewSeconds] = useState(120);
 
   useEffect(() => {
     if (!slug) return;
@@ -48,6 +49,14 @@ export default function LessonView() {
   useEffect(() => {
     setCompleted(false);
   }, [lessonId]);
+
+  useEffect(() => {
+    if (course?.access_type === 'paid') {
+      api.orders.publicSettings()
+        .then(s => setPreviewSeconds(Number(s?.preview_seconds) || 120))
+        .catch(() => {});
+    }
+  }, [course]);
 
   if (loading) {
     return <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>;
@@ -111,16 +120,6 @@ export default function LessonView() {
   const dur = lesson.video_duration_seconds || lesson.duration || 0;
   const content = lesson.article_body || '<p>Nội dung bài học đang được cập nhật...</p>';
   const isPreviewMode = course.access_type === 'paid' && !canAccess && lesson.is_free;
-
-  const [previewSeconds, setPreviewSeconds] = useState(120);
-
-  useEffect(() => {
-    if (course?.access_type === 'paid') {
-      api.orders.publicSettings()
-        .then(s => setPreviewSeconds(Number(s?.preview_seconds) || 120))
-        .catch(() => {});
-    }
-  }, [course]);
 
   const videoSrc = (() => {
     if (!lesson.video_url) return null;
