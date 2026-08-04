@@ -18,9 +18,10 @@ const QUOTES = [
   { text: 'Công nghệ không thay thế giáo viên — công nghệ giúp giáo viên tập trung vào điều quan trọng nhất.', author: 'Thông điệp giáo dục' },
 ];
 
-function shuffleQuote() {
-  const i = Math.floor(Math.random() * QUOTES.length);
-  return QUOTES[i];
+function shuffleQuote(exclude) {
+  const pool = QUOTES.filter(q => q !== exclude);
+  const i = Math.floor(Math.random() * pool.length);
+  return pool[i];
 }
 
 const STAT_META = [
@@ -34,7 +35,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const streak = useState(getStreak())[0];
-  const [quote] = useState(shuffleQuote);
+  const [quote, setQuote] = useState(() => shuffleQuote());
 
   const [tab, setTab] = useState('daily');
   const [questState, setQuestState] = useState(getQuestState());
@@ -138,7 +139,7 @@ export default function Dashboard() {
           <div style={{ fontSize: 13, fontStyle: 'italic', lineHeight: 1.6, color: 'var(--ink)', marginBottom: 4 }}>{quote.text}</div>
           <div style={{ fontSize: 11, color: 'var(--muted)' }}>— {quote.author}</div>
         </div>
-        <button onClick={() => window.location.reload()} style={{ flexShrink: 0, border: '1px solid var(--line)', background: 'var(--card)', borderRadius: 8, padding: '7px 14px', fontSize: 11, fontWeight: 600, color: 'var(--muted)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+        <button onClick={() => setQuote(shuffleQuote(quote))} style={{ flexShrink: 0, border: '1px solid var(--line)', background: 'var(--card)', borderRadius: 8, padding: '7px 14px', fontSize: 11, fontWeight: 600, color: 'var(--muted)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
           Câu khác
         </button>
       </div>
