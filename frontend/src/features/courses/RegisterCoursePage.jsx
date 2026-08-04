@@ -25,6 +25,7 @@ export default function RegisterCoursePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
+  const [awaiting, setAwaiting] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [remaining, setRemaining] = useState(0);
   const submittingRef = useRef(false);
@@ -87,8 +88,12 @@ export default function RegisterCoursePage() {
     setError('');
     setBusy(true);
     try {
-      await api.orders.confirmTransfer(order.id);
-      setDone(true);
+      const res = await api.orders.confirmTransfer(order.id);
+      if (res?.status === 'awaiting_confirmation') {
+        setAwaiting(true);
+      } else {
+        setDone(true);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -96,6 +101,20 @@ export default function RegisterCoursePage() {
       submittingRef.current = false;
     }
   };
+
+  useEffect(() => {
+    if (!awaiting || !user?.id || !course) return;
+    const timer = setInterval(async () => {
+      try {
+        const ids = await api.unlock.courseIds(user.id);
+        if (ids.has(course.id)) {
+          setAwaiting(false);
+          setDone(true);
+        }
+      } catch {}
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [awaiting, user?.id, course]);
 
   if (loading) {
     return <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>;
@@ -150,7 +169,20 @@ export default function RegisterCoursePage() {
           <div style={{ padding: '10px 14px', background: 'var(--red-bg)', color: 'var(--red)', borderRadius: 10, fontSize: 13, marginBottom: 14 }}>{error}</div>
         )}
 
-        {done ? (
+        {awaiting ? (
+          <div style={{ textAlign: 'center', padding: '12px 0' }}>
+            <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--gold-bg)', color: 'var(--gold)', display: 'grid', placeItems: 'center', margin: '0 auto 14px' }}>
+              <Icon.Clock size={30} />
+            </div>
+            <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 6 }}>Đã gửi yêu cầu chuyển khoản</h3>
+            <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 20 }}>
+              VMG sẽ kiểm tra khoản thanh toán và mở khóa khóa học cho bạn. Khóa học sẽ tự mở khi được xác nhận.
+            </p>
+            <Button variant="primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => navigate(`/courses/${slug}`)}>
+              Quay lại khóa học
+            </Button>
+          </div>
+        ) : done ? (
           <div style={{ textAlign: 'center', padding: '12px 0' }}>
             <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--green-bg)', color: 'var(--green)', display: 'grid', placeItems: 'center', margin: '0 auto 14px' }}>
               <Icon.Check size={30} />

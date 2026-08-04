@@ -206,8 +206,7 @@ router.post('/:id/confirm-transfer', authenticate, async (req, res, next) => {
       return res.status(400).json({ error: 'Đơn hàng đã hết hạn, vui lòng tạo đơn mới' });
     }
 
-    await unlockCourse(req.user.id, order.course_id, order.id, req.user.id);
-    res.json({ unlocked: true, course_id: order.course_id });
+    res.json({ status: 'awaiting_confirmation', course_id: order.course_id });
   } catch (err) {
     next(err);
   }
