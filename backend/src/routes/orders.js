@@ -55,16 +55,25 @@ async function isUnlocked(userId, courseId) {
 }
 
 async function unlockCourse(userId, courseId, orderId, confirmedById) {
-  const { error: enrollErr } = await supabaseAdmin
-    .from('enrollments')
-    .insert({ user_id: userId, course_id: courseId, status: 'active' })
-    .select('id');
-  if (enrollErr) throw enrollErr;
+  if (!(await isUnlocked(userId, courseId))) {
+    const { error: enrollErr } = await supabaseAdmin
+      .from('enrollments')
+      .insert({ user_id: userId, course_id: courseId, status: 'active' })
+      .select('id');
+    if (enrollErr) throw enrollErr;
+  }
 
-  await supabaseAdmin
+  const { data: current } = await supabaseAdmin
     .from('orders')
-    .update({ status: 'paid', paid_at: new Date().toISOString(), confirmed_by: confirmedById || null })
-    .eq('id', orderId);
+    .select('status')
+    .eq('id', orderId)
+    .maybeSingle();
+  if (current?.status !== 'paid') {
+    await supabaseAdmin
+      .from('orders')
+      .update({ status: 'paid', paid_at: new Date().toISOString(), confirmed_by: confirmedById || null })
+      .eq('id', orderId);
+  }
 
   const { data: course } = await supabaseAdmin
     .from('courses')
@@ -189,6 +198,9 @@ router.post('/:id/confirm-transfer', authenticate, async (req, res, next) => {
     if (error) throw error;
     if (!order) return res.status(404).json({ error: 'Đơn hàng không tồn tại' });
     if (order.user_id !== req.user.id) return res.status(403).json({ error: 'Không phải đơn của bạn' });
+    if (order.status === 'paid') {
+      return res.json({ unlocked: true, course_id: order.course_id });
+    }
     if (order.status !== 'pending') return res.status(400).json({ error: 'Đơn hàng đã xử lý' });
     if (order.expires_at && new Date(order.expires_at) < new Date()) {
       return res.status(400).json({ error: 'Đơn hàng đã hết hạn, vui lòng tạo đơn mới' });
@@ -229,6 +241,9 @@ router.post('/:id/approve', async (req, res, next) => {
       .eq('id', orderId)
       .maybeSingle();
     if (!order) return res.status(404).json({ error: 'Đơn hàng không tồn tại' });
+    if (order.status === 'paid') {
+      return res.json({ ok: true });
+    }
     if (order.status !== 'pending') return res.status(400).json({ error: 'Đơn hàng đã xử lý' });
 
     await unlockCourse(order.user_id, order.course_id, order.id, null);

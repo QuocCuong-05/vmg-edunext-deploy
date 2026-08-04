@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import QRCode from 'qrcode';
 import { api } from '../../lib/api';
@@ -27,6 +27,7 @@ export default function RegisterCoursePage() {
   const [done, setDone] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [remaining, setRemaining] = useState(0);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (!slug || !user?.id) return;
@@ -81,6 +82,8 @@ export default function RegisterCoursePage() {
   }, [order]);
 
   const handleConfirmTransfer = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setError('');
     setBusy(true);
     try {
@@ -90,6 +93,7 @@ export default function RegisterCoursePage() {
       setError(err.message);
     } finally {
       setBusy(false);
+      submittingRef.current = false;
     }
   };
 
