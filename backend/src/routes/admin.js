@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import crypto from 'node:crypto';
+import { supabaseAdmin } from '../config/database.js';
 import { importTable, TABLES } from '../lib/seedData.js';
 
 const router = Router();
@@ -28,6 +30,168 @@ router.post('/import', async (req, res) => {
   } catch (err) {
     console.error('Admin import error:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/orders', async (_req, res, next) => {
+  try {
+    let q = supabaseAdmin
+      .from('orders')
+      .select('*, courses(title, slug), profiles(full_name)')
+      .order('created_at', { ascending: false });
+    const { data, error } = await q.limit(200);
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/orders/:id/approve', async (req, res, next) => {
+  try {
+    const { data: order } = await supabaseAdmin
+      .from('orders')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle();
+    if (!order) return res.status(404).json({ error: 'Đơn hàng không tồn tại' });
+    if (order.status !== 'pending') return res.status(400).json({ error: 'Đơn hàng đã xử lý' });
+
+    await supabaseAdmin
+      .from('orders')
+      .update({ status: 'paid', paid_at: new Date().toISOString(), confirmed_by: req.user.id })
+      .eq('id', order.id);
+    await supabaseAdmin
+      .from('enrollments')
+      .insert({ user_id: order.user_id, course_id: order.course_id, status: 'active' });
+    const { data: course } = await supabaseAdmin.from('courses').select('title').eq('id', order.course_id).maybeSingle();
+    await supabaseAdmin
+      .from('notifications')
+      .insert({
+        user_id: order.user_id,
+        from_user_id: order.user_id,
+        type: 'purchase',
+        message: `Bạn đã mua khóa học "${course?.title || ''}" thành công.`,
+      });
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/codes', async (_req, res, next) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('activation_codes')
+      .select('*, courses(title)')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/codes/generate', async (req, res, next) => {
+  try {
+    const { course_id: courseId, count = 1, max_uses = 1, expires_days } = req.body;
+    const n = Math.max(1, Math.min(100, Number(count) || 1));
+    const uses = Math.max(1, Number(max_uses) || 1);
+    const expiresAt = expires_days ? new Date(Date.now() + Number(expires_days) * 86400000).toISOString() : null;
+
+    const codes = [];
+    for (let i = 0; i < n; i++) {
+      codes.push({
+        code: crypto.randomBytes(4).toString('hex').toUpperCase(),
+        course_id: courseId || null,
+        max_uses: uses,
+        expires_at: expiresAt,
+        created_by: req.user.id,
+      });
+    }
+    const { data, error } = await supabaseAdmin.from('activation_codes').insert(codes).select('code, course_id, max_uses, expires_at');
+    if (error) throw error;
+    res.json({ codes: data || [] });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/courses/paid', async (req, res, next) => {
+  try {
+    const { course_id: courseId, price, sale_price: salePrice } = req.body;
+    if (!courseId || !price) return res.status(400).json({ error: 'course_id và price là bắt buộc' });
+    const { data, error } = await supabaseAdmin
+      .from('courses')
+      .update({ access_type: 'paid', price: Math.round(price), sale_price: salePrice ? Math.round(salePrice) : null })
+      .eq('id', courseId)
+      .select('id, title, access_type, price, sale_price')
+      .single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/courses/free', async (req, res, next) => {
+  try {
+    const { course_id: courseId } = req.body;
+    if (!courseId) return res.status(400).json({ error: 'course_id là bắt buộc' });
+    const { data, error } = await supabaseAdmin
+      .from('courses')
+      .update({ access_type: 'free', price: null, sale_price: null })
+      .eq('id', courseId)
+      .select('id, title, access_type, price, sale_price')
+      .single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/courses/preview', async (req, res, next) => {
+  try {
+    const { lesson_id: lessonId, preview_text: previewText } = req.body;
+    if (!lessonId) return res.status(400).json({ error: 'lesson_id là bắt buộc' });
+    const { data, error } = await supabaseAdmin
+      .from('lessons')
+      .update({ preview_text: previewText || null, is_free: previewText ? true : undefined })
+      .eq('id', lessonId)
+      .select('id, title, is_free, preview_text');
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/settings', async (_req, res, next) => {
+  try {
+    const { data, error } = await supabaseAdmin.from('app_settings').select('*');
+    if (error) throw error;
+    const map = {};
+    (data || []).forEach(r => { map[r.key] = r.value; });
+    res.json(map);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/settings', async (req, res, next) => {
+  try {
+    const { key, value } = req.body;
+    if (!key) return res.status(400).json({ error: 'key là bắt buộc' });
+    const { data, error } = await supabaseAdmin
+      .from('app_settings')
+      .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+      .select('*');
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    next(err);
   }
 });
 

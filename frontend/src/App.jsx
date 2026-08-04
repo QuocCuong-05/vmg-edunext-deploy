@@ -8,6 +8,7 @@ import ResetPassword from './features/auth/ResetPassword';
 import Dashboard from './features/dashboard/Dashboard';
 import Courses from './features/courses/Courses';
 import CourseDetail from './features/courses/CourseDetail';
+import OrderApprovePage from './features/courses/OrderApprovePage';
 import LessonView from './features/courses/LessonView';
 import Vocabulary from './features/vocabulary/Vocabulary';
 import Classroom from './features/classroom/Classroom';
@@ -45,6 +46,7 @@ export default function App() {
       <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/order-approve/:orderId" element={<OrderApprovePage />} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/courses" element={<Courses />} />

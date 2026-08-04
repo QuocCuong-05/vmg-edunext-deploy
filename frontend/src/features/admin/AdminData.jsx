@@ -1,5 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { api } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -80,8 +82,23 @@ function splitLine(line) {
   return result;
 }
 
+const inputStyle = {
+  width: '100%', padding: '0.5rem', borderRadius: 6,
+  border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text)',
+};
+
+const TABS = [
+  { key: 'import', label: 'Nhập CSV' },
+  { key: 'orders', label: 'Đơn hàng' },
+  { key: 'codes', label: 'Mã kích hoạt' },
+  { key: 'courses', label: 'Khóa trả phí' },
+  { key: 'settings', label: 'Cấu hình QR' },
+];
+
 export default function AdminData() {
   const { user } = useAuth();
+  const [tab, setTab] = useState('import');
+
   const [table, setTable] = useState('');
   const [csvText, setCsvText] = useState('');
   const [preview, setPreview] = useState(null);
@@ -90,6 +107,15 @@ export default function AdminData() {
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useState('replace');
   const fileRef = useRef(null);
+
+  const [orders, setOrders] = useState([]);
+  const [codes, setCodes] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [lessons, setLessons] = useState([]);
+  const [genForm, setGenForm] = useState({ course_id: '', count: 5, max_uses: 1, expires_days: '' });
+  const [generated, setGenerated] = useState('');
+  const [courseForm, setCourseForm] = useState({});
+  const [settings, setSettings] = useState({});
 
   function handleFileChange(e) {
     const file = e.target.files[0];
@@ -154,167 +180,480 @@ export default function AdminData() {
     }
   }
 
+  async function loadOrders() {
+    try { setOrders(await api.admin.orders()); } catch {}
+  }
+  async function loadCodes() {
+    try { setCodes(await api.admin.codes()); } catch {}
+  }
+  async function loadCourses() {
+    try {
+      setCourses(await api.courses.list());
+      const { data } = await supabase.from('lessons').select('id, title, course_id');
+      setLessons(data || []);
+    } catch {}
+  }
+  async function loadSettings() {
+    try { setSettings(await api.admin.settings()); } catch {}
+  }
+
+  useEffect(() => {
+    if (tab === 'orders') loadOrders();
+    if (tab === 'codes') loadCodes();
+    if (tab === 'courses') loadCourses();
+    if (tab === 'settings') loadSettings();
+  }, [tab]);
+
+  async function handleApproveOrder(id) {
+    try {
+      await api.admin.approveOrder(id);
+      await loadOrders();
+    } catch (err) { setError(err.message); }
+  }
+
+  async function handleGenerate() {
+    setError('');
+    setGenerated('');
+    try {
+      const res = await api.admin.generateCodes({
+        course_id: genForm.course_id || null,
+        count: Number(genForm.count) || 1,
+        max_uses: Number(genForm.max_uses) || 1,
+        expires_days: genForm.expires_days ? Number(genForm.expires_days) : undefined,
+      });
+      setGenerated((res.codes || []).map(c => c.code).join('\n'));
+      await loadCodes();
+    } catch (err) { setError(err.message); }
+  }
+
+  async function handleSavePaid(courseId) {
+    const f = courseForm[courseId] || {};
+    if (!f.price) { setError('Nhập giá cho khóa trả phí'); return; }
+    try {
+      const updated = await api.admin.setPaidCourse(courseId, Number(f.price), f.sale_price ? Number(f.sale_price) : null);
+      setCourses(prev => prev.map(c => c.id === courseId ? { ...c, ...updated } : c));
+    } catch (err) { setError(err.message); }
+  }
+
+  async function handleSetFree(courseId) {
+    try {
+      const updated = await api.admin.setFreeCourse(courseId);
+      setCourses(prev => prev.map(c => c.id === courseId ? { ...c, ...updated } : c));
+    } catch (err) { setError(err.message); }
+  }
+
+  async function handleSavePreview(courseId) {
+    const f = courseForm[courseId] || {};
+    if (!f.preview_lesson_id) { setError('Chọn bài học để đặt preview'); return; }
+    try {
+      await api.admin.setPreview(f.preview_lesson_id, f.preview_text || '');
+    } catch (err) { setError(err.message); }
+  }
+
+  async function handleSaveSettings() {
+    try {
+      await api.admin.saveSetting('bank_transfer', {
+        bank_name: settings.bank_name || '',
+        account_number: settings.account_number || '',
+        account_holder: settings.account_holder || '',
+        content_prefix: settings.content_prefix || 'VMG',
+      });
+    } catch (err) { setError(err.message); }
+  }
+
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '2rem 1rem' }}>
-      <h2 style={{ marginBottom: '0.5rem' }}>Admin — Data Import</h2>
-      <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '0.9rem' }}>
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: '2rem 1rem' }}>
+      <h2 style={{ marginBottom: '0.5rem' }}>Admin — Quản lý</h2>
+      <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
         Logged in as <strong>{user?.email}</strong> (role: {user?.role})
       </p>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.25rem' }}>Table</label>
-        <select
-          value={table}
-          onChange={e => { setTable(e.target.value); handleClearFile(); }}
-          style={{ width: '100%', padding: '0.5rem', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text)' }}
-        >
-          <option value="">-- Select table --</option>
-          {ALLOWED_TABLES.map(t => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-      </div>
-
-      {table && (
-        <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8 }}>
-          <p style={{ margin: '0 0 0.5rem', fontWeight: 600, fontSize: '0.85rem' }}>
-            Các cột của <code style={{ background: 'var(--hover)', padding: '2px 6px', borderRadius: 4 }}>{table}</code>
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-            {TABLE_COLUMNS[table]?.required.map(col => (
-              <span key={col} style={{
-                padding: '3px 10px', borderRadius: 4, fontSize: '0.8rem',
-                background: 'var(--hover)', color: 'var(--text)',
-                border: '1px solid var(--border)',
-              }}>{col}</span>
-            ))}
-            {TABLE_COLUMNS[table]?.optional?.map(col => (
-              <span key={col} style={{
-                padding: '3px 10px', borderRadius: 4, fontSize: '0.8rem',
-                background: 'transparent', color: 'var(--text-muted)',
-                border: '1px dashed var(--border)',
-              }}>{col} <span style={{ fontSize: '0.7rem' }}>(tự sinh)</span></span>
-            ))}
-          </div>
-          {preview && (
-            (() => {
-              const requiredCols = TABLE_COLUMNS[table]?.required || [];
-              const csvCols = new Set(preview.headers);
-              const missing = requiredCols.filter(c => !csvCols.has(c));
-              const extra = preview.headers.filter(h => h && !requiredCols.includes(h) && !(TABLE_COLUMNS[table]?.optional || []).includes(h));
-              if (missing.length > 0 || extra.length > 0) {
-                return (
-                  <div style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>
-                    {missing.length > 0 && (
-                      <p style={{ margin: 0, color: 'var(--red)' }}>
-                        Thiếu cột: {missing.join(', ')}
-                      </p>
-                    )}
-                    {extra.length > 0 && (
-                      <p style={{ margin: 0, color: '#e67e22' }}>
-                        Cột thừa (sẽ bị bỏ qua): {extra.join(', ')}
-                      </p>
-                    )}
-                  </div>
-                );
-              }
-            })()
-          )}
-        </div>
-      )}
-
-      <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.25rem' }}>CSV File</label>
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".csv"
-          onChange={handleFileChange}
-          style={{ display: 'block', marginBottom: '0.5rem' }}
-        />
-        {preview && (
-          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '1rem', maxHeight: 250, overflow: 'auto' }}>
-            <p style={{ margin: '0 0 0.5rem', fontWeight: 600 }}>
-              Preview ({Math.min(5, preview.rows.length)} of {preview.rows.length} rows)
-            </p>
-            <table style={{ fontSize: '0.8rem', width: '100%', minWidth: 720, borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  {preview.headers.map(h => (
-                    <th key={h} style={{ textAlign: 'left', padding: '4px 8px', borderBottom: '1px solid var(--border)', background: 'var(--hover)' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {preview.rows.slice(0, 5).map((row, i) => (
-                  <tr key={i}>
-                    {preview.headers.map(h => (
-                      <td key={h} style={{ padding: '4px 8px', borderBottom: '1px solid var(--border)' }}>
-                        {String(row[h] || '').substring(0, 80)}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-        <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>Mode:</label>
-        {['replace', 'append'].map(m => (
-          <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: '0.85rem', padding: '4px 12px', borderRadius: 6, background: mode === m ? 'var(--red)' : 'var(--card-bg)', color: mode === m ? '#fff' : 'var(--text)', border: '1px solid', borderColor: mode === m ? 'var(--red)' : 'var(--border)' }}>
-            <input type="radio" name="importMode" value={m} checked={mode === m} onChange={() => setMode(m)} style={{ display: 'none' }} />
-            {m === 'replace' ? 'Replace (xóa hết, chèn mới)' : 'Append (thêm mới, bỏ qua trùng)'}
-          </label>
-        ))}
-      </div>
-
-      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-        <button
-          onClick={handleImport}
-          disabled={busy || !preview || !table}
-          style={{
-            padding: '0.6rem 1.5rem',
-            borderRadius: 8,
-            border: 'none',
-            background: busy ? 'var(--text-muted)' : 'var(--red)',
-            color: '#fff',
-            cursor: busy || !preview || !table ? 'not-allowed' : 'pointer',
-            fontWeight: 600,
-          }}
-        >
-          {busy ? 'Importing...' : 'Import'}
-        </button>
-
-        {csvText && (
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+        {TABS.map(t => (
           <button
-            onClick={handleClearFile}
+            key={t.key}
+            onClick={() => setTab(t.key)}
             style={{
-              padding: '0.6rem 1rem',
-              borderRadius: 8,
-              border: '1px solid var(--border)',
-              background: 'var(--card-bg)',
-              color: 'var(--text)',
-              cursor: 'pointer',
+              padding: '6px 14px', borderRadius: 8, border: '1px solid',
+              borderColor: tab === t.key ? 'var(--red)' : 'var(--border)',
+              background: tab === t.key ? 'var(--red)' : 'var(--card-bg)',
+              color: tab === t.key ? '#fff' : 'var(--text)',
+              cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
             }}
           >
-            Clear
+            {t.label}
           </button>
-        )}
+        ))}
       </div>
-
-      {status && (
-        <p style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--card-bg)', borderRadius: 8, color: 'var(--accent-green)' }}>
-          {status}
-        </p>
-      )}
 
       {error && (
         <p style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--card-bg)', borderRadius: 8, color: 'var(--red)' }}>
           {error}
         </p>
+      )}
+
+      {tab === 'import' && (
+        <>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.25rem' }}>Table</label>
+            <select
+              value={table}
+              onChange={e => { setTable(e.target.value); handleClearFile(); }}
+              style={inputStyle}
+            >
+              <option value="">-- Select table --</option>
+              {ALLOWED_TABLES.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+
+          {table && (
+            <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8 }}>
+              <p style={{ margin: '0 0 0.5rem', fontWeight: 600, fontSize: '0.85rem' }}>
+                Các cột của <code style={{ background: 'var(--hover)', padding: '2px 6px', borderRadius: 4 }}>{table}</code>
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                {TABLE_COLUMNS[table]?.required.map(col => (
+                  <span key={col} style={{
+                    padding: '3px 10px', borderRadius: 4, fontSize: '0.8rem',
+                    background: 'var(--hover)', color: 'var(--text)',
+                    border: '1px solid var(--border)',
+                  }}>{col}</span>
+                ))}
+                {TABLE_COLUMNS[table]?.optional?.map(col => (
+                  <span key={col} style={{
+                    padding: '3px 10px', borderRadius: 4, fontSize: '0.8rem',
+                    background: 'transparent', color: 'var(--text-muted)',
+                    border: '1px dashed var(--border)',
+                  }}>{col} <span style={{ fontSize: '0.7rem' }}>(tự sinh)</span></span>
+                ))}
+              </div>
+              {preview && (
+                (() => {
+                  const requiredCols = TABLE_COLUMNS[table]?.required || [];
+                  const csvCols = new Set(preview.headers);
+                  const missing = requiredCols.filter(c => !csvCols.has(c));
+                  const extra = preview.headers.filter(h => h && !requiredCols.includes(h) && !(TABLE_COLUMNS[table]?.optional || []).includes(h));
+                  if (missing.length > 0 || extra.length > 0) {
+                    return (
+                      <div style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>
+                        {missing.length > 0 && (
+                          <p style={{ margin: 0, color: 'var(--red)' }}>
+                            Thiếu cột: {missing.join(', ')}
+                          </p>
+                        )}
+                        {extra.length > 0 && (
+                          <p style={{ margin: 0, color: '#e67e22' }}>
+                            Cột thừa (sẽ bị bỏ qua): {extra.join(', ')}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  }
+                })()
+              )}
+            </div>
+          )}
+
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.25rem' }}>CSV File</label>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              style={{ display: 'block', marginBottom: '0.5rem' }}
+            />
+            {preview && (
+              <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '1rem', maxHeight: 250, overflow: 'auto' }}>
+                <p style={{ margin: '0 0 0.5rem', fontWeight: 600 }}>
+                  Preview ({Math.min(5, preview.rows.length)} of {preview.rows.length} rows)
+                </p>
+                <table style={{ fontSize: '0.8rem', width: '100%', minWidth: 720, borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      {preview.headers.map(h => (
+                        <th key={h} style={{ textAlign: 'left', padding: '4px 8px', borderBottom: '1px solid var(--border)', background: 'var(--hover)' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {preview.rows.slice(0, 5).map((row, i) => (
+                      <tr key={i}>
+                        {preview.headers.map(h => (
+                          <td key={h} style={{ padding: '4px 8px', borderBottom: '1px solid var(--border)' }}>
+                            {String(row[h] || '').substring(0, 80)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <label style={{ fontWeight: 600, fontSize: '0.9rem' }}>Mode:</label>
+            {['replace', 'append'].map(m => (
+              <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: '0.85rem', padding: '4px 12px', borderRadius: 6, background: mode === m ? 'var(--red)' : 'var(--card-bg)', color: mode === m ? '#fff' : 'var(--text)', border: '1px solid', borderColor: mode === m ? 'var(--red)' : 'var(--border)' }}>
+                <input type="radio" name="importMode" value={m} checked={mode === m} onChange={() => setMode(m)} style={{ display: 'none' }} />
+                {m === 'replace' ? 'Replace (xóa hết, chèn mới)' : 'Append (thêm mới, bỏ qua trùng)'}
+              </label>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <button
+              onClick={handleImport}
+              disabled={busy || !preview || !table}
+              style={{
+                padding: '0.6rem 1.5rem', borderRadius: 8, border: 'none',
+                background: busy ? 'var(--text-muted)' : 'var(--red)', color: '#fff',
+                cursor: busy || !preview || !table ? 'not-allowed' : 'pointer', fontWeight: 600,
+              }}
+            >
+              {busy ? 'Importing...' : 'Import'}
+            </button>
+
+            {csvText && (
+              <button onClick={handleClearFile} style={{
+                padding: '0.6rem 1rem', borderRadius: 8, border: '1px solid var(--border)',
+                background: 'var(--card-bg)', color: 'var(--text)', cursor: 'pointer',
+              }}>
+                Clear
+              </button>
+            )}
+          </div>
+
+          {status && (
+            <p style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--card-bg)', borderRadius: 8, color: 'var(--accent-green)' }}>
+              {status}
+            </p>
+          )}
+        </>
+      )}
+
+      {tab === 'orders' && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <h3 style={{ margin: 0 }}>Đơn hàng</h3>
+            <button onClick={loadOrders} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer' }}>Làm mới</button>
+          </div>
+          {orders.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)' }}>Chưa có đơn hàng</p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ fontSize: '0.8rem', width: '100%', minWidth: 640, borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    {['Mã đơn', 'Người mua', 'Khóa học', 'Số tiền', 'Phương thức', 'Trạng thái', 'Thời gian', ''].map(h => (
+                      <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid var(--border)', background: 'var(--hover)' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map(o => (
+                    <tr key={o.id}>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.order_no}</td>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.profiles?.full_name || o.user_id?.slice(0, 8)}</td>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.courses?.title}</td>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{(o.amount || 0).toLocaleString('vi-VN')} đ</td>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.method}</td>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: 10, fontSize: '0.75rem',
+                          background: o.status === 'paid' ? 'var(--green-bg)' : o.status === 'pending' ? 'var(--gold-bg)' : 'var(--red-bg)',
+                          color: o.status === 'paid' ? 'var(--green)' : o.status === 'pending' ? 'var(--gold)' : 'var(--red)',
+                        }}>
+                          {o.status === 'paid' ? 'Đã thanh toán' : o.status === 'pending' ? 'Chờ xác nhận' : o.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{o.created_at ? new Date(o.created_at).toLocaleString('vi-VN') : ''}</td>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>
+                        {o.status === 'pending' && (
+                          <button onClick={() => handleApproveOrder(o.id)} style={{
+                            padding: '4px 10px', borderRadius: 6, border: 'none',
+                            background: 'var(--red)', color: '#fff', cursor: 'pointer', fontSize: '0.75rem',
+                          }}>
+                            Xác nhận
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'codes' && (
+        <div>
+          <h3 style={{ margin: '0 0 12px' }}>Sinh mã kích hoạt</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Khóa học</label>
+              <select
+                value={genForm.course_id}
+                onChange={e => setGenForm({ ...genForm, course_id: e.target.value })}
+                style={inputStyle}
+              >
+                <option value="">-- Mọi khóa trả phí --</option>
+                {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Số lượng</label>
+              <input type="number" value={genForm.count} min="1" max="100" onChange={e => setGenForm({ ...genForm, count: e.target.value })} style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Số lần dùng tối đa / mã</label>
+              <input type="number" value={genForm.max_uses} min="1" onChange={e => setGenForm({ ...genForm, max_uses: e.target.value })} style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Hết hạn sau (ngày) — để trống nếu không hết hạn</label>
+              <input type="number" value={genForm.expires_days} min="1" onChange={e => setGenForm({ ...genForm, expires_days: e.target.value })} style={inputStyle} />
+            </div>
+          </div>
+          <button onClick={handleGenerate} style={{
+            padding: '0.6rem 1.5rem', borderRadius: 8, border: 'none',
+            background: 'var(--red)', color: '#fff', cursor: 'pointer', fontWeight: 600,
+          }}>
+            Sinh mã
+          </button>
+
+          {generated && (
+            <div style={{ marginTop: 12 }}>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Mã mới (copy để gửi):</label>
+              <textarea readOnly value={generated} rows={4} style={{ ...inputStyle, fontFamily: 'monospace' }} />
+            </div>
+          )}
+
+          <h3 style={{ margin: '20px 0 12px' }}>Danh sách mã ({codes.length})</h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ fontSize: '0.8rem', width: '100%', minWidth: 560, borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  {['Mã', 'Khóa học', 'Đã dùng', 'Tối đa', 'Hết hạn', 'Trạng thái'].map(h => (
+                    <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid var(--border)', background: 'var(--hover)' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {codes.map(c => (
+                  <tr key={c.id}>
+                    <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)', fontFamily: 'monospace' }}>{c.code}</td>
+                    <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{c.courses?.title || 'Mọi khóa'}</td>
+                    <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{c.used_count}/{c.max_uses}</td>
+                    <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{c.expires_at ? new Date(c.expires_at).toLocaleDateString('vi-VN') : '—'}</td>
+                    <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>
+                      <span style={{ color: c.is_active && c.used_count < c.max_uses ? 'var(--green)' : 'var(--red)' }}>
+                        {c.is_active && c.used_count < c.max_uses ? 'Hoạt động' : 'Hết'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab === 'courses' && (
+        <div>
+          <h3 style={{ margin: '0 0 12px' }}>Khóa trả phí — đặt giá & preview</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {courses.map(c => {
+              const f = courseForm[c.id] || {};
+              const paid = c.access_type === 'paid';
+              return (
+                <div key={c.id} style={{ padding: 14, background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+                    <b style={{ fontSize: '0.9rem' }}>{c.title}</b>
+                    <span style={{
+                      padding: '2px 10px', borderRadius: 10, fontSize: '0.75rem',
+                      background: paid ? 'var(--red)' : 'var(--hover)', color: paid ? '#fff' : 'var(--text)',
+                    }}>
+                      {paid ? 'Trả phí' : 'Miễn phí'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 8 }}>
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8rem', marginBottom: 4 }}>Giá (đ)</label>
+                      <input type="number" value={f.price ?? c.price ?? ''} onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, price: e.target.value } })} style={{ ...inputStyle, width: 130 }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8rem', marginBottom: 4 }}>Giá khuyến mãi (đ, tùy chọn)</label>
+                      <input type="number" value={f.sale_price ?? c.sale_price ?? ''} onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, sale_price: e.target.value } })} style={{ ...inputStyle, width: 130 }} />
+                    </div>
+                    <button onClick={() => handleSavePaid(c.id)} style={{ padding: '0.45rem 1rem', borderRadius: 6, border: 'none', background: 'var(--red)', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>
+                      Đặt trả phí
+                    </button>
+                    {paid && (
+                      <button onClick={() => handleSetFree(c.id)} style={{ padding: '0.45rem 1rem', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer' }}>
+                        Chuyển miễn phí
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: 180 }}>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8rem', marginBottom: 4 }}>Bài học preview</label>
+                      <select value={f.preview_lesson_id ?? ''} onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, preview_lesson_id: e.target.value } })} style={inputStyle}>
+                        <option value="">-- Chọn bài --</option>
+                        {(lessons.filter(l => l.course_id === c.id)).map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ flex: 2, minWidth: 200 }}>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '0.8rem', marginBottom: 4 }}>Đoạn xem trước</label>
+                      <input
+                        value={f.preview_text ?? ''}
+                        onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, preview_text: e.target.value } })}
+                        placeholder="Đoạn trích hiển thị cho người chưa mua..."
+                        style={inputStyle}
+                      />
+                    </div>
+                    <button onClick={() => handleSavePreview(c.id)} style={{ padding: '0.45rem 1rem', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--card-bg)', cursor: 'pointer' }}>
+                      Lưu preview
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {tab === 'settings' && (
+        <div style={{ maxWidth: 480 }}>
+          <h3 style={{ margin: '0 0 12px' }}>Cấu hình QR chuyển khoản</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Ngân hàng</label>
+              <input value={settings.bank_name || ''} onChange={e => setSettings({ ...settings, bank_name: e.target.value })} placeholder="VD: Vietcombank" style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Số tài khoản</label>
+              <input value={settings.account_number || ''} onChange={e => setSettings({ ...settings, account_number: e.target.value })} style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Chủ tài khoản</label>
+              <input value={settings.account_holder || ''} onChange={e => setSettings({ ...settings, account_holder: e.target.value })} style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Tiền tố nội dung chuyển khoản</label>
+              <input value={settings.content_prefix || ''} onChange={e => setSettings({ ...settings, content_prefix: e.target.value })} style={inputStyle} />
+            </div>
+            <button onClick={handleSaveSettings} style={{
+              padding: '0.6rem 1.5rem', borderRadius: 8, border: 'none',
+              background: 'var(--red)', color: '#fff', cursor: 'pointer', fontWeight: 600,
+            }}>
+              Lưu cấu hình
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -88,6 +88,11 @@ export default function Courses() {
                         Đang học • {enroll.progress_pct}%
                       </span>
                     )}
+                    {course.access_type === 'paid' && (
+                      <span className="pill" style={{ background: 'var(--red)', color: '#fff', fontWeight: 800 }}>
+                        {course.sale_price ?? course.price} đ
+                      </span>
+                    )}
                   </div>
                 </div>
               </Card>

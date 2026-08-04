@@ -9,6 +9,7 @@ import { dispatchAction } from '../../lib/quest-engine';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import { useAuth } from '../auth/AuthContext';
 
 function loadEnroll(slug) {
   try {
@@ -23,10 +24,12 @@ function saveEnroll(slug, data) {
 export default function LessonView() {
   const { slug, lessonId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const showToast = useToast();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -35,6 +38,12 @@ export default function LessonView() {
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => {
+    if (course?.access_type === 'paid' && user?.id) {
+      api.unlock.courseIds(user.id).then(ids => setUnlocked(ids.has(course.id))).catch(() => {});
+    }
+  }, [course, user?.id]);
 
   useEffect(() => {
     setCompleted(false);
@@ -61,14 +70,20 @@ export default function LessonView() {
   const enroll = loadEnroll(slug);
   const isFree = lesson.is_free;
   const isEnrolled = enroll?.enrolled;
+  const canAccess = course.access_type === 'paid' ? unlocked : isEnrolled;
   const isLessonCompleted = enroll?.completed_lessons?.includes(lessonId) || false;
 
-  if (!isFree && !isEnrolled) {
+  if (!isFree && !canAccess) {
     return (
       <div>
         <div className="back-btn" onClick={() => navigate(`/courses/${slug}`)}><Icon.ArrowLeft size={14} /> Quay lại khóa học</div>
         <div className="empty">
-          <h3>Bài học này yêu cầu đăng ký khóa học</h3>
+          <h3>Bài học này thuộc khóa học trả phí</h3>
+          {lesson.preview_text && (
+            <p style={{ fontSize: 13, color: 'var(--muted)', maxWidth: 520, margin: '8px auto 0', lineHeight: 1.7 }}>
+              {lesson.preview_text}
+            </p>
+          )}
           <Button size="sm" variant="primary" label="Đăng ký khóa học" onClick={() => navigate(`/courses/${slug}`)} style={{ marginTop: 12 }} />
         </div>
       </div>

@@ -398,6 +398,42 @@ export const api = {
       }
     },
   },
+  orders: {
+    create: async (courseId, method = 'bank_transfer') =>
+      request('/orders/create', { method: 'POST', body: JSON.stringify({ course_id: courseId, method }) }),
+    redeem: async (code, courseId) =>
+      request('/orders/redeem', { method: 'POST', body: JSON.stringify({ code, course_id: courseId }) }),
+    confirmTransfer: async (orderId) =>
+      request(`/orders/${orderId}/confirm-transfer`, { method: 'POST' }),
+    mine: async () => request('/orders/mine'),
+    approveInfo: async (orderId, token) =>
+      request(`/orders/${orderId}/approve-info?token=${encodeURIComponent(token)}`),
+    approve: async (orderId, token) =>
+      request(`/orders/${orderId}/approve?token=${encodeURIComponent(token)}`, { method: 'POST' }),
+  },
+  unlock: {
+    courseIds: async (userId) => {
+      const { data, error } = await supabase.from('enrollments').select('course_id').eq('user_id', userId);
+      if (error) throw error;
+      return new Set((data || []).map(e => e.course_id));
+    },
+  },
+  admin: {
+    orders: async () => request('/admin/orders'),
+    approveOrder: async (id) => request(`/admin/orders/${id}/approve`, { method: 'POST' }),
+    codes: async () => request('/admin/codes'),
+    generateCodes: async (payload) =>
+      request('/admin/codes/generate', { method: 'POST', body: JSON.stringify(payload) }),
+    setPaidCourse: async (courseId, price, salePrice) =>
+      request('/admin/courses/paid', { method: 'POST', body: JSON.stringify({ course_id: courseId, price, sale_price: salePrice }) }),
+    setFreeCourse: async (courseId) =>
+      request('/admin/courses/free', { method: 'POST', body: JSON.stringify({ course_id: courseId }) }),
+    setPreview: async (lessonId, previewText) =>
+      request('/admin/courses/preview', { method: 'POST', body: JSON.stringify({ lesson_id: lessonId, preview_text: previewText }) }),
+    settings: async () => request('/admin/settings'),
+    saveSetting: async (key, value) =>
+      request('/admin/settings', { method: 'POST', body: JSON.stringify({ key, value }) }),
+  },
   ranking: {
     list: async ({ ward, school, limit = 50 } = {}) => {
       let q = supabase.from('profiles').select('id, full_name, xp, school, ward').order('xp', { ascending: false }).limit(limit);

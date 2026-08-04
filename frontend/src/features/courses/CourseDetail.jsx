@@ -4,6 +4,8 @@ import { api } from '../../lib/api';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import { useAuth } from '../auth/AuthContext';
+import RegisterCourseModal from './RegisterCourseModal';
 
 function loadEnroll(slug) {
   try {
@@ -26,19 +28,31 @@ const COVER_MAP = {
 export default function CourseDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [enrolled, setEnrolled] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+
+  const isPaid = course?.access_type === 'paid';
+  const canAccess = isPaid ? unlocked : enrolled;
 
   useEffect(() => {
     if (!slug) return;
-    api.courses.get(slug).then(data => {
+    api.courses.get(slug).then(async data => {
       setCourse(data);
       const e = loadEnroll(slug);
       setEnrolled(e?.enrolled || false);
+      if (data.access_type === 'paid' && user?.id) {
+        try {
+          const ids = await api.unlock.courseIds(user.id);
+          setUnlocked(ids.has(data.id));
+        } catch {}
+      }
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, [slug]);
+  }, [slug, user?.id]);
 
   if (loading) {
     return <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>;
@@ -61,8 +75,11 @@ export default function CourseDetail() {
     setEnrolled(true);
   };
 
+  const handleUnlocked = () => setUnlocked(true);
+
   const cover = COVER_MAP[course.category] || { color: 'red', icon: Icon.Courses };
   const C = cover.icon;
+  const price = course.sale_price ?? course.price;
 
   return (
     <div className="page-enter">
@@ -74,32 +91,60 @@ export default function CourseDetail() {
             <C size={36} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ fontSize: 24, marginBottom: 8 }}>{course.title}</h1>
+            <h1 style={{ fontSize: 24, marginBottom: 8 }}>
+              {course.title}{' '}
+              {isPaid && (
+                <span className="pill" style={{ background: 'var(--red)', color: '#fff', fontSize: 10, verticalAlign: 'middle' }}>Trả phí</span>
+              )}
+            </h1>
             <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 12 }}>{course.description}</p>
             <div className="course-meta" style={{ marginBottom: 16 }}>
               <span className="pill">{course.level}</span>
               <span className="pill">{course.lesson_count} bài học</span>
               <span className="pill">{course.duration_hours} giờ</span>
               <span className="pill">{course.instructor}</span>
+              {isPaid && price != null && (
+                <span className="pill" style={{ background: 'var(--gold-bg)', color: 'var(--gold)', fontWeight: 800 }}>
+                  {price.toLocaleString('vi-VN')} đ
+                  {course.sale_price != null && course.sale_price < course.price && (
+                    <s style={{ marginLeft: 6, fontWeight: 500, opacity: .7 }}>{(course.price).toLocaleString('vi-VN')} đ</s>
+                  )}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
-        {!enrolled ? (
+        {!canAccess ? (
           <div className="enroll-bar">
             <div>
-              <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Bắt đầu khóa học này</p>
-              <p>Truy cập tất cả {course.lesson_count} bài học và theo dõi tiến độ của bạn.</p>
+              <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>
+                {isPaid ? 'Đăng ký khóa học này' : 'Bắt đầu khóa học này'}
+              </p>
+              <p>
+                {isPaid
+                  ? `Truy cập toàn bộ ${course.lesson_count} bài học sau khi thanh toán.`
+                  : `Truy cập tất cả ${course.lesson_count} bài học và theo dõi tiến độ của bạn.`}
+              </p>
             </div>
-            <Button style={{ background: 'var(--card)', color: 'var(--red)', fontWeight: 800, padding: '12px 28px' }}
-              onClick={handleEnroll}>
-              Đăng ký miễn phí <Icon.ArrowRight size={16} />
-            </Button>
+            {isPaid ? (
+              <Button style={{ background: 'var(--card)', color: 'var(--red)', fontWeight: 800, padding: '12px 28px' }}
+                onClick={() => setShowRegister(true)}>
+                Đăng ký khóa học <Icon.ArrowRight size={16} />
+              </Button>
+            ) : (
+              <Button style={{ background: 'var(--card)', color: 'var(--red)', fontWeight: 800, padding: '12px 28px' }}
+                onClick={handleEnroll}>
+                Đăng ký miễn phí <Icon.ArrowRight size={16} />
+              </Button>
+            )}
           </div>
         ) : (
           <div style={{ marginTop: 20, marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 13, fontWeight: 600 }}>Tiến độ: {enroll.progress_pct}%</span>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>
+                {isPaid ? 'Đã mở khóa' : `Tiến độ: ${enroll.progress_pct}%`}
+              </span>
               <span style={{ fontSize: 12, color: 'var(--muted)' }}>{completedIds.length}/{course.lesson_count} bài</span>
             </div>
             <div className="progress-bar">
@@ -112,13 +157,16 @@ export default function CourseDetail() {
       <h3 style={{ fontSize: 17, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}><Icon.BookOpen size={18} /> Danh sách bài học</h3>
       {(course.lessons || []).map((lesson, idx) => {
         const isCompleted = completedIds.includes(lesson.id);
+        const locked = !canAccess && !lesson.is_free;
         return (
           <div
             key={lesson.id}
-            className={`lesson-item ${isCompleted ? 'completed' : ''} ${!enrolled && !lesson.is_free ? 'locked' : ''}`}
+            className={`lesson-item ${isCompleted ? 'completed' : ''} ${locked ? 'locked' : ''}`}
             onClick={() => {
-              if (enrolled || lesson.is_free) {
+              if (canAccess || lesson.is_free) {
                 navigate(`/courses/${course.slug}/lessons/${lesson.id}`);
+              } else {
+                setShowRegister(true);
               }
             }}
           >
@@ -126,6 +174,11 @@ export default function CourseDetail() {
             <div className="lesson-info">
               <h4>{lesson.title}</h4>
               <p>{lesson.description}</p>
+              {locked && lesson.preview_text && (
+                <p style={{ fontSize: 11, color: 'var(--muted)', fontStyle: 'italic', marginTop: 4 }}>
+                  Xem trước: {lesson.preview_text}
+                </p>
+              )}
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {lesson.content_type !== 'video' && (
@@ -139,12 +192,21 @@ export default function CourseDetail() {
                 </span>
               )}
               <span className={`lesson-badge ${lesson.is_free ? 'free' : 'pro'}`}>
-                {lesson.is_free ? 'Miễn phí' : 'Pro'}
+                {lesson.is_free ? (isPaid ? 'Xem trước' : 'Miễn phí') : (isPaid ? 'Trả phí' : 'Pro')}
               </span>
             </div>
           </div>
         );
       })}
+
+      {showRegister && (
+        <RegisterCourseModal
+          course={course}
+          isAdmin={user?.role === 'admin' || user?.role === 'super_admin'}
+          onClose={() => setShowRegister(false)}
+          onUnlocked={handleUnlocked}
+        />
+      )}
     </div>
   );
 }
