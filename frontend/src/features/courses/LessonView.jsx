@@ -166,11 +166,9 @@ export default function LessonView() {
         }}>
           <div>
             <b style={{ fontSize: 14 }}>Bạn đang xem {Math.round(previewSeconds / 60)} phút đầu của bài học</b>
-            {dur > 0 && (
-              <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
-                Đăng ký khóa học để xem toàn bộ {Math.floor(dur / 60)} phút.
-              </p>
-            )}
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
+              Đăng ký khóa học để xem toàn bộ.
+            </p>
           </div>
           <Button size="sm" variant="primary" onClick={() => navigate(`/courses/${slug}/register`)}>
             Đăng ký khóa học
