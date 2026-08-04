@@ -62,6 +62,8 @@ export default function RankingPage() {
   const filteredSchools = selectedWard ? schools.filter(s => s.ward === selectedWard) : schools;
 
   const myRank = rankings.findIndex(r => r.id === user?.id) + 1;
+  const myRow = rankings.find(r => r.id === user?.id);
+  const myXp = myRow?.xp ?? user?.xp ?? 0;
 
   return (
     <div className="page-enter">
@@ -98,10 +100,10 @@ export default function RankingPage() {
             <Link to={`/profile/${user.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
               <div style={{ fontSize: 15, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}>{user?.full_name}</div>
             </Link>
-            <div style={{ fontSize: 12, color: 'var(--muted)' }}>{user.school ? user.school + (user.ward ? ' · ' + user.ward : '') : 'Level ' + (Math.floor((user?.xp || 0) / 3000) + 1)}</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)' }}>{user.school ? user.school + (user.ward ? ' · ' + user.ward : '') : 'Level ' + (Math.floor(myXp / 3000) + 1)}</div>
           </div>
           <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--red)' }}>
-            {(user?.xp || 0).toLocaleString()} XP
+            {myXp.toLocaleString()} XP
           </div>
         </div>
       </Card>
