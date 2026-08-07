@@ -191,6 +191,13 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
   font-size: 14px; transition: .15s;
 }
 .avatar-btn:hover { border-color: var(--red); background: var(--red-bg); }
+.avatar-plus-badge {
+  position: absolute; bottom: -4px; right: -4px; width: 18px; height: 18px;
+  border-radius: 50%; background: linear-gradient(135deg, #a855f7, #8b5cf6);
+  color: #fff; display: grid; place-items: center;
+  border: 2px solid var(--card); line-height: 0;
+}
+.avatar-dropdown-item.gold { color: #a855f7; font-weight: 700; }
 
 /* Main content */
 .main { padding: 28px 32px 48px; min-width: 0; }

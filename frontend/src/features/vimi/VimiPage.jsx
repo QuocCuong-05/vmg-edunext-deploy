@@ -3,6 +3,8 @@ import { Icon } from '../../lib/icons';
 import { useSpeechRecognition } from '../../lib/useSpeechRecognition';
 import { useStreamChat } from '../../lib/useStreamChat';
 import { API_BASE } from '../../lib/api';
+import { useAuth } from '../auth/AuthContext';
+import { Link } from 'react-router-dom';
 
 const SUGGESTIONS = [
   'Classroom English là gì?',
@@ -165,6 +167,7 @@ export default function VimiPage() {
   const bodyRef = useRef(null);
   const { isRecording, transcript, startRecording, stopRecording, clearTranscript } = useSpeechRecognition();
   const lastUserTextRef = useRef('');
+  const { isPlus, user, consumeAiUsage } = useAuth();
 
   const [input, setInput] = useState('');
   const { messages, append, isLoading, error } = useStreamChat({
@@ -183,23 +186,25 @@ export default function VimiPage() {
     if (transcript) setInput(transcript);
   }, [transcript]);
 
-  const handleSend = (text) => {
+  const handleSend = async (text) => {
     if (!text.trim() || isLoading) return;
     lastUserTextRef.current = text.trim();
     const msg = text.trim();
     setInput('');
     clearTranscript();
-    append({ role: 'user', content: msg }, { mode: speakingMode ? 'speaking' : 'chat' });
+    const ok = await append({ role: 'user', content: msg }, { mode: speakingMode ? 'speaking' : 'chat' });
+    if (ok) consumeAiUsage(speakingMode ? 'speaking' : 'chat');
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
     lastUserTextRef.current = input.trim();
     const text = input.trim();
     setInput('');
     clearTranscript();
-    append({ role: 'user', content: text }, { mode: speakingMode ? 'speaking' : 'chat' });
+    const ok = await append({ role: 'user', content: text }, { mode: speakingMode ? 'speaking' : 'chat' });
+    if (ok) consumeAiUsage(speakingMode ? 'speaking' : 'chat');
   };
 
   const filteredMessages = messages.filter(m => !(m.role === 'assistant' && m.content === ''));
@@ -229,12 +234,29 @@ export default function VimiPage() {
   const feedback = lastAssistantMsg ? parseFeedback(lastAssistantMsg.content) : null;
   const showSpeakingPrompt = speakingMode && speakingStarted && !isLoading && !feedback;
 
+  const aiKey = speakingMode ? 'speakingLeft' : 'chatLeft';
+  const remainingCount = !isPlus ? (user?.aiUsage?.[aiKey] ?? null) : null;
+  const remainingLimit = !isPlus ? (speakingMode ? 3 : 5) : null;
+
   return (
     <div className="page-enter" style={{ maxWidth: 800 }}>
       <div className="page-title">
         <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icon.ViMi size={26} /> ViMi AI Tutor</h1>
         <p>Trợ lý giảng dạy thông minh — hỏi đáp về phương pháp, ngôn ngữ và hoạt động dạy học</p>
       </div>
+
+      {!isPlus && remainingCount !== null && (
+        <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span className="pill" style={{ background: 'var(--gold-bg)', color: 'var(--gold)', fontWeight: 800 }}>
+            Hôm nay còn {remainingCount}/{remainingLimit} lượt {speakingMode ? 'luyện nói' : 'chat'}
+          </span>
+          {remainingCount === 0 && (
+            <Link to="/plus" style={{ fontSize: 12, fontWeight: 700, color: 'var(--red)' }}>
+              Nâng cấp Plus để không giới hạn →
+            </Link>
+          )}
+        </div>
+      )}
 
       {!speakingMode && (
         <div style={{ marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>

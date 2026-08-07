@@ -3,6 +3,8 @@ import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import { API_BASE } from '../../lib/api';
+import { useAuth } from '../auth/AuthContext';
+import { Link } from 'react-router-dom';
 
 export default function PlannerPage() {
   const [topic, setTopic] = useState('');
@@ -13,6 +15,9 @@ export default function PlannerPage() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { isPlus, user, consumeAiUsage } = useAuth();
+
+  const remainingCount = !isPlus ? (user?.aiUsage?.lessonPlanLeft ?? null) : null;
 
   const handleGenerate = async () => {
     if (!topic.trim() || loading) return;
@@ -20,9 +25,12 @@ export default function PlannerPage() {
     setError(null);
     setResult(null);
     try {
+      const token = localStorage.getItem('vmg_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
       const res = await fetch(`${API_BASE}/vimi-ai/lesson-plan`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ topic: topic.trim(), grade_level: gradeLevel, level: learnerLevel, duration, focus }),
       });
       if (!res.ok) {
@@ -40,6 +48,7 @@ export default function PlannerPage() {
       const json = JSON.parse(text.match(/\{.*\}/s)?.[0] || '{}');
       if (!json.title) throw new Error('AI returned invalid response');
       setResult(json);
+      consumeAiUsage('lesson_plan');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -55,6 +64,19 @@ export default function PlannerPage() {
         </h1>
         <p>Generate a structured lesson plan for your bilingual classroom</p>
       </div>
+
+      {!isPlus && remainingCount !== null && (
+        <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span className="pill" style={{ background: 'var(--gold-bg)', color: 'var(--gold)', fontWeight: 800 }}>
+            Tuần này còn {remainingCount}/4 bài dạy AI
+          </span>
+          {remainingCount === 0 && (
+            <Link to="/plus" style={{ fontSize: 12, fontWeight: 700, color: 'var(--red)' }}>
+              Nâng cấp Plus để không giới hạn →
+            </Link>
+          )}
+        </div>
+      )}
 
       <Card style={{ maxWidth: 600, marginBottom: 28, padding: 24 }}>
         <div className="form-group">

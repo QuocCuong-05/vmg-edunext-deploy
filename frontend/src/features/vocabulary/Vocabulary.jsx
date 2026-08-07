@@ -1,14 +1,17 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Icon } from '../../lib/icons';
 import { api } from '../../lib/api';
 import { dispatchAction } from '../../lib/quest-engine';
 import Card from '../../components/ui/Card';
 import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../../components/ui/Toast';
 
 const LEVELS = ['All', 'A2', 'B1', 'B2', 'C1'];
 
 export default function Vocabulary() {
-  const { user } = useAuth();
+  const { user, isPlus } = useAuth();
+  const showToast = useToast();
   const [search, setSearch] = useState('');
   const [level, setLevel] = useState('All');
   const [topic, setTopic] = useState('All');
@@ -57,7 +60,8 @@ export default function Vocabulary() {
       } else {
         await api.vocabulary.saved.add(user.id, entryId);
       }
-    } catch {
+    } catch (err) {
+      showToast(err.message, 'error');
       setSavedIds(prev => {
         const next = new Set(prev);
         wasSaved ? next.add(entryId) : next.delete(entryId);
@@ -66,7 +70,9 @@ export default function Vocabulary() {
     } finally {
       setBusyId(null);
     }
-  }, [user?.id, busyId]);
+  }, [user?.id, busyId, showToast]);
+
+  const savedCount = savedIds.size;
 
   const topics = useMemo(() => {
     const all = [...new Set(items.map(v => v.topic))].sort();
@@ -89,6 +95,19 @@ export default function Vocabulary() {
         <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icon.Book size={24} /> Từ vựng giáo dục</h1>
         {!loading && <p>{items.length} từ vựng thiết yếu cho giáo viên song ngữ (A2-C1)</p>}
       </div>
+
+      {!loading && !isPlus && (
+        <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span className="pill" style={{ background: 'var(--gold-bg)', color: 'var(--gold)', fontWeight: 800 }}>
+            Đã lưu {savedCount}/100 từ vào sổ từ
+          </span>
+          {savedCount >= 100 && (
+            <Link to="/plus" style={{ fontSize: 12, fontWeight: 700, color: 'var(--red)' }}>
+              Nâng cấp Plus để lưu không giới hạn →
+            </Link>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <div className="empty"><h3>Đang tải...</h3></div>

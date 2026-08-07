@@ -58,10 +58,10 @@ export default function OrderApprovePage() {
             </div>
             <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>Thanh toán thành công!</h2>
             <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 20 }}>
-              Khóa học đã được mở khóa cho người mua.
+              {info.item_type === 'plus' ? 'Gói Plus đã được kích hoạt cho người mua.' : 'Khóa học đã được mở khóa cho người mua.'}
             </p>
-            <Link to={info.course?.slug ? `/courses/${info.course.slug}` : '/'}>
-              <Button variant="primary" style={{ width: '100%', justifyContent: 'center' }}>Quay lại khóa học</Button>
+            <Link to={info.course?.slug ? `/courses/${info.course.slug}` : '/plus'}>
+              <Button variant="primary" style={{ width: '100%', justifyContent: 'center' }}>Quay lại</Button>
             </Link>
           </>
         ) : (
@@ -80,7 +80,8 @@ export default function OrderApprovePage() {
                 <span style={{ color: 'var(--muted)' }}>Mã đơn</span><b>{info.order_no}</b>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0' }}>
-                <span style={{ color: 'var(--muted)' }}>Khóa học</span><b>{info.course?.title}</b>
+                <span style={{ color: 'var(--muted)' }}>{info.item_type === 'plus' ? 'Gói Plus' : 'Khóa học'}</span>
+                <b>{info.item_type === 'plus' ? `Plus ${info.period} tháng` : info.course?.title}</b>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0' }}>
                 <span style={{ color: 'var(--muted)' }}>Số tiền</span>

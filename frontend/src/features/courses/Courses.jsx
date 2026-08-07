@@ -88,9 +88,9 @@ export default function Courses() {
                         Đang học • {enroll.progress_pct}%
                       </span>
                     )}
-                    {course.access_type === 'paid' && (
+                    {(course.access_type === 'premium' || course.access_type === 'paid') && (
                       <span className="pill" style={{ background: 'var(--red)', color: '#fff', fontWeight: 800 }}>
-                        {course.sale_price ?? course.price} đ
+                        <Icon.Gem size={9} style={{ verticalAlign: 'middle', marginRight: 2 }} /> Gói Plus
                       </span>
                     )}
                   </div>

@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../../components/ui/Toast';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Dialog from '../../components/ui/Dialog';
@@ -21,7 +23,9 @@ function QrMock() {
 }
 
 export default function CertificatePage() {
-  const { user } = useAuth();
+  const { user, isPlus } = useAuth();
+  const navigate = useNavigate();
+  const showToast = useToast();
   const [exporting, setExporting] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
   const today = new Date().toLocaleDateString('en-GB', {
@@ -46,7 +50,14 @@ export default function CertificatePage() {
     }
   };
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => {
+    if (!isPlus) {
+      showToast('Tải PDF (In) dành cho tài khoản Plus', 'error');
+      navigate('/plus');
+      return;
+    }
+    window.print();
+  };
 
   const handleShare = () => {
     const url = encodeURIComponent(window.location.href);
@@ -103,7 +114,7 @@ export default function CertificatePage() {
             {exporting ? 'Đang tải...' : 'Tải PNG'}
           </Button>
           <Button variant="ghost" onClick={handlePrint}>
-            <Icon.Printer size={16} /> In / Lưu PDF
+            <Icon.Printer size={16} /> {isPlus ? 'In / Lưu PDF' : 'In / Lưu PDF (Plus)'}
           </Button>
           <Button variant="ghost" onClick={handleShare}>
             <Icon.Share size={16} /> Chia sẻ

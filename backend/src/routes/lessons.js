@@ -1,20 +1,44 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
+import { hasActivePlus } from '../lib/plus.js';
 
 const router = Router();
 
-// GET /api/lessons/:id — single lesson detail
-router.get('/:id', async (req, res) => {
+// GET /api/lessons/:id — single lesson detail (sanitized theo quyền)
+router.get('/:id', authenticate, async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { data: lesson, error } = await supabase
       .from('lessons')
       .select('*')
       .eq('id', req.params.id)
       .single();
 
     if (error) return res.status(404).json({ error: 'Lesson not found' });
-    res.json({ data });
+
+    if (lesson.is_free || (await hasActivePlus(req.user.id))) {
+      return res.json({ data: lesson });
+    }
+
+    const { data: courseEnrolled } = await supabase
+      .from('enrollments')
+      .select('id')
+      .eq('user_id', req.user.id)
+      .eq('course_id', lesson.course_id)
+      .maybeSingle();
+    if (courseEnrolled) return res.json({ data: lesson });
+
+    return res.json({
+      data: {
+        id: lesson.id,
+        title: lesson.title,
+        sort_order: lesson.sort_order,
+        content_type: lesson.content_type,
+        duration_minutes: lesson.duration_minutes,
+        is_free: lesson.is_free,
+        preview_text: lesson.preview_text,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

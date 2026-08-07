@@ -5,6 +5,7 @@ import Dialog from '../../components/ui/Dialog';
 import { Icon } from '../../lib/icons';
 import { getXp, addXp } from '../../lib/xp';
 import { api } from '../../lib/api';
+import { useAuth } from '../auth/AuthContext';
 
 const CATEGORIES = {
   hoc_lieu: { label: 'Tủ học liệu', color: 'var(--blue)' },
@@ -31,6 +32,7 @@ const ICON_MAP = {
 };
 
 export default function RewardsPage() {
+  const { isPlus } = useAuth();
   const [tab, setTab] = useState('shop');
   const [xp, setXpState] = useState(getXp);
   const [items, setItems] = useState([]);
@@ -55,13 +57,15 @@ export default function RewardsPage() {
   const grouped = useMemo(() => {
     const map = {};
     items.forEach(item => {
+      if (item.tier === 'plus' && !isPlus) return;
       if (!map[item.category]) map[item.category] = [];
       map[item.category].push(item);
     });
     return map;
-  }, [items]);
+  }, [items, isPlus]);
 
   function handleRedeem(item) {
+    if (item.tier === 'plus' && !isPlus) return;
     if (xp < item.price || owned.includes(item.id)) return;
     const newXp = addXp(-item.price);
     setXpState(newXp);
@@ -173,6 +177,11 @@ export default function RewardsPage() {
                       <Card key={item.id} className="reward-card">
                         <div className="reward-card-icon"><ItemIcon size={32} /></div>
                         <h3 className="reward-card-name">{item.name}</h3>
+                        {item.tier === 'plus' && (
+                          <span className="pill" style={{ background: 'linear-gradient(135deg, #a855f7, #8b5cf6)', color: '#fff', fontSize: 9, marginBottom: 8 }}>
+                            <Icon.Gem size={8} style={{ verticalAlign: 'middle', marginRight: 2 }} /> Plus
+                          </span>
+                        )}
                         <p className="reward-card-desc">{item.desc_text}</p>
                         <div className="reward-card-price">{item.price} XP</div>
                         {isOwned ? (

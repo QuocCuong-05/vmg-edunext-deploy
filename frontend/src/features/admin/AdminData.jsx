@@ -86,7 +86,8 @@ function splitLine(line) {
 const TABS = [
   { key: 'import', label: 'Nhập CSV', icon: Icon.Download },
   { key: 'orders', label: 'Đơn hàng', icon: Icon.CartAlt },
-  { key: 'courses', label: 'Khóa trả phí', icon: Icon.Courses },
+  { key: 'plus', label: 'Tài khoản Plus', icon: Icon.Gem },
+  { key: 'courses', label: 'Khóa Premium', icon: Icon.Courses },
   { key: 'settings', label: 'Cấu hình', icon: Icon.Cog },
 ];
 
@@ -94,6 +95,8 @@ const badge = (status) => {
   if (status === 'paid') return <span className="admin-badge green">Đã thanh toán</span>;
   if (status === 'pending') return <span className="admin-badge gold">Chờ xác nhận</span>;
   if (status === 'cancelled') return <span className="admin-badge gray">Đã hủy</span>;
+  if (status === 'active') return <span className="admin-badge green">Hoạt động</span>;
+  if (status === 'expired') return <span className="admin-badge red">Hết hạn</span>;
   return <span className="admin-badge red">{status}</span>;
 };
 
@@ -111,10 +114,12 @@ export default function AdminData() {
   const fileRef = useRef(null);
 
   const [orders, setOrders] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
   const [courses, setCourses] = useState([]);
   const [lessons, setLessons] = useState([]);
   const [courseForm, setCourseForm] = useState({});
   const [settings, setSettings] = useState({});
+  const [activateForm, setActivateForm] = useState({ userId: '', period: '1' });
 
   function handleFileChange(e) {
     const file = e.target.files[0];
@@ -192,9 +197,13 @@ export default function AdminData() {
   async function loadSettings() {
     try { setSettings(await api.admin.settings()); } catch {}
   }
+  async function loadSubscriptions() {
+    try { setSubscriptions(await api.admin.subscriptions()); } catch {}
+  }
 
   useEffect(() => {
     if (tab === 'orders') loadOrders();
+    if (tab === 'plus') loadSubscriptions();
     if (tab === 'courses') loadCourses();
     if (tab === 'settings') loadSettings();
   }, [tab]);
@@ -203,6 +212,30 @@ export default function AdminData() {
     try {
       await api.admin.approveOrder(id);
       await loadOrders();
+    } catch (err) { setError(err.message); }
+  }
+
+  async function handleRenewSubscription(id) {
+    try {
+      await api.admin.renewSubscription(id);
+      await loadSubscriptions();
+    } catch (err) { setError(err.message); }
+  }
+
+  async function handleCancelSubscription(id) {
+    try {
+      await api.admin.cancelSubscription(id);
+      await loadSubscriptions();
+    } catch (err) { setError(err.message); }
+  }
+
+  async function handleActivateSubscription() {
+    if (!activateForm.userId.trim()) { setError('Nhập user_id của tài khoản'); return; }
+    try {
+      await api.admin.activateSubscription(activateForm.userId.trim(), Number(activateForm.period) || 1);
+      setActivateForm({ userId: '', period: '1' });
+      await loadSubscriptions();
+      setError('');
     } catch (err) { setError(err.message); }
   }
 
@@ -408,7 +441,7 @@ export default function AdminData() {
                   <tr>
                     <th>Mã đơn</th>
                     <th>Người mua</th>
-                    <th>Khóa học</th>
+                    <th>Sản phẩm</th>
                     <th>Số tiền</th>
                     <th>Phương thức</th>
                     <th>Trạng thái</th>
@@ -421,7 +454,11 @@ export default function AdminData() {
                     <tr key={o.id}>
                       <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{o.order_no}</td>
                       <td>{o.full_name || o.profiles?.full_name || o.user_id?.slice(0, 8)}</td>
-                      <td>{o.courses?.title}</td>
+                      <td>
+                        {o.item_type === 'plus'
+                          ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon.Gem size={12} /> Gói Plus {o.period} tháng</span>
+                          : (o.courses?.title || '—')}
+                      </td>
                       <td style={{ fontWeight: 700 }}>{(o.amount || 0).toLocaleString('vi-VN')} đ</td>
                       <td style={{ fontSize: 12 }}>{o.method === 'bank_transfer' ? 'Chuyển khoản' : o.method}</td>
                       <td>{badge(o.status)}</td>
@@ -440,24 +477,103 @@ export default function AdminData() {
         </div>
       )}
 
+      {tab === 'plus' && (
+        <div className="admin-panel">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <h3 style={{ margin: 0 }}>Tài khoản Plus</h3>
+            <button className="admin-btn-ghost" onClick={loadSubscriptions}>Làm mới</button>
+          </div>
+
+          <div style={{ marginBottom: 20, padding: 16, background: 'var(--surface-hover)', border: '1px solid var(--line)', borderRadius: 12 }}>
+            <b style={{ fontSize: 13, marginBottom: 10, display: 'block' }}>Kích hoạt thủ công (khi nhận chuyển khoản không qua đơn hàng)</b>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <label style={{ display: 'block', fontWeight: 700, fontSize: 11, marginBottom: 5, color: 'var(--muted)' }}>User ID</label>
+                <input
+                  className="admin-input"
+                  placeholder="uuid của tài khoản (lấy từ bảng profiles)"
+                  value={activateForm.userId}
+                  onChange={e => setActivateForm({ ...activateForm, userId: e.target.value })}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontWeight: 700, fontSize: 11, marginBottom: 5, color: 'var(--muted)' }}>Kỳ hạn</label>
+                <select
+                  className="admin-input"
+                  value={activateForm.period}
+                  onChange={e => setActivateForm({ ...activateForm, period: e.target.value })}
+                >
+                  {[1, 3, 6, 12].map(p => <option key={p} value={p}>{p} tháng</option>)}
+                </select>
+              </div>
+              <button className="admin-btn" onClick={handleActivateSubscription}>Kích hoạt Plus</button>
+            </div>
+          </div>
+
+          {subscriptions.length === 0 ? (
+            <p className="admin-note">Chưa có tài khoản Plus nào.</p>
+          ) : (
+            <div className="admin-table-wrap">
+              <table className="admin-table" style={{ minWidth: 720 }}>
+                <thead>
+                  <tr>
+                    <th>Người dùng</th>
+                    <th>Gói</th>
+                    <th>Giá</th>
+                    <th>Bắt đầu</th>
+                    <th>Hết hạn</th>
+                    <th>Trạng thái</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {subscriptions.map(s => {
+                    const isExpired = s.status === 'active' && new Date(s.end_at) < new Date();
+                    return (
+                      <tr key={s.id}>
+                        <td>{s.full_name || s.user_id?.slice(0, 8)}</td>
+                        <td><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon.Gem size={12} /> Plus {s.period} tháng</span></td>
+                        <td>{s.price ? `${(s.price || 0).toLocaleString('vi-VN')} đ` : '—'}</td>
+                        <td style={{ fontSize: 12, color: 'var(--muted)' }}>{s.start_at ? new Date(s.start_at).toLocaleDateString('vi-VN') : ''}</td>
+                        <td style={{ fontSize: 12, color: 'var(--muted)' }}>{s.end_at ? new Date(s.end_at).toLocaleDateString('vi-VN') : ''}</td>
+                        <td>{badge(isExpired ? 'expired' : s.status)}</td>
+                        <td style={{ display: 'flex', gap: 6 }}>
+                          <button className="admin-btn" onClick={() => handleRenewSubscription(s.id)}>Gia hạn</button>
+                          {s.status === 'active' && !isExpired && (
+                            <button className="admin-btn-ghost" onClick={() => handleCancelSubscription(s.id)}>Hủy</button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {tab === 'courses' && (
         <div className="admin-panel">
-          <h3>Khóa trả phí — đặt giá &amp; preview</h3>
+          <h3>Khóa Premium — đặt trạng thái &amp; preview</h3>
+          <p className="admin-note" style={{ marginBottom: 16 }}>
+            Khóa Premium chỉ mở khi tài khoản có gói Plus — không bán lẻ từng khóa. Giá để tham khảo/nội bộ.
+          </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {courses.map(c => {
               const f = courseForm[c.id] || {};
-              const paid = c.access_type === 'paid';
+              const premium = c.access_type === 'premium' || c.access_type === 'paid';
               return (
                 <div key={c.id} style={{ padding: 16, background: 'var(--surface-hover)', border: '1px solid var(--line)', borderRadius: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
                     <b style={{ fontSize: 14 }}>{c.title}</b>
-                    <span className={`admin-badge ${paid ? 'red' : 'gray'}`}>
-                      {paid ? 'Trả phí' : 'Miễn phí'}
+                    <span className={`admin-badge ${premium ? 'red' : 'gray'}`}>
+                      {premium ? 'Premium' : 'Miễn phí'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 12 }}>
                     <div>
-                      <label style={{ display: 'block', fontWeight: 700, fontSize: 11, marginBottom: 5, color: 'var(--muted)' }}>Giá (đ)</label>
+                      <label style={{ display: 'block', fontWeight: 700, fontSize: 11, marginBottom: 5, color: 'var(--muted)' }}>Giá tham khảo (đ)</label>
                       <input type="number" className="admin-input" style={{ width: 140 }}
                         value={f.price ?? c.price ?? ''}
                         onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, price: e.target.value } })} />
@@ -468,8 +584,8 @@ export default function AdminData() {
                         value={f.sale_price ?? c.sale_price ?? ''}
                         onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, sale_price: e.target.value } })} />
                     </div>
-                    <button className="admin-btn" onClick={() => handleSavePaid(c.id)}>Đặt trả phí</button>
-                    {paid && (
+                    <button className="admin-btn" onClick={() => handleSavePaid(c.id)}>Đặt Premium</button>
+                    {premium && (
                       <button className="admin-btn-ghost" onClick={() => handleSetFree(c.id)}>Chuyển miễn phí</button>
                     )}
                   </div>

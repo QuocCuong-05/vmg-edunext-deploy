@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
-import { syncXp } from '../../lib/xp';
+import { syncXp, setPlusFlag } from '../../lib/xp';
 
 const AuthContext = createContext(null);
 
@@ -9,6 +9,11 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  function applyUser(data) {
+    setPlusFlag(data?.user?.plus?.active);
+    setUser(data?.user || null);
+  }
 
   useEffect(() => {
     restoreSession();
@@ -30,7 +35,7 @@ export function AuthProvider({ children }) {
 
       if (res.ok) {
         const data = await res.json();
-        setUser(data.user);
+        applyUser(data);
         localStorage.setItem('vmg_token', session.access_token);
         syncXp();
       } else {
@@ -79,7 +84,7 @@ export function AuthProvider({ children }) {
     }
 
     const meData = await meRes.json();
-    setUser(meData.user);
+    applyUser(meData);
     syncXp();
     return meData.user;
   }, []);
@@ -120,7 +125,7 @@ export function AuthProvider({ children }) {
     }
 
     const meData = await meRes.json();
-    setUser(meData.user);
+    applyUser(meData);
     syncXp();
     return meData.user;
   }, []);
@@ -133,6 +138,7 @@ export function AuthProvider({ children }) {
       // ignore network errors on logout
     }
     localStorage.removeItem('vmg_token');
+    setPlusFlag(false);
     setUser(null);
   }, []);
 
@@ -144,12 +150,23 @@ export function AuthProvider({ children }) {
     });
     if (!res.ok) return null;
     const data = await res.json();
-    setUser(data.user);
+    applyUser(data);
     return data.user;
   }, []);
 
+  const consumeAiUsage = useCallback((kind) => {
+    setUser(prev => {
+      if (!prev?.aiUsage) return prev;
+      const key = `${kind}Left`;
+      if (typeof prev.aiUsage[key] !== 'number') return prev;
+      return { ...prev, aiUsage: { ...prev.aiUsage, [key]: Math.max(0, prev.aiUsage[key] - 1) } };
+    });
+  }, []);
+
+  const isPlus = !!user?.plus?.active;
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, refreshUser, consumeAiUsage, isPlus }}>
       {children}
     </AuthContext.Provider>
   );

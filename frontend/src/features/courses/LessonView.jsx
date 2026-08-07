@@ -24,7 +24,7 @@ function saveEnroll(slug, data) {
 export default function LessonView() {
   const { slug, lessonId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isPlus } = useAuth();
   const showToast = useToast();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ export default function LessonView() {
   }, [slug]);
 
   useEffect(() => {
-    if (course?.access_type === 'paid' && user?.id) {
+    if ((course?.access_type === 'premium' || course?.access_type === 'paid') && user?.id) {
       api.unlock.courseIds(user.id).then(ids => setUnlocked(ids.has(course.id))).catch(() => {});
     }
   }, [course, user?.id]);
@@ -51,7 +51,7 @@ export default function LessonView() {
   }, [lessonId]);
 
   useEffect(() => {
-    if (course?.access_type === 'paid') {
+    if (course?.access_type === 'premium' || course?.access_type === 'paid') {
       api.orders.publicSettings()
         .then(s => setPreviewSeconds(Number(s?.preview_seconds) || 120))
         .catch(() => {});
@@ -79,7 +79,8 @@ export default function LessonView() {
   const enroll = loadEnroll(slug);
   const isFree = lesson.is_free;
   const isEnrolled = enroll?.enrolled;
-  const canAccess = course.access_type === 'paid' ? unlocked : isEnrolled;
+  const isPremium = course.access_type === 'premium' || course.access_type === 'paid';
+  const canAccess = isPremium ? (isPlus || unlocked) : isEnrolled;
   const isLessonCompleted = enroll?.completed_lessons?.includes(lessonId) || false;
 
   if (!isFree && !canAccess) {
@@ -87,13 +88,13 @@ export default function LessonView() {
       <div>
         <div className="back-btn" onClick={() => navigate(`/courses/${slug}`)}><Icon.ArrowLeft size={14} /> Quay lại khóa học</div>
         <div className="empty">
-          <h3>Bài học này thuộc khóa học trả phí</h3>
+          <h3>Bài học này thuộc khóa học Premium</h3>
           {lesson.preview_text && (
             <p style={{ fontSize: 13, color: 'var(--muted)', maxWidth: 520, margin: '8px auto 0', lineHeight: 1.7 }}>
               {lesson.preview_text}
             </p>
           )}
-          <Button size="sm" variant="primary" label="Đăng ký khóa học" onClick={() => navigate(`/courses/${slug}`)} style={{ marginTop: 12 }} />
+          <Button size="sm" variant="primary" label="Nâng cấp Plus để xem" onClick={() => navigate('/plus')} style={{ marginTop: 12 }} />
         </div>
       </div>
     );
@@ -119,7 +120,7 @@ export default function LessonView() {
 
   const dur = lesson.video_duration_seconds || lesson.duration || 0;
   const content = lesson.article_body || '<p>Nội dung bài học đang được cập nhật...</p>';
-  const isPreviewMode = course.access_type === 'paid' && !canAccess && lesson.is_free;
+  const isPreviewMode = isPremium && !canAccess && lesson.is_free;
 
   const videoSrc = (() => {
     if (!lesson.video_url) return null;
@@ -167,11 +168,11 @@ export default function LessonView() {
           <div>
             <b style={{ fontSize: 14 }}>Bạn đang xem {Math.round(previewSeconds / 60)} phút đầu của bài học</b>
             <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
-              Đăng ký khóa học để xem toàn bộ.
+              Nâng cấp Plus để xem toàn bộ.
             </p>
           </div>
-          <Button size="sm" variant="primary" onClick={() => navigate(`/courses/${slug}/register`)}>
-            Đăng ký khóa học
+          <Button size="sm" variant="primary" onClick={() => navigate('/plus')}>
+            Nâng cấp Plus
           </Button>
         </div>
       )}

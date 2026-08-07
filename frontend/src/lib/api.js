@@ -71,18 +71,8 @@ export const api = {
     },
   },
   courses: {
-    list: async () => {
-      const { data, error } = await supabase.from('courses').select('*').eq('is_published', true);
-      if (error) throw error;
-      return data;
-    },
-    get: async (slug) => {
-      const { data: course, error } = await supabase.from('courses').select('*').eq('slug', slug).single();
-      if (error) throw error;
-      const { data: lessons, error: lerr } = await supabase.from('lessons').select('*').eq('course_id', course.id).order('sort_order');
-      if (lerr) throw lerr;
-      return { ...course, lessons: lessons || [] };
-    },
+    list: async () => request('/courses'),
+    get: async (slug) => request(`/courses/${slug}`),
   },
   vimi: {
     chat: (message) => request('/vimi/chat', { method: 'POST', body: JSON.stringify({ message }) }),
@@ -113,9 +103,19 @@ export const api = {
   },
   vocabulary: {
     list: async () => fromDb(await supabase.from('vocabulary_entries').select('*').eq('is_published', true)),
+    canAdd: async (userId) => {
+      const { data, error } = await supabase.rpc('check_wordbook_limit', { p_user_id: userId });
+      if (error) throw error;
+      return !!data;
+    },
     saved: {
       list: async (userId) => fromDb(await supabase.from('user_vocabulary').select('*, vocabulary_entries(*)').eq('user_id', userId)),
-      add: async (userId, entryId) => fromDb(await supabase.from('user_vocabulary').insert({ user_id: userId, vocabulary_entry_id: entryId }).select().single()),
+      add: async (userId, entryId) => {
+        if (!(await api.vocabulary.canAdd(userId))) {
+          throw new Error('Sổ từ đã đạt giới hạn 100 từ. Nâng cấp Plus để lưu không giới hạn.');
+        }
+        return fromDb(await supabase.from('user_vocabulary').insert({ user_id: userId, vocabulary_entry_id: entryId }).select().single());
+      },
       remove: async (userId, entryId) => fromDb(await supabase.from('user_vocabulary').delete().eq('user_id', userId).eq('vocabulary_entry_id', entryId)),
     },
   },
@@ -145,6 +145,9 @@ export const api = {
         return null;
       }
     },
+    submit: async (quizSetId, answers) =>
+      request('/quiz/submit', { method: 'POST', body: JSON.stringify({ quiz_set_id: quizSetId, answers }) }),
+    attempts: async () => request('/quiz/attempts'),
   },
   community: {
     posts: {
@@ -401,6 +404,8 @@ export const api = {
   orders: {
     create: async (courseId, method = 'bank_transfer') =>
       request('/orders/create', { method: 'POST', body: JSON.stringify({ course_id: courseId, method }) }),
+    createPlus: async (period) =>
+      request('/orders/create', { method: 'POST', body: JSON.stringify({ plan: 'plus', period }) }),
     confirmTransfer: async (orderId) =>
       request(`/orders/${orderId}/confirm-transfer`, { method: 'POST' }),
     mine: async () => request('/orders/mine'),
@@ -429,6 +434,13 @@ export const api = {
     settings: async () => request('/admin/settings'),
     saveSetting: async (key, value) =>
       request('/admin/settings', { method: 'POST', body: JSON.stringify({ key, value }) }),
+    subscriptions: async () => request('/admin/subscriptions'),
+    activateSubscription: async (userId, period) =>
+      request('/admin/subscriptions/activate', { method: 'POST', body: JSON.stringify({ user_id: userId, period }) }),
+    renewSubscription: async (id) =>
+      request(`/admin/subscriptions/${id}/renew`, { method: 'POST' }),
+    cancelSubscription: async (id) =>
+      request(`/admin/subscriptions/${id}/cancel`, { method: 'POST' }),
   },
   ranking: {
     list: async ({ ward, school, limit = 50 } = {}) => {

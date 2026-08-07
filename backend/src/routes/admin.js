@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabaseAdmin } from '../config/database.js';
 import { importTable, TABLES } from '../lib/seedData.js';
+import { activatePlus } from '../lib/plus.js';
 
 const router = Router();
 
@@ -72,6 +73,12 @@ router.post('/orders/:id/approve', async (req, res, next) => {
       .from('orders')
       .update({ status: 'paid', paid_at: new Date().toISOString(), confirmed_by: req.user.id })
       .eq('id', order.id);
+
+    if (order.item_type === 'plus') {
+      await activatePlus(order.user_id, null, order.period, order.amount, req.user.id);
+      return res.json({ ok: true });
+    }
+
     await supabaseAdmin
       .from('enrollments')
       .insert({ user_id: order.user_id, course_id: order.course_id, status: 'active' });
@@ -96,7 +103,7 @@ router.post('/courses/paid', async (req, res, next) => {
     if (!courseId || !price) return res.status(400).json({ error: 'course_id và price là bắt buộc' });
     const { data, error } = await supabaseAdmin
       .from('courses')
-      .update({ access_type: 'paid', price: Math.round(price), sale_price: salePrice ? Math.round(salePrice) : null })
+      .update({ access_type: 'premium', price: Math.round(price), sale_price: salePrice ? Math.round(salePrice) : null })
       .eq('id', courseId)
       .select('id, title, access_type, price, sale_price')
       .single();
@@ -160,6 +167,82 @@ router.post('/settings', async (req, res, next) => {
       .from('app_settings')
       .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
       .select('*');
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/subscriptions', async (_req, res, next) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('subscriptions')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+
+    const userIds = [...new Set((data || []).map(s => s.user_id))];
+    let profileMap = {};
+    if (userIds.length) {
+      const { data: profiles } = await supabaseAdmin
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+      (profiles || []).forEach(p => { profileMap[p.id] = p.full_name; });
+    }
+    res.json((data || []).map(s => ({ ...s, full_name: profileMap[s.user_id] || null })));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/subscriptions/activate', async (req, res, next) => {
+  try {
+    const { user_id: userId, period } = req.body;
+    if (!userId) return res.status(400).json({ error: 'user_id là bắt buộc' });
+    const p = Number(period) || 1;
+    if (![1, 3, 6, 12].includes(p)) return res.status(400).json({ error: 'period phải là 1, 3, 6 hoặc 12' });
+    const sub = await activatePlus(userId, null, p, null, req.user.id);
+    res.json(sub);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/subscriptions/:id/renew', async (req, res, next) => {
+  try {
+    const { data: sub } = await supabaseAdmin
+      .from('subscriptions')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle();
+    if (!sub) return res.status(404).json({ error: 'Không tìm thấy tài khoản Plus' });
+    const base = new Date(Math.max(new Date(sub.end_at).getTime(), Date.now()));
+    const end = new Date(base);
+    end.setUTCMonth(end.getUTCMonth() + sub.period);
+    const { data, error } = await supabaseAdmin
+      .from('subscriptions')
+      .update({ status: 'active', end_at: end.toISOString(), updated_at: new Date().toISOString() })
+      .eq('id', sub.id)
+      .select('*')
+      .single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/subscriptions/:id/cancel', async (req, res, next) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('subscriptions')
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq('id', req.params.id)
+      .select('*')
+      .single();
     if (error) throw error;
     res.json(data);
   } catch (err) {

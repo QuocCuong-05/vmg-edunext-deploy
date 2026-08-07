@@ -26,6 +26,7 @@ import UserProfilePage from './features/community/UserProfilePage';
 import BlogPage from './features/blog/BlogPage';
 import BookingPage from './features/booking/BookingPage';
 import RewardsPage from './features/rewards/RewardsPage';
+import PlusPage from './features/plus/PlusPage';
 import AdminData from './features/admin/AdminData';
 import AdminRoute from './features/auth/AdminRoute';
 import AccountPage from './features/profile/AccountPage';
@@ -71,6 +72,7 @@ export default function App() {
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/rewards" element={<RewardsPage />} />
+        <Route path="/plus" element={<PlusPage />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/password" element={<ChangePasswordPage />} />
       </Route>

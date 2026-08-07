@@ -27,14 +27,14 @@ const COVER_MAP = {
 export default function CourseDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isPlus } = useAuth();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [enrolled, setEnrolled] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
 
-  const isPaid = course?.access_type === 'paid';
-  const canAccess = isPaid ? unlocked : enrolled;
+  const isPremium = course?.access_type === 'premium' || course?.access_type === 'paid';
+  const canAccess = isPremium ? (isPlus || unlocked) : enrolled;
 
   useEffect(() => {
     if (!slug) return;
@@ -42,7 +42,7 @@ export default function CourseDetail() {
       setCourse(data);
       const e = loadEnroll(slug);
       setEnrolled(e?.enrolled || false);
-      if (data.access_type === 'paid' && user?.id) {
+      if ((data.access_type === 'premium' || data.access_type === 'paid') && user?.id) {
         try {
           const ids = await api.unlock.courseIds(user.id);
           setUnlocked(ids.has(data.id));
@@ -75,7 +75,6 @@ export default function CourseDetail() {
 
   const cover = COVER_MAP[course.category] || { color: 'red', icon: Icon.Courses };
   const C = cover.icon;
-  const price = course.sale_price ?? course.price;
 
   return (
     <div className="page-enter">
@@ -89,8 +88,10 @@ export default function CourseDetail() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <h1 style={{ fontSize: 24, marginBottom: 8 }}>
               {course.title}{' '}
-              {isPaid && (
-                <span className="pill" style={{ background: 'var(--red)', color: '#fff', fontSize: 10, verticalAlign: 'middle' }}>Trả phí</span>
+              {isPremium && (
+                <span className="pill" style={{ background: 'var(--red)', color: '#fff', fontSize: 10, verticalAlign: 'middle' }}>
+                  <Icon.Gem size={9} style={{ verticalAlign: 'middle', marginRight: 2 }} /> Gói Plus
+                </span>
               )}
             </h1>
             <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 12 }}>{course.description}</p>
@@ -99,12 +100,9 @@ export default function CourseDetail() {
               <span className="pill">{course.lesson_count} bài học</span>
               <span className="pill">{course.duration_hours} giờ</span>
               <span className="pill">{course.instructor}</span>
-              {isPaid && price != null && (
+              {isPremium && (
                 <span className="pill" style={{ background: 'var(--gold-bg)', color: 'var(--gold)', fontWeight: 800 }}>
-                  {price.toLocaleString('vi-VN')} đ
-                  {course.sale_price != null && course.sale_price < course.price && (
-                    <s style={{ marginLeft: 6, fontWeight: 500, opacity: .7 }}>{(course.price).toLocaleString('vi-VN')} đ</s>
-                  )}
+                  Mở toàn bộ khi có Plus
                 </span>
               )}
             </div>
@@ -115,18 +113,18 @@ export default function CourseDetail() {
           <div className="enroll-bar">
             <div>
               <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>
-                {isPaid ? 'Đăng ký khóa học này' : 'Bắt đầu khóa học này'}
+                {isPremium ? 'Khóa học dành cho tài khoản Plus' : 'Bắt đầu khóa học này'}
               </p>
               <p>
-                {isPaid
-                  ? `Truy cập toàn bộ ${course.lesson_count} bài học sau khi thanh toán.`
+                {isPremium
+                  ? `Nâng cấp Plus để truy cập toàn bộ ${course.lesson_count} bài học và mọi khóa học premium.`
                   : `Truy cập tất cả ${course.lesson_count} bài học và theo dõi tiến độ của bạn.`}
               </p>
             </div>
-            {isPaid ? (
+            {isPremium ? (
               <Button style={{ background: 'var(--card)', color: 'var(--red)', fontWeight: 800, padding: '12px 28px' }}
-                onClick={() => navigate(`/courses/${slug}/register`)}>
-                Đăng ký khóa học <Icon.ArrowRight size={16} />
+                onClick={() => navigate('/plus')}>
+                Nâng cấp Plus <Icon.ArrowRight size={16} />
               </Button>
             ) : (
               <Button style={{ background: 'var(--card)', color: 'var(--red)', fontWeight: 800, padding: '12px 28px' }}
@@ -139,7 +137,7 @@ export default function CourseDetail() {
           <div style={{ marginTop: 20, marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600 }}>
-                {isPaid ? 'Đã mở khóa' : `Tiến độ: ${enroll.progress_pct}%`}
+                {isPremium ? 'Đã mở khóa' : `Tiến độ: ${enroll.progress_pct}%`}
               </span>
               <span style={{ fontSize: 12, color: 'var(--muted)' }}>{completedIds.length}/{course.lesson_count} bài</span>
             </div>
@@ -162,7 +160,7 @@ export default function CourseDetail() {
               if (canAccess || lesson.is_free) {
                 navigate(`/courses/${course.slug}/lessons/${lesson.id}`);
               } else {
-                navigate(`/courses/${course.slug}/register`);
+                navigate('/plus');
               }
             }}
           >
@@ -188,7 +186,7 @@ export default function CourseDetail() {
                 </span>
               )}
               <span className={`lesson-badge ${lesson.is_free ? 'free' : 'pro'}`}>
-                {lesson.is_free ? (isPaid ? 'Xem trước' : 'Miễn phí') : (isPaid ? 'Trả phí' : 'Pro')}
+                {lesson.is_free ? (isPremium ? 'Xem trước' : 'Miễn phí') : (isPremium ? 'Plus' : 'Pro')}
               </span>
             </div>
           </div>

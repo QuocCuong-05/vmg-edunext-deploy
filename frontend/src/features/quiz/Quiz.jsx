@@ -9,6 +9,7 @@ import { dispatchAction } from '../../lib/quest-engine';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import { useAuth } from '../auth/AuthContext';
 function normalizeQuestions(qs) {
   return (qs.questions || []).map(q => ({
     id: q.id,
@@ -20,6 +21,7 @@ function normalizeQuestions(qs) {
     competency_code: q.competency_code || '',
     level: q.level || 'B1',
     options: (q.options || []).map(o => ({
+      id: o.id,
       option_text: o.option_text,
       is_correct: o.is_correct,
       feedback_correct: o.feedback_correct || '',
@@ -32,10 +34,12 @@ export default function Quiz() {
   const { slug } = useParams();
   const showToast = useToast();
   const location = useLocation();
+  const { isPlus } = useAuth();
   const isChallenge = location.pathname.startsWith('/level/quiz');
   const [quizSet, setQuizSet] = useState(null);
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [loading, setLoading] = useState(!!slug);
+  const [attempts, setAttempts] = useState([]);
 
   useEffect(() => {
     if (slug) {
@@ -74,6 +78,7 @@ export default function Quiz() {
 
   const correctCount = results.filter(r => r.correct).length;
   const score = Math.round((correctCount / allQuestions.length) * 100);
+  const [serverScore, setServerScore] = useState(null);
 
   useEffect(() => {
     if (finished && score >= quiz.passing_score) {
@@ -92,11 +97,19 @@ export default function Quiz() {
     }
   }, [finished, score]);
 
+  useEffect(() => {
+    if (isPlus && !loading) {
+      api.quiz.attempts().then(setAttempts).catch(() => {});
+    }
+  }, [isPlus, loading]);
+
   const handleSelect = (idx) => {
     if (answered) return;
     setSelected(idx);
     setAnswered(true);
     setResults(prev => [...prev, {
+      question_id: question.id,
+      option_id: question.options[idx].id,
       question: question.prompt,
       selected: idx,
       correct: question.options[idx].is_correct,
@@ -108,6 +121,9 @@ export default function Quiz() {
   const handleNext = () => {
     if (isLast) {
       setFinished(true);
+      api.quiz.submit(quizSet.id, results.map(r => ({ question_id: r.question_id, option_id: r.option_id })))
+        .then(res => setServerScore(res?.score ?? null))
+        .catch(() => {});
     } else {
       setCurrentQ(prev => prev + 1);
       setSelected(null);
@@ -121,6 +137,7 @@ export default function Quiz() {
     setAnswered(false);
     setResults([]);
     setFinished(false);
+    setServerScore(null);
     setStarted(true);
   };
 
@@ -170,12 +187,30 @@ export default function Quiz() {
             {isChallenge ? 'Vào thi' : 'Bắt đầu luyện tập'} <Icon.ArrowRight size={16} />
           </Button>
         </Card>
+
+        {isPlus && attempts.length > 0 && (
+          <Card style={{ maxWidth: 600, padding: 24, marginTop: 20 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Lịch sử làm bài của bạn</h3>
+            {attempts.slice(0, 10).map(a => (
+              <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--line)', fontSize: 13 }}>
+                <span>{a.quiz_sets?.title || 'Bài quiz'}</span>
+                <span>
+                  <b style={{ color: a.score >= (quiz?.passing_score || 60) ? 'var(--green)' : 'var(--red)' }}>{a.score}%</b>
+                  <span style={{ color: 'var(--muted)', fontSize: 11, marginLeft: 8 }}>
+                    {new Date(a.created_at).toLocaleDateString('vi-VN')}
+                  </span>
+                </span>
+              </div>
+            ))}
+          </Card>
+        )}
       </div>
     );
   }
 
   if (finished) {
-    const passed = score >= quiz.passing_score;
+    const finalScore = serverScore ?? score;
+    const passed = finalScore >= quiz.passing_score;
     return (
       <div className="page-enter">
         <div className="page-title">
@@ -188,7 +223,7 @@ export default function Quiz() {
             {correctCount}/{allQuestions.length}
           </div>
           <div style={{ fontSize: 20, color: 'var(--muted)', marginBottom: 20 }}>
-            Đạt {score}% — Yêu cầu: {quiz.passing_score}%
+            Đạt {finalScore}% — Yêu cầu: {quiz.passing_score}%
           </div>
           {passed && <div style={{ fontSize: 13, color: 'var(--green)', marginBottom: 16 }}>+{quiz.xp_reward} XP</div>}
 

@@ -26,14 +26,21 @@ export function useStreamChat({ api, initialMessages = [] }) {
       const controller = new AbortController();
       abortRef.current = controller;
 
+      const token = localStorage.getItem('vmg_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch(api, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ messages: newMessages, mode: options.mode || 'chat' }),
         signal: controller.signal,
       });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error || `HTTP ${res.status}`);
+      }
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -52,11 +59,13 @@ export function useStreamChat({ api, initialMessages = [] }) {
           return next;
         });
       }
+      return true;
     } catch (err) {
       if (err.name !== 'AbortError') {
         setError(err.message);
         setMessages(prev => prev.slice(0, -1));
       }
+      return false;
     } finally {
       setIsLoading(false);
       abortRef.current = null;

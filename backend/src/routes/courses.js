@@ -1,8 +1,26 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
+import { hasActivePlus } from '../lib/plus.js';
 
 const router = Router();
+
+function sanitizeLessons(lessons, canAccessFull) {
+  return (lessons || []).map(l => {
+    if (canAccessFull || l.is_free) return l;
+    return {
+      id: l.id,
+      title: l.title,
+      sort_order: l.sort_order,
+      content_type: l.content_type,
+      duration_minutes: l.duration_minutes,
+      duration: l.duration ?? null,
+      video_duration_seconds: l.video_duration_seconds ?? null,
+      is_free: l.is_free,
+      preview_text: l.preview_text,
+    };
+  });
+}
 
 // GET /api/courses — list published courses
 router.get('/', async (_req, res) => {
@@ -20,8 +38,8 @@ router.get('/', async (_req, res) => {
   }
 });
 
-// GET /api/courses/:slug — single course with lessons
-router.get('/:slug', async (req, res) => {
+// GET /api/courses/:slug — single course with lessons (sanitized theo quyền)
+router.get('/:slug', authenticate, async (req, res) => {
   try {
     const { data: course, error: courseError } = await supabase
       .from('courses')
@@ -40,7 +58,18 @@ router.get('/:slug', async (req, res) => {
 
     if (lessonsError) return res.status(400).json({ error: lessonsError.message });
 
-    res.json({ data: { ...course, lessons } });
+    const [plusActive, enrolled] = await Promise.all([
+      hasActivePlus(req.user.id),
+      supabase
+        .from('enrollments')
+        .select('id')
+        .eq('user_id', req.user.id)
+        .eq('course_id', course.id)
+        .maybeSingle(),
+    ]);
+    const canAccessFull = plusActive || !!enrolled?.data;
+
+    res.json({ data: { ...course, lessons: sanitizeLessons(lessons, canAccessFull) } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

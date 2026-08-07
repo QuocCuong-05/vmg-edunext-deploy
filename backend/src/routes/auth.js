@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { supabase, supabaseAdmin } from '../config/database.js';
+import { getPlusStatus, getAiRemaining } from '../lib/plus.js';
 
 const router = Router();
 
@@ -65,11 +66,25 @@ router.get('/me', async (req, res) => {
     .eq('id', user.id)
     .maybeSingle();
 
+  await supabaseAdmin
+    .from('profiles')
+    .update({ last_active_at: new Date().toISOString() })
+    .eq('id', user.id)
+    .then(() => {})
+    .catch(() => {});
+
+  const [plus, aiUsage] = await Promise.all([
+    getPlusStatus(user.id),
+    getAiRemaining(user.id),
+  ]);
+
   res.json({
     user: {
       id: user.id,
       email: user.email,
-      ...(profile || {})
+      ...(profile || {}),
+      plus,
+      aiUsage,
     }
   });
 });

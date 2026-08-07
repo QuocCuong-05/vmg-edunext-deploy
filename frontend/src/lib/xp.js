@@ -1,6 +1,22 @@
 const XP_KEY = 'vmg_xp';
 const INITIAL_XP = 0;
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const PLUS_KEY = 'vmg_is_plus';
+
+export function setPlusFlag(active) {
+  try {
+    if (active) localStorage.setItem(PLUS_KEY, '1');
+    else localStorage.removeItem(PLUS_KEY);
+  } catch {}
+}
+
+function xpMultiplier() {
+  try {
+    return localStorage.getItem(PLUS_KEY) === '1' ? 1.2 : 1;
+  } catch {
+    return 1;
+  }
+}
 
 export function getXp() {
   try {
@@ -28,7 +44,7 @@ function scheduleSync() {
 
 export function addXp(delta) {
   const current = getXp();
-  const next = Math.max(0, current + delta);
+  const next = Math.max(0, current + Math.round(delta * xpMultiplier()));
   setXp(next);
   scheduleSync();
   return next;

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import crypto from 'node:crypto';
 import { supabase, supabaseAdmin, JWT_SECRET } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
+import { activatePlus } from '../lib/plus.js';
 
 const router = Router();
 
@@ -101,9 +102,75 @@ async function getOrderTtlMinutes() {
   return Math.max(1, Math.min(60, minutes));
 }
 
+async function getPlusPrice(period) {
+  const { data } = await supabaseAdmin
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'plus_prices')
+    .maybeSingle();
+  const price = Number(data?.value?.[String(period)]) || 0;
+  if (!price) throw Object.assign(new Error('Giá gói Plus chưa được cấu hình'), { status: 400 });
+  return price;
+}
+
+async function createPlusOrder(req, res, next) {
+  try {
+    const period = Number(req.body.period) || 0;
+    if (![1, 3, 6, 12].includes(period)) {
+      return res.status(400).json({ error: 'period phải là 1, 3, 6 hoặc 12 tháng' });
+    }
+
+    const { data: existing } = await supabaseAdmin
+      .from('orders')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .eq('item_type', 'plus')
+      .eq('status', 'pending')
+      .maybeSingle();
+    if (existing && new Date(existing.expires_at) > new Date()) {
+      return res.json({ order: existing, existing: true });
+    }
+
+    const amount = await getPlusPrice(period);
+    const ttlMinutes = await getOrderTtlMinutes();
+    const order = {
+      order_no: genOrderNo(),
+      user_id: req.user.id,
+      item_type: 'plus',
+      plan: 'plus',
+      period,
+      amount,
+      method: 'bank_transfer',
+      status: 'pending',
+      expires_at: new Date(Date.now() + ttlMinutes * 60 * 1000).toISOString(),
+    };
+    const { data: created, error } = await supabaseAdmin
+      .from('orders')
+      .insert(order)
+      .select('*')
+      .single();
+    if (error) throw error;
+
+    const role = await getProfileRole(req.user.id);
+    const isAdmin = ['admin', 'super_admin'].includes(role);
+    const result = { order: created, existing: false, qr_type: isAdmin ? 'approve' : 'transfer' };
+    if (isAdmin) {
+      const origin = req.get('origin') || process.env.FRONTEND_URL || '';
+      result.approve_url = `${origin}/order-approve/${created.id}?token=${signApproveToken(created.id)}`;
+    }
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
 router.post('/create', authenticate, async (req, res, next) => {
   try {
-    const { course_id: courseId } = req.body;
+    const { course_id: courseId, plan, period } = req.body;
+
+    if (plan === 'plus') {
+      return await createPlusOrder(req, res, next);
+    }
     if (!courseId) return res.status(400).json({ error: 'course_id is required' });
 
     const { data: course, error: courseErr } = await supabase
@@ -202,14 +269,14 @@ router.post('/:id/confirm-transfer', authenticate, async (req, res, next) => {
     if (!order) return res.status(404).json({ error: 'Đơn hàng không tồn tại' });
     if (order.user_id !== req.user.id) return res.status(403).json({ error: 'Không phải đơn của bạn' });
     if (order.status === 'paid') {
-      return res.json({ unlocked: true, course_id: order.course_id });
+      return res.json({ unlocked: true, item_type: order.item_type, course_id: order.course_id });
     }
     if (order.status !== 'pending') return res.status(400).json({ error: 'Đơn hàng đã xử lý' });
     if (order.expires_at && new Date(order.expires_at) < new Date()) {
       return res.status(400).json({ error: 'Đơn hàng đã hết hạn, vui lòng tạo đơn mới' });
     }
 
-    res.json({ status: 'awaiting_confirmation', course_id: order.course_id });
+    res.json({ status: 'awaiting_confirmation', item_type: order.item_type, course_id: order.course_id });
   } catch (err) {
     next(err);
   }
@@ -222,11 +289,19 @@ router.get('/:id/approve-info', async (req, res, next) => {
 
     const { data: order } = await supabaseAdmin
       .from('orders')
-      .select('id, order_no, amount, status, expires_at, courses(title, slug)')
+      .select('id, order_no, amount, status, expires_at, item_type, plan, period, courses(title, slug)')
       .eq('id', orderId)
       .maybeSingle();
     if (!order) return res.status(404).json({ error: 'Đơn hàng không tồn tại' });
-    res.json({ order_no: order.order_no, amount: order.amount, status: order.status, course: order.courses });
+    res.json({
+      order_no: order.order_no,
+      amount: order.amount,
+      status: order.status,
+      item_type: order.item_type,
+      plan: order.plan,
+      period: order.period,
+      course: order.courses,
+    });
   } catch (err) {
     next(err);
   }
@@ -248,6 +323,10 @@ router.post('/:id/approve', async (req, res, next) => {
     }
     if (order.status !== 'pending') return res.status(400).json({ error: 'Đơn hàng đã xử lý' });
 
+    if (order.item_type === 'plus') {
+      await activatePlus(order.user_id, order.id, order.period, order.amount, null);
+      return res.json({ ok: true });
+    }
     await unlockCourse(order.user_id, order.course_id, order.id, null);
     res.json({ ok: true });
   } catch (err) {

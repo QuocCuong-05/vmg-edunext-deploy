@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { VMG_SYSTEM_PROMPT, SPEAKING_SYSTEM_PROMPT, LESSON_PLAN_SYSTEM_PROMPT } from '../lib/vmg-prompts.js';
+import { authenticate } from '../middleware/auth.js';
+import { canUseAi, incrementAiUsage } from '../lib/plus.js';
 
 const router = Router();
 
@@ -9,7 +11,7 @@ function stripEmoji(text) {
 
 console.log('[ViMi-AI] FPT_API_KEY loaded:', !!process.env.FPT_API_KEY);
 
-router.post('/chat', async (req, res) => {
+router.post('/chat', authenticate, async (req, res) => {
   try {
     const { messages, mode } = req.body;
     console.log('[ViMi-AI] POST /chat mode=%s messages=%d key_present=%s',
@@ -19,6 +21,13 @@ router.post('/chat', async (req, res) => {
     }
 
     const isSpeaking = mode === 'speaking';
+    const kind = isSpeaking ? 'speaking' : 'chat';
+    const gate = await canUseAi(req.user.id, kind);
+    if (!gate.ok) {
+      const label = isSpeaking ? 'luyện nói hôm nay' : 'chat hôm nay';
+      return res.status(403).json({ error: `Bạn đã dùng hết lượt ${label}`, remaining: 0 });
+    }
+
     const system = isSpeaking ? SPEAKING_SYSTEM_PROMPT : VMG_SYSTEM_PROMPT;
 
     const cleanedMessages = messages.map(m => {
@@ -54,7 +63,9 @@ router.post('/chat', async (req, res) => {
           'Content-Type': 'text/plain; charset=utf-8',
           'Transfer-Encoding': 'chunked',
           'X-Stream': 'true',
+          'X-Remaining': String(gate.remaining ?? ''),
         });
+        incrementAiUsage(req.user.id, kind).catch(err => console.error('[ViMi-AI] usage increment failed:', err.message));
         const decoder = new TextDecoder();
         while (true) {
           const { done, value } = await reader.read();
@@ -81,13 +92,18 @@ router.post('/chat', async (req, res) => {
   }
 });
 
-router.post('/lesson-plan', async (req, res) => {
+router.post('/lesson-plan', authenticate, async (req, res) => {
   try {
     const { topic, grade_level, level, duration, focus } = req.body;
     console.log('[ViMi-AI] POST /lesson-plan topic=%s grade_level=%s level=%s duration=%s focus=%s key_present=%s',
       topic, grade_level, level, duration, focus, !!process.env.FPT_API_KEY);
     if (!topic) {
       return res.status(400).json({ error: 'Topic is required' });
+    }
+
+    const gate = await canUseAi(req.user.id, 'lesson_plan');
+    if (!gate.ok) {
+      return res.status(403).json({ error: 'Bạn đã dùng hết lượt thiết kế bài dạy tuần này', remaining: 0 });
     }
 
     if (process.env.FPT_API_KEY) {
@@ -118,7 +134,9 @@ Return ONLY valid JSON obeying the output format specified in the system prompt.
         res.writeHead(200, {
           'Content-Type': 'text/plain; charset=utf-8',
           'Transfer-Encoding': 'chunked',
+          'X-Remaining': String(gate.remaining ?? ''),
         });
+        incrementAiUsage(req.user.id, 'lesson_plan').catch(err => console.error('[ViMi-AI] usage increment failed:', err.message));
         const decoder = new TextDecoder();
         while (true) {
           const { done, value } = await reader.read();

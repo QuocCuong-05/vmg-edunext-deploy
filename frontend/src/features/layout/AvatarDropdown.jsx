@@ -12,8 +12,12 @@ export default function AvatarDropdown({ initials }) {
   });
   const ref = useRef(null);
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { mode, toggleTheme } = useThemeMode();
+
+  const isPlus = !!user?.plus?.active;
+  const endAt = user?.plus?.endAt ? new Date(user.plus.endAt) : null;
+  const expiringSoon = isPlus && endAt && (endAt.getTime() - Date.now()) < 7 * 24 * 3600 * 1000;
 
   useEffect(() => {
     if (!open) return;
@@ -35,7 +39,12 @@ export default function AvatarDropdown({ initials }) {
     localStorage.setItem('vmg_lang', next);
   }
 
+  const plusLabel = isPlus
+    ? (expiringSoon ? `Gói Plus · hết hạn ${endAt.toLocaleDateString('vi-VN')} (sắp hết!)` : `Gói Plus · đến ${endAt.toLocaleDateString('vi-VN')}`)
+    : 'Nâng cấp Plus';
+
   const items = [
+    { icon: Icon.Gem, label: plusLabel, onClick: () => navigate('/plus'), close: true, gold: true },
     { icon: Icon.User, label: 'Thông tin tài khoản', onClick: () => navigate('/account'), close: true },
     { icon: mode === 'dark' ? Icon.Sun : Icon.Moon, label: mode === 'dark' ? 'Giao diện sáng' : 'Giao diện tối', onClick: toggleTheme },
     { icon: Icon.Globe, label: lang === 'vi' ? 'English' : 'Tiếng Việt', onClick: toggleLang },
@@ -46,11 +55,16 @@ export default function AvatarDropdown({ initials }) {
     <div ref={ref} className="avatar-wrap">
       <button className="avatar-btn" onClick={() => setOpen(o => !o)}>
         {initials}
+        {isPlus && (
+          <span className="avatar-plus-badge" title="Gói Plus">
+            <Icon.Gem size={10} />
+          </span>
+        )}
       </button>
       {open && (
         <div className="avatar-dropdown">
           {items.map((item, i) => (
-            <button key={i} className="avatar-dropdown-item" onClick={() => {
+            <button key={i} className={`avatar-dropdown-item${item.gold ? ' gold' : ''}`} onClick={() => {
               item.onClick();
               if (item.close) setOpen(false);
             }}>
