@@ -235,7 +235,7 @@ export default function PlusPage() {
                     </button>
                   ))}
                 </div>
-                <Button variant="primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setShowPayment(true); createOrder(); }} isDisabled={busy}>
+                <Button variant="primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setShowPayment(true); createOrder(period); }} isDisabled={busy}>
                   {busy ? 'Đang tạo đơn...' : `Mua gói ${active.period} tháng · ${formatVnd(active.price)}`}
                 </Button>
               </div>
@@ -261,7 +261,7 @@ export default function PlusPage() {
                         </button>
                       ))}
                     </div>
-                    <Button variant="primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => createOrder()} isDisabled={busy}>
+                    <Button variant="primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => createOrder(period)} isDisabled={busy}>
                       {busy ? 'Đang tạo đơn...' : `Mua gói ${active.period} tháng · ${formatVnd(active.price)}`}
                     </Button>
                   </div>
@@ -285,12 +285,8 @@ export default function PlusPage() {
                     {qrDataUrl ? (
                       <img src={qrDataUrl} alt="QR thanh toán" style={{ width: 220, height: 220, borderRadius: 10, border: '1px solid var(--line)' }} />
                     ) : (
-                      <div style={{
-                        width: 220, height: 220, margin: '0 auto', borderRadius: 10,
-                        border: '1px dashed var(--line)',
-                        display: 'grid', placeItems: 'center', color: 'var(--muted)', fontSize: 12, padding: 12,
-                      }}>
-                        QR chuyển khoản<br />(sẽ hiển thị ở đây)
+                      <div style={{ fontSize: 13, color: 'var(--muted)', margin: '12px 0' }}>
+                        Vui lòng chuyển khoản theo thông tin bên dưới
                       </div>
                     )}
 
@@ -330,7 +326,7 @@ export default function PlusPage() {
                     </div>
 
                     {expired ? (
-                      <Button variant="primary" style={{ width: '100%', justifyContent: 'center', marginTop: 16 }} onClick={() => createOrder()} isDisabled={busy}>
+                      <Button variant="primary" style={{ width: '100%', justifyContent: 'center', marginTop: 16 }} onClick={() => createOrder(period)} isDisabled={busy}>
                         Tạo đơn mới
                       </Button>
                     ) : (
