@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { supabase } from './supabase';
 
 export function useStreamChat({ api, initialMessages = [] }) {
   const [messages, setMessages] = useState(initialMessages);
@@ -26,7 +27,8 @@ export function useStreamChat({ api, initialMessages = [] }) {
       const controller = new AbortController();
       abortRef.current = controller;
 
-      const token = localStorage.getItem('vmg_token');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 

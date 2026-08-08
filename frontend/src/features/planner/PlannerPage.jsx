@@ -5,6 +5,7 @@ import Card from '../../components/ui/Card';
 import { API_BASE } from '../../lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { Link } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
 
 export default function PlannerPage() {
   const [topic, setTopic] = useState('');
@@ -25,7 +26,8 @@ export default function PlannerPage() {
     setError(null);
     setResult(null);
     try {
-      const token = localStorage.getItem('vmg_token');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
       const res = await fetch(`${API_BASE}/vimi-ai/lesson-plan`, {
