@@ -16,8 +16,8 @@ export default function AvatarDropdown({ initials }) {
   const { mode, toggleTheme } = useThemeMode();
 
   const isPlus = !!user?.plus?.active;
-  const endAt = user?.plus?.endAt ? new Date(user.plus.endAt) : null;
-  const expiringSoon = isPlus && endAt && (endAt.getTime() - Date.now()) < 7 * 24 * 3600 * 1000;
+
+  const plusLabel = isPlus ? 'Gói Plus của bạn' : 'Nâng cấp Plus';
 
   useEffect(() => {
     if (!open) return;
@@ -38,10 +38,6 @@ export default function AvatarDropdown({ initials }) {
     setLang(next);
     localStorage.setItem('vmg_lang', next);
   }
-
-  const plusLabel = isPlus
-    ? (expiringSoon ? `Gói Plus · hết hạn ${endAt.toLocaleDateString('vi-VN')} (sắp hết!)` : `Gói Plus · đến ${endAt.toLocaleDateString('vi-VN')}`)
-    : 'Nâng cấp Plus';
 
   const items = [
     { icon: Icon.Gem, label: plusLabel, onClick: () => navigate('/plus'), close: true, gold: true },
