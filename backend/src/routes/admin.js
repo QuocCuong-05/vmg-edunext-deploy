@@ -184,27 +184,14 @@ router.get('/dashboard-stats', async (_req, res, next) => {
     const nowIso = now.toISOString();
 
     const [
-      { count: totalUsers },
-      { data: new7 },
-      { data: new30 },
-      { data: activeUsers },
-      { data: completed },
-      { data: activeLearners },
-      { count: totalProgress },
-      { data: quizAtt },
-      { count: quizUsers },
-      { data: quizAvg },
-      { count: totalCourses },
-      { count: premiumCourses },
-      { data: pendingOrders },
-      { data: monthOrders },
-      { data: totalRev },
-      { count: activePlus },
-      { count: expiringPlus },
-      { data: communityPosts },
-      { data: communityComments },
-      { data: xpAvg },
-      { data: xpTop },
+      cu, cu7, cu30, cuAct,
+      comp, actLrn, totProg,
+      qAtt, qUsr, qAvg,
+      tCourses, pCourses,
+      pendOrd, mOrd, tRev,
+      aPlus, ePlus,
+      cP, cC,
+      xpAv, xpTp,
     ] = await Promise.all([
       supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }),
       supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', d7),
@@ -219,7 +206,7 @@ router.get('/dashboard-stats', async (_req, res, next) => {
       supabaseAdmin.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true),
       supabaseAdmin.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true).in('access_type', ['premium', 'paid']),
       supabaseAdmin.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabaseAdmin.from('orders').select('id, amount', { count: 'exact', head: true }).eq('status', 'paid').gte('paid_at', monthStart),
+      supabaseAdmin.from('orders').select('amount').eq('status', 'paid').gte('paid_at', monthStart),
       supabaseAdmin.from('orders').select('amount').eq('status', 'paid'),
       supabaseAdmin.from('subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active').gt('end_at', nowIso),
       supabaseAdmin.from('subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active').gt('end_at', nowIso).lte('end_at', d7future),
@@ -229,57 +216,48 @@ router.get('/dashboard-stats', async (_req, res, next) => {
       supabaseAdmin.from('profiles').select('id, full_name, xp').order('xp', { ascending: false }).limit(10),
     ]);
 
-    const monthRevenue = (monthOrders || []).reduce((s, o) => s + (o.amount || 0), 0);
-    const totalRevenue = (totalRev || []).reduce((s, o) => s + (o.amount || 0), 0);
-    const quizAvgScore = quizAvg?.length
+    const totalUsers = cu?.count || 0;
+    const new7 = cu7?.count || 0;
+    const new30 = cu30?.count || 0;
+    const activeUsers = cuAct?.count || 0;
+    const completed = comp?.count || 0;
+    const activeLearners = actLrn?.count || 0;
+    const totalProgress = totProg?.count || 0;
+    const quizAtt = qAtt?.count || 0;
+    const quizUsers = qUsr?.count || 0;
+    const totalCourses = tCourses?.count || 0;
+    const premiumCourses = pCourses?.count || 0;
+    const pendingOrders = pendOrd?.count || 0;
+    const activePlus = aPlus?.count || 0;
+    const expiringPlus = ePlus?.count || 0;
+    const communityPosts = cP?.count || 0;
+    const communityComments = cC?.count || 0;
+
+    const monthOrders = mOrd?.data || [];
+    const totalRev = tRev?.data || [];
+    const quizAvg = qAvg?.data || [];
+    const xpAvg = xpAv?.data || [];
+    const xpTop = xpTp?.data || [];
+
+    const monthRevenue = monthOrders.reduce((s, o) => s + (o.amount || 0), 0);
+    const totalRevenue = totalRev.reduce((s, o) => s + (o.amount || 0), 0);
+    const quizAvgScore = quizAvg.length
       ? Math.round((quizAvg.reduce((s, a) => s + (a.score || 0), 0) / quizAvg.length) * 10) / 10
       : null;
-    const avgXp = xpAvg?.length
+    const avgXp = xpAvg.length
       ? Math.round(xpAvg.reduce((s, p) => s + (p.xp || 0), 0) / xpAvg.length)
       : 0;
-    const completionPct = totalProgress > 0
-      ? Math.round((completed?.count || 0) / totalProgress * 100)
-      : 0;
+    const completionPct = totalProgress > 0 ? Math.round((completed / totalProgress) * 100) : 0;
 
     res.json({
-      users: {
-        total: totalUsers?.count || 0,
-        new7d: new7?.count || 0,
-        new30d: new30?.count || 0,
-        active7d: activeUsers?.count || 0,
-      },
-      learning: {
-        completed: completed?.count || 0,
-        total: totalProgress || 0,
-        completionPct,
-        activeLearners: activeLearners?.count || 0,
-      },
-      quiz: {
-        attempts7d: quizAtt?.count || 0,
-        users7d: quizUsers?.count || 0,
-        avgScore: quizAvgScore,
-      },
-      courses: {
-        total: totalCourses?.count || 0,
-        premium: premiumCourses?.count || 0,
-      },
-      revenue: {
-        pending: pendingOrders?.count || 0,
-        month: monthRevenue,
-        total: totalRevenue,
-      },
-      plus: {
-        active: activePlus?.count || 0,
-        expiring7d: expiringPlus?.count || 0,
-      },
-      community: {
-        posts7d: communityPosts?.count || 0,
-        comments7d: communityComments?.count || 0,
-      },
-      xp: {
-        avg: avgXp,
-        top10: xpTop || [],
-      },
+      users: { total: totalUsers, new7d: new7, new30d: new30, active7d: activeUsers },
+      learning: { completed, total: totalProgress, completionPct, activeLearners },
+      quiz: { attempts7d: quizAtt, users7d: quizUsers, avgScore: quizAvgScore },
+      courses: { total: totalCourses, premium: premiumCourses },
+      revenue: { pending: pendingOrders, month: monthRevenue, total: totalRevenue },
+      plus: { active: activePlus, expiring7d: expiringPlus },
+      community: { posts7d: communityPosts, comments7d: communityComments },
+      xp: { avg: avgXp, top10: xpTop },
     });
   } catch (err) {
     next(err);
