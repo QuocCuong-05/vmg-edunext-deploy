@@ -53,7 +53,7 @@ const GROUPS = [
 ];
 
 export default function Layout() {
-  const { user, logout } = useAuth();
+  const { user, logout, isPlus } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const initials = user?.full_name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'VM';
@@ -281,7 +281,14 @@ export default function Layout() {
               justifyContent: showRail ? 'center' : 'flex-start',
               padding: '8px 12px',
             }}>
-              <div className="avatar-btn" title={user?.full_name} style={{ width: 36, height: 36, fontSize: 12, flexShrink: 0 }}>{initials}</div>
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <div className="avatar-btn" title={user?.full_name} style={{ width: 36, height: 36, fontSize: 12 }}>{initials}</div>
+                {isPlus && (
+                  <span className="avatar-plus-badge" title="Gói Plus" style={{ bottom: -3, right: -3, width: 15, height: 15 }}>
+                    <Icon.Gem size={9} />
+                  </span>
+                )}
+              </div>
               {!showRail && (
                 <>
                   <div style={{ flex: 1, minWidth: 0 }}>
