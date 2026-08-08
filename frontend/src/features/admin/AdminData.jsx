@@ -84,6 +84,7 @@ function splitLine(line) {
 }
 
 const TABS = [
+  { key: 'overview', label: 'Tổng quan', icon: Icon.Stats },
   { key: 'import', label: 'Nhập CSV', icon: Icon.Download },
   { key: 'orders', label: 'Đơn hàng', icon: Icon.CartAlt },
   { key: 'plus', label: 'Tài khoản Plus', icon: Icon.Gem },
@@ -102,7 +103,9 @@ const badge = (status) => {
 
 export default function AdminData() {
   const { user } = useAuth();
-  const [tab, setTab] = useState('import');
+  const [tab, setTab] = useState('overview');
+
+  const [dashboard, setDashboard] = useState(null);
 
   const [table, setTable] = useState('');
   const [csvText, setCsvText] = useState('');
@@ -200,8 +203,12 @@ export default function AdminData() {
   async function loadSubscriptions() {
     try { setSubscriptions(await api.admin.subscriptions()); } catch {}
   }
+  async function loadDashboard() {
+    try { setDashboard(await api.admin.dashboardStats()); } catch {}
+  }
 
   useEffect(() => {
+    if (tab === 'overview') loadDashboard();
     if (tab === 'orders') loadOrders();
     if (tab === 'plus') loadSubscriptions();
     if (tab === 'courses') loadCourses();
@@ -297,6 +304,103 @@ export default function AdminData() {
       {error && (
         <div style={{ padding: '10px 14px', background: 'var(--red-bg)', color: 'var(--red)', borderRadius: 10, fontSize: 13, marginBottom: 16 }}>
           {error}
+        </div>
+      )}
+
+      {tab === 'overview' && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Tổng quan nền tảng</h3>
+            <button className="admin-btn-ghost" onClick={loadDashboard}>Làm mới</button>
+          </div>
+
+          {!dashboard ? (
+            <p className="admin-note">Đang tải...</p>
+          ) : (
+            <>
+              <div className="grid-4" style={{ marginBottom: 24 }}>
+                <div className="stat-card accent-red">
+                  <div className="accent-bar" />
+                  <div style={{ fontSize: 28, fontWeight: 900 }}>{dashboard.users.total}</div>
+                  <div style={{ fontSize: 13, color: 'var(--muted)' }}>Tổng người dùng</div>
+                  <div style={{ fontSize: 11, color: 'var(--ink)', marginTop: 4 }}>+{dashboard.users.new7d} trong 7 ngày</div>
+                </div>
+                <div className="stat-card accent-green">
+                  <div className="accent-bar" />
+                  <div style={{ fontSize: 28, fontWeight: 900 }}>{dashboard.users.active7d}</div>
+                  <div style={{ fontSize: 13, color: 'var(--muted)' }}>Hoạt động 7 ngày</div>
+                  <div style={{ fontSize: 11, color: 'var(--ink)', marginTop: 4 }}>{dashboard.learning.activeLearners} đang học</div>
+                </div>
+                <div className="stat-card accent-blue">
+                  <div className="accent-bar" style={{ background: 'var(--blue)' }} />
+                  <div style={{ fontSize: 28, fontWeight: 900 }}>{dashboard.quiz.avgScore ?? '—'}%</div>
+                  <div style={{ fontSize: 13, color: 'var(--muted)' }}>Điểm quiz TB 7 ngày</div>
+                  <div style={{ fontSize: 11, color: 'var(--ink)', marginTop: 4 }}>{dashboard.quiz.attempts7d} lượt làm</div>
+                </div>
+                <div className="stat-card accent-gold">
+                  <div className="accent-bar" style={{ background: 'var(--gold)' }} />
+                  <div style={{ fontSize: 28, fontWeight: 900 }}>{dashboard.revenue.pending}</div>
+                  <div style={{ fontSize: 13, color: 'var(--muted)' }}>Đơn chờ duyệt</div>
+                  <div style={{ fontSize: 11, color: 'var(--ink)', marginTop: 4 }}>Plus: {dashboard.plus.active} active</div>
+                </div>
+              </div>
+
+              <div className="grid-2" style={{ marginBottom: 24 }}>
+                <div className="admin-panel">
+                  <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Doanh thu tháng</h4>
+                  <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--green)' }}>
+                    {(dashboard.revenue.month || 0).toLocaleString('vi-VN')} đ
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
+                    Tổng: {(dashboard.revenue.total || 0).toLocaleString('vi-VN')} đ
+                  </div>
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0' }}>
+                      <span style={{ color: 'var(--muted)' }}>Hoàn thành bài học</span>
+                      <b>{dashboard.learning.completionPct}% ({dashboard.learning.completed}/{dashboard.learning.total})</b>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0' }}>
+                      <span style={{ color: 'var(--muted)' }}>User mới 30 ngày</span>
+                      <b>{dashboard.users.new30d}</b>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0' }}>
+                      <span style={{ color: 'var(--muted)' }}>Khóa học</span>
+                      <b>{dashboard.courses.total} ({dashboard.courses.premium} premium)</b>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0' }}>
+                      <span style={{ color: 'var(--muted)' }}>Cộng đồng 7 ngày</span>
+                      <b>{dashboard.community.posts7d} bài · {dashboard.community.comments7d} bình luận</b>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0' }}>
+                      <span style={{ color: 'var(--muted)' }}>XP trung bình</span>
+                      <b>{dashboard.xp.avg?.toLocaleString('vi-VN')}</b>
+                    </div>
+                    {dashboard.plus.expiring7d > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0', color: 'var(--red)' }}>
+                        <span>Plus sắp hết hạn 7 ngày</span>
+                        <b>{dashboard.plus.expiring7d}</b>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="admin-panel">
+                  <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Top 10 XP</h4>
+                  {dashboard.xp.top10.map((p, i) => (
+                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: i < 9 ? '1px solid var(--line)' : 'none', fontSize: 13 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ width: 22, textAlign: 'center', fontWeight: 700, color: i < 3 ? 'var(--gold)' : 'var(--muted)' }}>
+                          {i + 1}
+                        </span>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>{p.full_name}</span>
+                      </div>
+                      <b>{p.xp?.toLocaleString('vi-VN')} XP</b>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 

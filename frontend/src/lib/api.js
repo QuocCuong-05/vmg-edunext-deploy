@@ -425,6 +425,7 @@ export const api = {
   admin: {
     orders: async () => request('/admin/orders'),
     approveOrder: async (id) => request(`/admin/orders/${id}/approve`, { method: 'POST' }),
+    dashboardStats: async () => request('/admin/dashboard-stats'),
     setPaidCourse: async (courseId, price, salePrice) =>
       request('/admin/courses/paid', { method: 'POST', body: JSON.stringify({ course_id: courseId, price, sale_price: salePrice }) }),
     setFreeCourse: async (courseId) =>
