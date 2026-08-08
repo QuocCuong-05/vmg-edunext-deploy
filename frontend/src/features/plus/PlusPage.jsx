@@ -269,6 +269,12 @@ export default function PlusPage() {
 
                 {order && (
                   <div style={{ textAlign: 'center' }}>
+                    <button
+                      onClick={() => { setOrder(null); setQrDataUrl(''); setError(''); }}
+                      style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 13, marginBottom: 14, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    >
+                      <Icon.ArrowLeft size={14} /> Quay lại
+                    </button>
                     <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--red)', marginBottom: 4 }}>
                       {formatVnd(order.amount)}
                     </div>
