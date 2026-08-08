@@ -331,7 +331,7 @@ export default function PlusPage() {
                       </Button>
                     ) : (
                       <Button variant="primary" style={{ width: '100%', justifyContent: 'center', marginTop: 16 }} onClick={handleConfirmTransfer} isDisabled={busy}>
-                        {busy ? 'Đang xử lý...' : 'Tôi đã chuyển khoản xong'}
+                        {busy ? 'Đang xử lý...' : 'Tôi đã hoàn tất thanh toán'}
                       </Button>
                     )}
                   </div>
