@@ -32,7 +32,7 @@ export async function getPlusStatus(userId) {
     .limit(1)
     .maybeSingle();
   const active = !!data && data.status === 'active' && new Date(data.end_at) > new Date();
-  return { active, endAt: data?.end_at || null, plan: data?.plan || null };
+  return { active, endAt: data?.end_at || null, plan: data?.plan || null, period: data?.period || null, startAt: data?.start_at || null };
 }
 
 export async function hasActivePlus(userId) {
