@@ -321,7 +321,7 @@ export default function PlusPage() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14 }}>
                       <Icon.Clock size={14} style={{ color: expired ? 'var(--red)' : 'var(--muted)' }} />
                       <span style={{ fontSize: 13, fontWeight: 700, color: expired ? 'var(--red)' : 'var(--ink)' }}>
-                        {expired ? 'Đơn đã hết hạn' : `Còn ${mmss} để hoàn tất thanh toán`}
+                        {expired ? 'Đơn đã hết hạn' : `Còn ${mmss} để hoàn tất`}
                       </span>
                     </div>
 
