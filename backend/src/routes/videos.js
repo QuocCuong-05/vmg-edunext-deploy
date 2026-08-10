@@ -30,6 +30,10 @@ router.get('/token/:lessonId', authenticate, async (req, res, next) => {
       canAccessFull = !!enrolled;
     }
 
+    if (!canAccessFull && !isPreviewLesson) {
+      return res.status(403).json({ error: 'Bài học này yêu cầu gói Plus' });
+    }
+
     // URL http (YouTube...) — giữ nguyên iframe legacy
     if (lesson.video_url.startsWith('http')) {
       return res.json({
