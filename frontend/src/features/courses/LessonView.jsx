@@ -121,6 +121,16 @@ export default function LessonView() {
     }
   }
 
+  function handleSeeked() {
+    if (isPreviewLesson && videoRef.current && teaserLimit > 0) {
+      if (videoRef.current.currentTime >= teaserLimit) {
+        videoRef.current.currentTime = Math.max(0, teaserLimit - 1);
+        videoRef.current.pause();
+        setTeaserEnded(true);
+      }
+    }
+  }
+
   if (isLocked) {
     return (
       <div>
@@ -174,7 +184,7 @@ export default function LessonView() {
       <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>{lesson.description}</p>
 
       {lesson.content_type === 'video' && (
-        <div className="video-player">
+        <div className="video-player" style={{ position: 'relative' }}>
           {videoInfo?.legacy ? (
             <iframe src={videoInfo.url} allowFullScreen title={lesson.title} />
           ) : videoInfo ? (
@@ -184,6 +194,7 @@ export default function LessonView() {
               controls
               playsInline
               onTimeUpdate={handleTimeUpdate}
+              onSeeked={handleSeeked}
               style={{ width: '100%', aspectRatio: '16/9', background: '#000', borderRadius: 12 }}
             />
           ) : videoError ? (
@@ -198,6 +209,27 @@ export default function LessonView() {
               <p style={{ fontSize: 12, marginTop: 8, opacity: .5 }}>
                 Thời lượng: {Math.floor(dur / 60)}:{String(dur % 60).padStart(2, '0')}
               </p>
+            </div>
+          )}
+
+          {teaserEnded && videoInfo && (
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 5,
+              background: 'rgba(10,14,20,.92)',
+              borderRadius: 12,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 12, textAlign: 'center', padding: 24,
+            }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--red)', color: '#fff', display: 'grid', placeItems: 'center' }}>
+                <Icon.Gem size={26} />
+              </div>
+              <b style={{ fontSize: 16, color: '#fff' }}>Bạn đã xem hết phần xem trước</b>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,.7)', margin: 0 }}>
+                Nâng cấp Plus để xem toàn bộ bài học này.
+              </p>
+              <Button size="sm" variant="primary" onClick={() => navigate('/plus')} style={{ marginTop: 6 }}>
+                Nâng cấp Plus
+              </Button>
             </div>
           )}
         </div>
