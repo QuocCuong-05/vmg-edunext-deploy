@@ -174,11 +174,7 @@ export default function CourseDetail() {
                   key={lesson.id}
                   className={`lesson-item ${isCompleted ? 'completed' : ''} ${locked ? 'locked' : ''}`}
                   onClick={() => {
-                    if (canAccess || lesson.is_free || isTeaser) {
-                      navigate(`/courses/${course.slug}/lessons/${lesson.id}`);
-                    } else {
-                      navigate('/plus');
-                    }
+                    navigate(`/courses/${course.slug}/lessons/${lesson.id}`);
                   }}
                 >
                   <div className="lesson-number">{isCompleted ? '✓' : idx + 1}</div>

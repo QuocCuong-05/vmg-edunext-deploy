@@ -68,13 +68,14 @@ export default function LessonView() {
     setVideoError('');
     setTeaserEnded(false);
     const l = course?.lessons?.find(x => x.id === lessonId);
-    if (!l || !l.video_url) return;
+    if (!l) return;
     const locked = !l.is_free && !isPlus && !unlocked && !l.preview_text;
     if (locked) return;
-    if (l.video_url.startsWith('http')) {
+    if (l.video_url && l.video_url.startsWith('http')) {
       setVideoInfo({ legacy: true, url: l.video_url });
       return;
     }
+    if (!l.video_url && !l.preview_text) return;
     let cancelled = false;
     api.videos.token(lessonId)
       .then(info => { if (!cancelled) setVideoInfo(info); })
