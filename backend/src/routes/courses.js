@@ -18,6 +18,7 @@ function sanitizeLessons(lessons, canAccessFull) {
       video_duration_seconds: l.video_duration_seconds ?? null,
       is_free: l.is_free,
       preview_text: l.preview_text,
+      module: l.module ?? null,
     };
   });
 }
