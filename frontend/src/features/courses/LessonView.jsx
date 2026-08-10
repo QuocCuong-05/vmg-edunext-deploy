@@ -114,16 +114,21 @@ export default function LessonView() {
         if (row?.watched_seconds > 0) {
           maxWatchedRef.current = row.watched_seconds;
           setMaxWatched(row.watched_seconds);
-          if (videoRef.current && !restoredRef.current) {
+          if (videoRef.current?.readyState >= 1 && !restoredRef.current) {
             videoRef.current.currentTime = row.watched_seconds;
             restoredRef.current = true;
+          }
+          const l = course?.lessons?.find(x => x.id === lessonId);
+          const teaserLesson = l && !l.is_free && !isPlus && !unlocked && !!l.preview_text;
+          if (teaserLesson && row.watched_seconds >= (Number(previewSeconds) || 120)) {
+            setTeaserEnded(true);
           }
         }
         if (row?.completed) setCompleted(true);
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [course?.id, lessonId, user?.id]);
+  }, [course?.id, lessonId, user?.id, isPlus, unlocked, previewSeconds]);
 
   if (loading) {
     return <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>;
