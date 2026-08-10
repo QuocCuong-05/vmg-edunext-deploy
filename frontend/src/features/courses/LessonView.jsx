@@ -363,13 +363,15 @@ export default function LessonView() {
 
       <div className="lesson-nav">
         {prevLesson ? (
-          <Button variant="ghost" onClick={() => navigate(`/courses/${slug}/lessons/${prevLesson.id}`)}>
-            <Icon.ArrowLeft size={16} /> {prevLesson.title}
+          <Button variant="ghost" onClick={() => navigate(`/courses/${slug}/lessons/${prevLesson.id}`)} style={{ minWidth: 0 }}>
+            <Icon.ArrowLeft size={16} style={{ flexShrink: 0 }} />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{prevLesson.title}</span>
           </Button>
         ) : <div />}
         {nextLesson ? (
-          <Button variant="primary" onClick={() => navigate(`/courses/${slug}/lessons/${nextLesson.id}`)}>
-            {nextLesson.title} <Icon.ArrowRight size={16} />
+          <Button variant="primary" onClick={() => navigate(`/courses/${slug}/lessons/${nextLesson.id}`)} style={{ minWidth: 0 }}>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{nextLesson.title}</span>
+            <Icon.ArrowRight size={16} style={{ flexShrink: 0 }} />
           </Button>
         ) : <div />}
       </div>

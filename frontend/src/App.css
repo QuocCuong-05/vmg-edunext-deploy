@@ -632,7 +632,11 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 .lesson-content { max-width: 900px; overflow-wrap: break-word; word-break: break-word; }
 .lesson-content table { max-width: 100%; display: block; overflow-x: auto; }
 .lesson-nav { display: flex; justify-content: space-between; margin-top: 24px; gap: 12px; }
-.lesson-nav button { max-width: 48%; }
+.lesson-nav button { max-width: 48%; min-width: 0; }
+@media (max-width: 768px) {
+  .lesson-nav { flex-direction: column; align-items: stretch; }
+  .lesson-nav button { max-width: 100%; }
+}
 
 /* Back button */
 .back-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); margin-bottom: 16px; cursor: pointer; transition: color .15s; }
