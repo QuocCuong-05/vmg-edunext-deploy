@@ -97,7 +97,8 @@ export default function LessonView() {
     const timer = setInterval(() => {
       const w = Math.round(maxWatchedRef.current);
       if (w > 0) {
-        api.lessons.progress(lessonId, { watched_seconds: w }).catch(() => {});
+        api.lessons.progress(lessonId, { watched_seconds: w })
+          .catch(err => console.error('[progress]', err.message));
       }
     }, 10000);
     return () => clearInterval(timer);
@@ -126,7 +127,7 @@ export default function LessonView() {
         }
         if (row?.completed) setCompleted(true);
       })
-      .catch(() => {});
+      .catch(err => console.error('[progress restore]', err.message));
     return () => { cancelled = true; };
   }, [course?.id, lessonId, user?.id, isPlus, unlocked, previewSeconds]);
 

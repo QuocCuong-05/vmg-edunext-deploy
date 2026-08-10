@@ -62,7 +62,10 @@ router.post('/:id/progress', authenticate, async (req, res) => {
       .select()
       .single();
 
-    if (error) return res.status(400).json({ error: error.message });
+    if (error) {
+      console.error('[progress upsert]', error.message);
+      return res.status(400).json({ error: error.message });
+    }
     res.json({ data });
   } catch (err) {
     res.status(500).json({ error: err.message });
