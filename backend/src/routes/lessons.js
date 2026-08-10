@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { supabase } from '../config/database.js';
+import { supabase, supabaseAdmin } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
 import { hasActivePlus } from '../lib/plus.js';
 
@@ -49,7 +49,7 @@ router.post('/:id/progress', authenticate, async (req, res) => {
   try {
     const { completed, watched_seconds, score } = req.body;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('lesson_progress')
       .upsert({
         user_id: req.user.id,
