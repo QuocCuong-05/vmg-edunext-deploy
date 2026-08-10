@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Icon } from '../../lib/icons';
@@ -62,6 +62,26 @@ export default function LessonView() {
     }
   }, [course]);
 
+  // Lấy video: legacy URL (YouTube) dùng thẳng; storage path → signed token
+  useEffect(() => {
+    setVideoInfo(null);
+    setVideoError('');
+    setTeaserEnded(false);
+    const l = course?.lessons?.find(x => x.id === lessonId);
+    if (!l || !l.video_url) return;
+    const locked = !l.is_free && !isPlus && !unlocked && !l.preview_text;
+    if (locked) return;
+    if (l.video_url.startsWith('http')) {
+      setVideoInfo({ legacy: true, url: l.video_url });
+      return;
+    }
+    let cancelled = false;
+    api.videos.token(lessonId)
+      .then(info => { if (!cancelled) setVideoInfo(info); })
+      .catch(err => { if (!cancelled) setVideoError(err.message); });
+    return () => { cancelled = true; };
+  }, [lessonId, course, isPlus, unlocked]);
+
   if (loading) {
     return <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>;
   }
@@ -89,33 +109,16 @@ export default function LessonView() {
   const isLocked = !isFree && !canAccessFull && !isPreviewLesson;
   const isLessonCompleted = enroll?.completed_lessons?.includes(lessonId) || false;
 
-  // Lấy video: legacy URL (YouTube) dùng thẳng; storage path → signed token
-  useEffect(() => {
-    setVideoInfo(null);
-    setVideoError('');
-    setTeaserEnded(false);
-    if (isLocked || !lesson.video_url) return;
-    if (lesson.video_url.startsWith('http')) {
-      setVideoInfo({ legacy: true, url: lesson.video_url });
-      return;
-    }
-    let cancelled = false;
-    api.videos.token(lesson.id)
-      .then(info => { if (!cancelled) setVideoInfo(info); })
-      .catch(err => { if (!cancelled) setVideoError(err.message); });
-    return () => { cancelled = true; };
-  }, [lesson?.id, lesson?.video_url, isLocked]);
-
   const teaserLimit = videoInfo?.previewSeconds ?? previewSeconds;
 
-  const handleTimeUpdate = useCallback(() => {
+  function handleTimeUpdate() {
     if (isPreviewLesson && videoRef.current && teaserLimit > 0) {
       if (videoRef.current.currentTime >= teaserLimit) {
         videoRef.current.pause();
         setTeaserEnded(true);
       }
     }
-  }, [isPreviewLesson, teaserLimit]);
+  }
 
   if (isLocked) {
     return (
