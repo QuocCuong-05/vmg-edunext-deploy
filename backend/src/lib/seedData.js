@@ -169,7 +169,7 @@ export const TABLES = [
     importOrder: 11,
     idInCsv: false,
     onConflict: 'course_id,slug',
-    selectColumns: 'course_id, title, slug, description, sort_order, content_type, video_url, video_duration_seconds, article_body, is_free',
+    selectColumns: 'course_id, title, slug, description, sort_order, content_type, video_url, video_duration_seconds, article_body, is_free, module, preview_text',
   },
   {
     name: 'level_challenges',

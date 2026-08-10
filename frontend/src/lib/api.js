@@ -415,6 +415,9 @@ export const api = {
     approve: async (orderId, token) =>
       request(`/orders/${orderId}/approve?token=${encodeURIComponent(token)}`, { method: 'POST' }),
   },
+  videos: {
+    token: async (lessonId) => request(`/videos/token/${lessonId}`),
+  },
   unlock: {
     courseIds: async (userId) => {
       const { data, error } = await supabase.from('enrollments').select('course_id').eq('user_id', userId);

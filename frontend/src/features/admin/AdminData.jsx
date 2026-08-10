@@ -24,7 +24,7 @@ const TABLE_COLUMNS = {
   quests: { required: ['type','title','desc_text','xp','is_active'], optional: ['id'] },
   rewards: { required: ['name','desc_text','price','icon_type','content_type','category','content_json','stock','is_active'] },
   courses: { required: ['title','slug','description','level','category','duration_hours','lesson_count','instructor','is_published'], optional: ['id','access_type','price','sale_price'] },
-  lessons: { required: ['course_id','title','slug','description','sort_order','content_type','video_url','video_duration_seconds','article_body','is_free'] },
+  lessons: { required: ['course_id','title','slug','description','sort_order','content_type','video_url','video_duration_seconds','article_body','is_free'], optional: ['id','module','preview_text'] },
   level_challenges: { required: ['title','description','xp_reward','quiz_set_id','level_min','sort_order','is_active'] },
 };
 

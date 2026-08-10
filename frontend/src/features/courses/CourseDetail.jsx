@@ -149,49 +149,69 @@ export default function CourseDetail() {
       </Card>
 
       <h3 style={{ fontSize: 17, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}><Icon.BookOpen size={18} /> Danh sách bài học</h3>
-      {(course.lessons || []).map((lesson, idx) => {
-        const isCompleted = completedIds.includes(lesson.id);
-        const locked = !canAccess && !lesson.is_free;
-        return (
-          <div
-            key={lesson.id}
-            className={`lesson-item ${isCompleted ? 'completed' : ''} ${locked ? 'locked' : ''}`}
-            onClick={() => {
-              if (canAccess || lesson.is_free) {
-                navigate(`/courses/${course.slug}/lessons/${lesson.id}`);
-              } else {
-                navigate('/plus');
-              }
-            }}
-          >
-            <div className="lesson-number">{isCompleted ? '✓' : idx + 1}</div>
-            <div className="lesson-info">
-              <h4>{lesson.title}</h4>
-              <p>{lesson.description}</p>
-              {locked && lesson.preview_text && (
-                <p style={{ fontSize: 11, color: 'var(--muted)', fontStyle: 'italic', marginTop: 4 }}>
-                  Xem trước: {lesson.preview_text}
-                </p>
-              )}
+      {(() => {
+        const groups = [];
+        (course.lessons || []).forEach(l => {
+          const key = l.module || 'Bài học';
+          const g = groups.find(x => x.name === key);
+          if (g) g.items.push(l);
+          else groups.push({ name: key, items: [l] });
+        });
+        let globalIdx = 0;
+        return groups.map(group => (
+          <div key={group.name}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '18px 0 10px' }}>
+              <span style={{ width: 4, height: 18, borderRadius: 2, background: 'var(--red)', flexShrink: 0 }} />
+              <b style={{ fontSize: 14 }}>{group.name}</b>
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              {lesson.content_type !== 'video' && (
-                <span className="pill" style={{ fontSize: 9, padding: '3px 8px' }}>
-                  {lesson.content_type === 'article' ? '📄' : '📝'}
-                </span>
-              )}
-              {(lesson.video_duration_seconds || lesson.duration) > 0 && (
-                <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-                  {Math.floor((lesson.video_duration_seconds || lesson.duration) / 60)}:{String((lesson.video_duration_seconds || lesson.duration) % 60).padStart(2, '0')}
-                </span>
-              )}
-              <span className={`lesson-badge ${lesson.is_free ? 'free' : 'pro'}`}>
-                {lesson.is_free ? (isPremium ? 'Xem trước' : 'Miễn phí') : (isPremium ? 'Plus' : 'Pro')}
-              </span>
-            </div>
+            {group.items.map(lesson => {
+              const isCompleted = completedIds.includes(lesson.id);
+              const locked = !canAccess && !lesson.is_free;
+              const isTeaser = locked && !!lesson.preview_text;
+              const idx = globalIdx++;
+              return (
+                <div
+                  key={lesson.id}
+                  className={`lesson-item ${isCompleted ? 'completed' : ''} ${locked ? 'locked' : ''}`}
+                  onClick={() => {
+                    if (canAccess || lesson.is_free || isTeaser) {
+                      navigate(`/courses/${course.slug}/lessons/${lesson.id}`);
+                    } else {
+                      navigate('/plus');
+                    }
+                  }}
+                >
+                  <div className="lesson-number">{isCompleted ? '✓' : idx + 1}</div>
+                  <div className="lesson-info">
+                    <h4>{lesson.title}</h4>
+                    <p>{lesson.description}</p>
+                    {locked && lesson.preview_text && (
+                      <p style={{ fontSize: 11, color: 'var(--muted)', fontStyle: 'italic', marginTop: 4 }}>
+                        Xem trước: {lesson.preview_text}
+                      </p>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    {lesson.content_type !== 'video' && (
+                      <span className="pill" style={{ fontSize: 9, padding: '3px 8px' }}>
+                        {lesson.content_type === 'article' ? '📄' : '📝'}
+                      </span>
+                    )}
+                    {(lesson.video_duration_seconds || lesson.duration) > 0 && (
+                      <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+                        {Math.floor((lesson.video_duration_seconds || lesson.duration) / 60)}:{String((lesson.video_duration_seconds || lesson.duration) % 60).padStart(2, '0')}
+                      </span>
+                    )}
+                    <span className={`lesson-badge ${lesson.is_free ? 'free' : isTeaser ? 'free' : 'pro'}`}>
+                      {lesson.is_free ? 'Miễn phí' : (isTeaser ? 'Xem trước 2 phút' : (isPremium ? 'Plus' : 'Pro'))}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
+        ));
+      })()}
     </div>
   );
 }

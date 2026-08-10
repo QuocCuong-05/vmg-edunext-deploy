@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Icon } from '../../lib/icons';
@@ -31,6 +31,10 @@ export default function LessonView() {
   const [completed, setCompleted] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [previewSeconds, setPreviewSeconds] = useState(120);
+  const [videoInfo, setVideoInfo] = useState(null);
+  const [videoError, setVideoError] = useState('');
+  const [teaserEnded, setTeaserEnded] = useState(false);
+  const videoRef = useRef(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -80,10 +84,40 @@ export default function LessonView() {
   const isFree = lesson.is_free;
   const isEnrolled = enroll?.enrolled;
   const isPremium = course.access_type === 'premium' || course.access_type === 'paid';
-  const canAccess = isPremium ? (isPlus || unlocked) : isEnrolled;
+  const canAccessFull = isFree || isPlus || unlocked;
+  const isPreviewLesson = !canAccessFull && !!lesson.preview_text;
+  const isLocked = !isFree && !canAccessFull && !isPreviewLesson;
   const isLessonCompleted = enroll?.completed_lessons?.includes(lessonId) || false;
 
-  if (!isFree && !canAccess) {
+  // Lấy video: legacy URL (YouTube) dùng thẳng; storage path → signed token
+  useEffect(() => {
+    setVideoInfo(null);
+    setVideoError('');
+    setTeaserEnded(false);
+    if (isLocked || !lesson.video_url) return;
+    if (lesson.video_url.startsWith('http')) {
+      setVideoInfo({ legacy: true, url: lesson.video_url });
+      return;
+    }
+    let cancelled = false;
+    api.videos.token(lesson.id)
+      .then(info => { if (!cancelled) setVideoInfo(info); })
+      .catch(err => { if (!cancelled) setVideoError(err.message); });
+    return () => { cancelled = true; };
+  }, [lesson?.id, lesson?.video_url, isLocked]);
+
+  const teaserLimit = videoInfo?.previewSeconds ?? previewSeconds;
+
+  const handleTimeUpdate = useCallback(() => {
+    if (isPreviewLesson && videoRef.current && teaserLimit > 0) {
+      if (videoRef.current.currentTime >= teaserLimit) {
+        videoRef.current.pause();
+        setTeaserEnded(true);
+      }
+    }
+  }, [isPreviewLesson, teaserLimit]);
+
+  if (isLocked) {
     return (
       <div>
         <div className="back-btn" onClick={() => navigate(`/courses/${slug}`)}><Icon.ArrowLeft size={14} /> Quay lại khóa học</div>
@@ -120,14 +154,6 @@ export default function LessonView() {
 
   const dur = lesson.video_duration_seconds || lesson.duration || 0;
   const content = lesson.article_body || '<p>Nội dung bài học đang được cập nhật...</p>';
-  const isPreviewMode = isPremium && !canAccess && lesson.is_free;
-
-  const videoSrc = (() => {
-    if (!lesson.video_url) return null;
-    if (!isPreviewMode) return lesson.video_url;
-    const sep = lesson.video_url.includes('?') ? '&' : '?';
-    return `${lesson.video_url}${sep}start=0&end=${previewSeconds}`;
-  })();
 
   return (
     <div className="lesson-content page-enter">
@@ -135,9 +161,9 @@ export default function LessonView() {
 
       <h1 style={{ fontSize: 22, marginBottom: 8 }}>
         {lesson.title}{' '}
-        {isPreviewMode && (
+        {isPreviewLesson && (
           <span className="pill" style={{ background: 'var(--gold-bg)', color: 'var(--gold)', fontSize: 10, verticalAlign: 'middle' }}>
-            Xem trước {Math.round(previewSeconds / 60)} phút đầu
+            Xem trước {Math.round(teaserLimit / 60)} phút đầu
           </span>
         )}
       </h1>
@@ -145,8 +171,22 @@ export default function LessonView() {
 
       {lesson.content_type === 'video' && (
         <div className="video-player">
-          {videoSrc ? (
-            <iframe src={videoSrc} allowFullScreen title={lesson.title} />
+          {videoInfo?.legacy ? (
+            <iframe src={videoInfo.url} allowFullScreen title={lesson.title} />
+          ) : videoInfo ? (
+            <video
+              ref={videoRef}
+              src={videoInfo.url}
+              controls
+              playsInline
+              onTimeUpdate={handleTimeUpdate}
+              style={{ width: '100%', aspectRatio: '16/9', background: '#000', borderRadius: 12 }}
+            />
+          ) : videoError ? (
+            <div className="placeholder">
+              <div style={{ marginBottom: 12 }}><Icon.X size={40} /></div>
+              <p>Không thể phát video: {videoError}</p>
+            </div>
           ) : (
             <div className="placeholder">
               <div style={{ marginBottom: 12 }}><Icon.Play size={48} /></div>
@@ -159,14 +199,14 @@ export default function LessonView() {
         </div>
       )}
 
-      {isPreviewMode && (
+      {(isPreviewLesson || teaserEnded) && (
         <div style={{
           marginBottom: 20, padding: '14px 18px',
           background: 'var(--red-bg)', border: '1px solid var(--red)', borderRadius: 12,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
         }}>
           <div>
-            <b style={{ fontSize: 14 }}>Bạn đang xem {Math.round(previewSeconds / 60)} phút đầu của bài học</b>
+            <b style={{ fontSize: 14 }}>{teaserEnded ? 'Bạn đã xem hết phần xem trước' : `Bạn đang xem ${Math.round(teaserLimit / 60)} phút đầu của bài học`}</b>
             <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
               Nâng cấp Plus để xem toàn bộ.
             </p>
