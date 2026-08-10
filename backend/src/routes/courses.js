@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { supabase } from '../config/database.js';
+import { supabase, supabaseAdmin } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
 import { hasActivePlus } from '../lib/plus.js';
 
@@ -95,31 +95,29 @@ router.post('/:courseId/enroll', authenticate, async (req, res) => {
 // GET /api/courses/:courseId/progress — user progress in course
 router.get('/:courseId/progress', authenticate, async (req, res) => {
   try {
-    const { data: enrollment, error: enrollError } = await supabase
-      .from('enrollments')
-      .select('*')
-      .eq('user_id', req.user.id)
-      .eq('course_id', req.params.courseId)
-      .single();
-
-    if (enrollError && enrollError.code === 'PGRST116') {
-      return res.json({ data: { enrolled: false, progress_pct: 0, completed_lessons: [], status: null } });
-    }
-
-    const { data: progress } = await supabase
+    const { data: progress } = await supabaseAdmin
       .from('lesson_progress')
       .select('lesson_id, completed, watched_seconds, score')
       .eq('user_id', req.user.id);
 
     const completedLessons = (progress || []).filter(p => p.completed).map(p => p.lesson_id);
 
+    const { data: enrollment, error: enrollError } = await supabase
+      .from('enrollments')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .eq('course_id', req.params.courseId)
+      .maybeSingle();
+
+    if (enrollError) throw enrollError;
+
     res.json({
       data: {
-        enrolled: true,
+        enrolled: !!enrollment,
         progress_pct: enrollment?.progress_pct || 0,
-        status: enrollment?.status || 'active',
+        status: enrollment?.status || null,
         completed_lessons: completedLessons,
-        details: progress || []
+        details: progress || [],
       }
     });
   } catch (err) {

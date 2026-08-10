@@ -114,6 +114,10 @@ export default function LessonView() {
         if (row?.watched_seconds > 0) {
           maxWatchedRef.current = row.watched_seconds;
           setMaxWatched(row.watched_seconds);
+          if (videoRef.current && !restoredRef.current) {
+            videoRef.current.currentTime = row.watched_seconds;
+            restoredRef.current = true;
+          }
         }
         if (row?.completed) setCompleted(true);
       })
