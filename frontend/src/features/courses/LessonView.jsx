@@ -38,6 +38,7 @@ export default function LessonView() {
   const [videoComplete, setVideoComplete] = useState(false);
   const videoRef = useRef(null);
   const maxWatchedRef = useRef(0);
+  const restoredRef = useRef(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -58,6 +59,7 @@ export default function LessonView() {
     setMaxWatched(0);
     maxWatchedRef.current = 0;
     setVideoComplete(false);
+    restoredRef.current = false;
   }, [lessonId]);
 
   useEffect(() => {
@@ -101,6 +103,24 @@ export default function LessonView() {
     return () => clearInterval(timer);
   }, [lessonId, videoInfo, videoComplete]);
 
+  // Khôi phục tiến độ từ server khi mở bài (reload không mất)
+  useEffect(() => {
+    if (!course?.id || !lessonId || !user?.id) return;
+    let cancelled = false;
+    api.courses.progress(course.id)
+      .then(data => {
+        if (cancelled) return;
+        const row = (data?.details || []).find(p => p.lesson_id === lessonId);
+        if (row?.watched_seconds > 0) {
+          maxWatchedRef.current = row.watched_seconds;
+          setMaxWatched(row.watched_seconds);
+        }
+        if (row?.completed) setCompleted(true);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [course?.id, lessonId, user?.id]);
+
   if (loading) {
     return <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>;
   }
@@ -131,7 +151,7 @@ export default function LessonView() {
   const teaserLimit = videoInfo?.previewSeconds ?? previewSeconds;
 
   function handleTimeUpdate() {
-    if (videoRef.current) {
+    if (videoRef.current && !videoRef.current.seeking) {
       maxWatchedRef.current = Math.max(maxWatchedRef.current, videoRef.current.currentTime);
       setMaxWatched(maxWatchedRef.current);
     }
@@ -140,6 +160,12 @@ export default function LessonView() {
         videoRef.current.pause();
         setTeaserEnded(true);
       }
+    }
+  }
+
+  function handleSeeking() {
+    if (videoRef.current && videoRef.current.currentTime > maxWatchedRef.current + 2) {
+      videoRef.current.currentTime = maxWatchedRef.current;
     }
   }
 
@@ -153,6 +179,13 @@ export default function LessonView() {
     }
     if (videoRef.current && videoRef.current.currentTime > maxWatchedRef.current + 2) {
       videoRef.current.currentTime = maxWatchedRef.current;
+    }
+  }
+
+  function handleLoadedMetadata() {
+    if (videoRef.current && maxWatchedRef.current > 0 && !restoredRef.current) {
+      videoRef.current.currentTime = maxWatchedRef.current;
+      restoredRef.current = true;
     }
   }
 
@@ -233,7 +266,9 @@ export default function LessonView() {
               playsInline
               onContextMenu={e => e.preventDefault()}
               onTimeUpdate={handleTimeUpdate}
+              onSeeking={handleSeeking}
               onSeeked={handleSeeked}
+              onLoadedMetadata={handleLoadedMetadata}
               onEnded={handleEnded}
               style={{ width: '100%', aspectRatio: '16/9', background: '#000', borderRadius: 12 }}
             />
@@ -314,11 +349,6 @@ export default function LessonView() {
         <Button variant="primary" onClick={handleComplete} isDisabled={completed || isLessonCompleted || completeBlockedByVideo}>
           {completed || isLessonCompleted ? <><Icon.Check size={16} /> Đã hoàn thành</> : (completeBlockedByVideo ? 'Xem hết video để hoàn thành' : 'Đánh dấu hoàn thành')}
         </Button>
-        {completeBlockedByVideo && (
-          <p style={{ fontSize: 12, color: 'var(--muted)' }}>
-            Bạn cần xem hết video (không tua tới trước) để hoàn thành bài học này.
-          </p>
-        )}
       </div>
 
       <div className="lesson-nav">

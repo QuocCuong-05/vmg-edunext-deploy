@@ -73,6 +73,7 @@ export const api = {
   courses: {
     list: async () => request('/courses'),
     get: async (slug) => request(`/courses/${slug}`),
+    progress: async (courseId) => request(`/courses/${courseId}/progress`),
   },
   lessons: {
     progress: async (lessonId, data) =>
