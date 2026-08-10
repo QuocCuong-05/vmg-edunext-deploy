@@ -12,7 +12,8 @@ import {
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 async function request(url, options = {}) {
-  const token = localStorage.getItem('vmg_token');
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
   const headers = { 'Content-Type': 'application/json', ...options.headers };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
