@@ -34,7 +34,10 @@ export default function LessonView() {
   const [videoInfo, setVideoInfo] = useState(null);
   const [videoError, setVideoError] = useState('');
   const [teaserEnded, setTeaserEnded] = useState(false);
+  const [maxWatched, setMaxWatched] = useState(0);
+  const [videoComplete, setVideoComplete] = useState(false);
   const videoRef = useRef(null);
+  const maxWatchedRef = useRef(0);
 
   useEffect(() => {
     if (!slug) return;
@@ -52,6 +55,9 @@ export default function LessonView() {
 
   useEffect(() => {
     setCompleted(false);
+    setMaxWatched(0);
+    maxWatchedRef.current = 0;
+    setVideoComplete(false);
   }, [lessonId]);
 
   useEffect(() => {
@@ -83,6 +89,18 @@ export default function LessonView() {
     return () => { cancelled = true; };
   }, [lessonId, course, isPlus, unlocked]);
 
+  // Ping tiến độ lên server mỗi 10s (chống mất tiến độ khi reload + dữ liệu KPI)
+  useEffect(() => {
+    if (!lessonId || !videoInfo || videoComplete) return;
+    const timer = setInterval(() => {
+      const w = Math.round(maxWatchedRef.current);
+      if (w > 0) {
+        api.lessons.progress(lessonId, { watched_seconds: w }).catch(() => {});
+      }
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [lessonId, videoInfo, videoComplete]);
+
   if (loading) {
     return <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>;
   }
@@ -113,6 +131,10 @@ export default function LessonView() {
   const teaserLimit = videoInfo?.previewSeconds ?? previewSeconds;
 
   function handleTimeUpdate() {
+    if (videoRef.current) {
+      maxWatchedRef.current = Math.max(maxWatchedRef.current, videoRef.current.currentTime);
+      setMaxWatched(maxWatchedRef.current);
+    }
     if (isPreviewLesson && videoRef.current && teaserLimit > 0) {
       if (videoRef.current.currentTime >= teaserLimit) {
         videoRef.current.pause();
@@ -129,6 +151,13 @@ export default function LessonView() {
         setTeaserEnded(true);
       }
     }
+    if (videoRef.current && videoRef.current.currentTime > maxWatchedRef.current + 2) {
+      videoRef.current.currentTime = maxWatchedRef.current;
+    }
+  }
+
+  function handleEnded() {
+    setVideoComplete(true);
   }
 
   if (isLocked) {
@@ -148,7 +177,13 @@ export default function LessonView() {
     );
   }
 
+  const dur = lesson.video_duration_seconds || lesson.duration || 0;
+  const content = lesson.article_body || '<p>Nội dung bài học đang được cập nhật...</p>';
+  const lessonHasVideo = !!lesson.video_url;
+  const completeBlockedByVideo = lessonHasVideo && !videoComplete;
+
   const handleComplete = () => {
+    if (lessonHasVideo && !videoComplete) return;
     setCompleted(true);
     updateStreak();
     addXp(60);
@@ -164,10 +199,11 @@ export default function LessonView() {
     e.progress_pct = Math.round((arr.length / total) * 100);
     e.enrolled = true;
     saveEnroll(slug, e);
+    api.lessons.progress(lessonId, {
+      completed: true,
+      watched_seconds: Math.round(maxWatchedRef.current),
+    }).catch(() => {});
   };
-
-  const dur = lesson.video_duration_seconds || lesson.duration || 0;
-  const content = lesson.article_body || '<p>Nội dung bài học đang được cập nhật...</p>';
 
   return (
     <div className="lesson-content page-enter">
@@ -192,9 +228,13 @@ export default function LessonView() {
               ref={videoRef}
               src={videoInfo.url}
               controls
+              controlsList="nodownload noremoteplayback"
+              disablePictureInPicture
               playsInline
+              onContextMenu={e => e.preventDefault()}
               onTimeUpdate={handleTimeUpdate}
               onSeeked={handleSeeked}
+              onEnded={handleEnded}
               style={{ width: '100%', aspectRatio: '16/9', background: '#000', borderRadius: 12 }}
             />
           ) : videoError ? (
@@ -270,10 +310,15 @@ export default function LessonView() {
         </Card>
       )}
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-        <Button variant="primary" onClick={handleComplete} isDisabled={completed || isLessonCompleted}>
-          {completed || isLessonCompleted ? <><Icon.Check size={16} /> Đã hoàn thành</> : 'Đánh dấu hoàn thành'}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+        <Button variant="primary" onClick={handleComplete} isDisabled={completed || isLessonCompleted || completeBlockedByVideo}>
+          {completed || isLessonCompleted ? <><Icon.Check size={16} /> Đã hoàn thành</> : (completeBlockedByVideo ? 'Xem hết video để hoàn thành' : 'Đánh dấu hoàn thành')}
         </Button>
+        {completeBlockedByVideo && (
+          <p style={{ fontSize: 12, color: 'var(--muted)' }}>
+            Bạn cần xem hết video (không tua tới trước) để hoàn thành bài học này.
+          </p>
+        )}
       </div>
 
       <div className="lesson-nav">

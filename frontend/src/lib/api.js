@@ -74,6 +74,10 @@ export const api = {
     list: async () => request('/courses'),
     get: async (slug) => request(`/courses/${slug}`),
   },
+  lessons: {
+    progress: async (lessonId, data) =>
+      request(`/lessons/${lessonId}/progress`, { method: 'POST', body: JSON.stringify(data) }),
+  },
   vimi: {
     chat: (message) => request('/vimi/chat', { method: 'POST', body: JSON.stringify({ message }) }),
   },
