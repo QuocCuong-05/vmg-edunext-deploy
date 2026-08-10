@@ -59,7 +59,7 @@ export default function RankingPage() {
     loadRankings(opts);
   }
 
-  const filteredSchools = selectedWard ? schools.filter(s => s.ward === selectedWard) : schools;
+  const filteredSchools = selectedWard ? schools.filter(s => s.ward_name === selectedWard) : schools;
 
   const myRank = rankings.findIndex(r => r.id === user?.id) + 1;
   const myRow = rankings.find(r => r.id === user?.id);

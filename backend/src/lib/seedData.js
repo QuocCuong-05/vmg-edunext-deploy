@@ -180,10 +180,27 @@ export const TABLES = [
     onConflict: 'title',
     selectColumns: 'title, description, xp_reward, quiz_set_id, level_min, sort_order, is_active',
   },
+  {
+    name: 'wards',
+    csv: 'wards.csv',
+    deleteOrder: 0,
+    importOrder: 0,
+    idInCsv: false,
+    onConflict: 'name',
+    selectColumns: 'name',
+  },
+  {
+    name: 'schools',
+    csv: 'schools.csv',
+    deleteOrder: 0,
+    importOrder: 0,
+    idInCsv: false,
+    onConflict: 'name',
+    selectColumns: 'name, ward_name, level',
+  },
 ];
 
 const by = (orderKey) => TABLES.filter(t => t[orderKey] > 0).sort((a, b) => a[orderKey] - b[orderKey]);
-
 export async function clearTable(tableName) {
   const { error } = await supabaseAdmin
     .from(tableName)
