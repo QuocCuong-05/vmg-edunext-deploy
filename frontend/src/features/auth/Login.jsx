@@ -158,7 +158,13 @@ export default function Login() {
             ) : (
               <>
                 {isLogin ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}
-                <a onClick={() => { setIsLogin(!isLogin); setError(''); setInfo(''); }}>{isLogin ? 'Đăng ký ngay' : 'Đăng nhập'}</a>
+                <a onClick={() => {
+                  const toLogin = !isLogin;
+                  setIsLogin(toLogin);
+                  setError('');
+                  setInfo('');
+                  if (!toLogin) { setEmail(''); setPassword(''); }
+                }}>{isLogin ? 'Đăng ký ngay' : 'Đăng nhập'}</a>
               </>
             )}
           </div>
