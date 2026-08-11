@@ -99,13 +99,13 @@ router.post('/orders/:id/approve', async (req, res, next) => {
 
 router.post('/courses/paid', async (req, res, next) => {
   try {
-    const { course_id: courseId, price, sale_price: salePrice } = req.body;
-    if (!courseId || !price) return res.status(400).json({ error: 'course_id và price là bắt buộc' });
+    const { course_id: courseId } = req.body;
+    if (!courseId) return res.status(400).json({ error: 'course_id là bắt buộc' });
     const { data, error } = await supabaseAdmin
       .from('courses')
-      .update({ access_type: 'premium', price: Math.round(price), sale_price: salePrice ? Math.round(salePrice) : null })
+      .update({ access_type: 'premium' })
       .eq('id', courseId)
-      .select('id, title, access_type, price, sale_price')
+      .select('id, title, access_type')
       .single();
     if (error) throw error;
     res.json(data);
@@ -120,9 +120,9 @@ router.post('/courses/free', async (req, res, next) => {
     if (!courseId) return res.status(400).json({ error: 'course_id là bắt buộc' });
     const { data, error } = await supabaseAdmin
       .from('courses')
-      .update({ access_type: 'free', price: null, sale_price: null })
+      .update({ access_type: 'free' })
       .eq('id', courseId)
-      .select('id, title, access_type, price, sale_price')
+      .select('id, title, access_type')
       .single();
     if (error) throw error;
     res.json(data);

@@ -249,10 +249,8 @@ export default function AdminData() {
   }
 
   async function handleSavePaid(courseId) {
-    const f = courseForm[courseId] || {};
-    if (!f.price) { setError('Nhập giá cho khóa trả phí'); return; }
     try {
-      const updated = await api.admin.setPaidCourse(courseId, Number(f.price), f.sale_price ? Number(f.sale_price) : null);
+      const updated = await api.admin.setPremiumCourse(courseId);
       setCourses(prev => prev.map(c => c.id === courseId ? { ...c, ...updated } : c));
     } catch (err) { setError(err.message); }
   }
@@ -663,7 +661,7 @@ export default function AdminData() {
         <div className="admin-panel">
           <h3>Khóa Premium — đặt trạng thái &amp; preview</h3>
           <p className="admin-note" style={{ marginBottom: 16 }}>
-            Khóa Premium chỉ mở khi tài khoản có gói Plus — không bán lẻ từng khóa. Giá để tham khảo/nội bộ.
+            Khóa Premium chỉ mở khi tài khoản có gói Plus — không bán lẻ từng khóa.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {courses.map(c => {
@@ -678,18 +676,6 @@ export default function AdminData() {
                     </span>
                   </div>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 12 }}>
-                    <div>
-                      <label style={{ display: 'block', fontWeight: 700, fontSize: 11, marginBottom: 5, color: 'var(--muted)' }}>Giá tham khảo (đ)</label>
-                      <input type="number" className="admin-input" style={{ width: 140 }}
-                        value={f.price ?? c.price ?? ''}
-                        onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, price: e.target.value } })} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontWeight: 700, fontSize: 11, marginBottom: 5, color: 'var(--muted)' }}>Giá khuyến mãi (đ)</label>
-                      <input type="number" className="admin-input" style={{ width: 140 }}
-                        value={f.sale_price ?? c.sale_price ?? ''}
-                        onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, sale_price: e.target.value } })} />
-                    </div>
                     <button className="admin-btn" onClick={() => handleSavePaid(c.id)}>Đặt Premium</button>
                     {premium && (
                       <button className="admin-btn-ghost" onClick={() => handleSetFree(c.id)}>Chuyển miễn phí</button>

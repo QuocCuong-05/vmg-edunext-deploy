@@ -166,63 +166,11 @@ async function createPlusOrder(req, res, next) {
 
 router.post('/create', authenticate, async (req, res, next) => {
   try {
-    const { course_id: courseId, plan, period } = req.body;
-
-    if (plan === 'plus') {
-      return await createPlusOrder(req, res, next);
+    const { plan } = req.body;
+    if (plan !== 'plus') {
+      return res.status(400).json({ error: 'Chỉ hỗ trợ mua gói Plus (plan: "plus")' });
     }
-    if (!courseId) return res.status(400).json({ error: 'course_id is required' });
-
-    const { data: course, error: courseErr } = await supabase
-      .from('courses')
-      .select('id, title, access_type, price, sale_price')
-      .eq('id', courseId)
-      .single();
-    if (courseErr || !course) return res.status(404).json({ error: 'Khóa học không tồn tại' });
-    if (course.access_type !== 'paid') return res.status(400).json({ error: 'Khóa học này không cần thanh toán' });
-    if (!course.price) return res.status(400).json({ error: 'Khóa học chưa được đặt giá' });
-
-    if (await isUnlocked(req.user.id, courseId)) {
-      return res.status(409).json({ error: 'Bạn đã mở khóa khóa học này rồi' });
-    }
-
-    const { data: existing } = await supabaseAdmin
-      .from('orders')
-      .select('*')
-      .eq('user_id', req.user.id)
-      .eq('course_id', courseId)
-      .eq('status', 'pending')
-      .maybeSingle();
-    if (existing && new Date(existing.expires_at) > new Date()) {
-      return res.json({ order: existing, existing: true });
-    }
-
-    const ttlMinutes = await getOrderTtlMinutes();
-    const amount = course.sale_price ?? course.price;
-    const order = {
-      order_no: genOrderNo(),
-      user_id: req.user.id,
-      course_id: courseId,
-      amount,
-      method: 'bank_transfer',
-      status: 'pending',
-      expires_at: new Date(Date.now() + ttlMinutes * 60 * 1000).toISOString(),
-    };
-    const { data: created, error } = await supabaseAdmin
-      .from('orders')
-      .insert(order)
-      .select('*')
-      .single();
-    if (error) throw error;
-
-    const role = await getProfileRole(req.user.id);
-    const isAdmin = ['admin', 'super_admin'].includes(role);
-    const result = { order: created, existing: false, qr_type: isAdmin ? 'approve' : 'transfer' };
-    if (isAdmin) {
-      const origin = req.get('origin') || process.env.FRONTEND_URL || '';
-      result.approve_url = `${origin}/order-approve/${created.id}?token=${signApproveToken(created.id)}`;
-    }
-    res.json(result);
+    return await createPlusOrder(req, res, next);
   } catch (err) {
     next(err);
   }

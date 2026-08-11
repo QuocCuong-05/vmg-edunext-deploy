@@ -408,8 +408,6 @@ export const api = {
     },
   },
   orders: {
-    create: async (courseId, method = 'bank_transfer') =>
-      request('/orders/create', { method: 'POST', body: JSON.stringify({ course_id: courseId, method }) }),
     createPlus: async (period) =>
       request('/orders/create', { method: 'POST', body: JSON.stringify({ plan: 'plus', period }) }),
     confirmTransfer: async (orderId) =>
@@ -435,8 +433,8 @@ export const api = {
     orders: async () => request('/admin/orders'),
     approveOrder: async (id) => request(`/admin/orders/${id}/approve`, { method: 'POST' }),
     dashboardStats: async () => request('/admin/dashboard-stats'),
-    setPaidCourse: async (courseId, price, salePrice) =>
-      request('/admin/courses/paid', { method: 'POST', body: JSON.stringify({ course_id: courseId, price, sale_price: salePrice }) }),
+    setPremiumCourse: async (courseId) =>
+      request('/admin/courses/paid', { method: 'POST', body: JSON.stringify({ course_id: courseId }) }),
     setFreeCourse: async (courseId) =>
       request('/admin/courses/free', { method: 'POST', body: JSON.stringify({ course_id: courseId }) }),
     setPreview: async (lessonId, previewText) =>

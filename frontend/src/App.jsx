@@ -8,7 +8,6 @@ import ResetPassword from './features/auth/ResetPassword';
 import Dashboard from './features/dashboard/Dashboard';
 import Courses from './features/courses/Courses';
 import CourseDetail from './features/courses/CourseDetail';
-import RegisterCoursePage from './features/courses/RegisterCoursePage';
 import OrderApprovePage from './features/courses/OrderApprovePage';
 import LessonView from './features/courses/LessonView';
 import Vocabulary from './features/vocabulary/Vocabulary';
@@ -53,7 +52,6 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/courses/:slug" element={<CourseDetail />} />
-        <Route path="/courses/:slug/register" element={<RegisterCoursePage />} />
         <Route path="/courses/:slug/lessons/:lessonId" element={<LessonView />} />
         <Route path="/vocabulary" element={<Vocabulary />} />
         <Route path="/classroom" element={<Classroom />} />
