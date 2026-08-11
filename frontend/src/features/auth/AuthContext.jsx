@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { syncXp, setPlusFlag } from '../../lib/xp';
+import { validatePassword } from '../../lib/password';
 
 const AuthContext = createContext(null);
 
@@ -90,7 +91,10 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signup = useCallback(async (email, password, full_name, school, ward) => {
-    if (password.length < 6) throw new Error('Mật khẩu phải có ít nhất 6 ký tự');
+    const v = validatePassword(password);
+    if (!v.ok) {
+      throw new Error('Mật khẩu yếu — cần: ' + v.failed.join(', '));
+    }
 
     const res = await fetch(`${API_BASE}/auth/signup`, {
       method: 'POST',

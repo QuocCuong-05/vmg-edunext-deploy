@@ -4,11 +4,18 @@ import { getPlusStatus, getAiRemaining } from '../lib/plus.js';
 
 const router = Router();
 
+const PASSWORD_RULE = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/;
+
 router.post('/signup', async (req, res) => {
   try {
     const { email, password, full_name, school, ward } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
+    }
+    if (!PASSWORD_RULE.test(password)) {
+      return res.status(400).json({
+        error: 'Mật khẩu yếu: cần tối thiểu 6 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt',
+      });
     }
 
     const { data, error } = await supabase.auth.signUp({

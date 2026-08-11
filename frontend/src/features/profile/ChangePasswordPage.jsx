@@ -4,6 +4,8 @@ import { supabase } from '../../lib/supabase';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import PasswordChecklist from '../../components/ui/PasswordChecklist';
+import { validatePassword } from '../../lib/password';
 
 export default function ChangePasswordPage() {
   const { user, logout } = useAuth();
@@ -17,8 +19,9 @@ export default function ChangePasswordPage() {
       window.__vimi_toast?.('Vui lòng nhập mật khẩu hiện tại', 'error');
       return;
     }
-    if (next.length < 6) {
-      window.__vimi_toast?.('Mật khẩu mới phải có ít nhất 6 ký tự', 'error');
+    const v = validatePassword(next);
+    if (!v.ok) {
+      window.__vimi_toast?.('Mật khẩu mới yếu — cần: ' + v.failed.join(', '), 'error');
       return;
     }
     if (next !== confirm) {
@@ -83,9 +86,10 @@ export default function ChangePasswordPage() {
             type="password"
             value={next}
             onChange={e => setNext(e.target.value)}
-            placeholder="Ít nhất 6 ký tự"
+            placeholder="Nhập mật khẩu mới"
             autoComplete="new-password"
           />
+          <PasswordChecklist password={next} />
         </div>
 
         <div className="form-group">
@@ -100,7 +104,7 @@ export default function ChangePasswordPage() {
         </div>
 
         <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16, lineHeight: 1.5 }}>
-          Yêu cầu: mật khẩu mới tối thiểu 6 ký tự, khác mật khẩu hiện tại. Sau khi đổi, bạn có thể cần đăng nhập lại.
+          Yêu cầu: tối thiểu 6 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt; khác mật khẩu hiện tại. Sau khi đổi, bạn có thể cần đăng nhập lại.
         </p>
 
         <Button variant="primary" isDisabled={submitting} onClick={handleSubmit}>
