@@ -30,6 +30,7 @@ import AdminData from './features/admin/AdminData';
 import AdminRoute from './features/auth/AdminRoute';
 import AccountPage from './features/profile/AccountPage';
 import ChangePasswordPage from './features/profile/ChangePasswordPage';
+import PolicyPage from './features/policy/PolicyPage';
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -48,6 +49,7 @@ export default function App() {
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/order-approve/:orderId" element={<OrderApprovePage />} />
+      <Route path="/policy/:slug" element={<PolicyPage />} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/courses" element={<Courses />} />

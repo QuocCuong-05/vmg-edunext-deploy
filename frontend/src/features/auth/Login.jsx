@@ -2,16 +2,29 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 import Button from '../../components/ui/Button';
 import PasswordChecklist from '../../components/ui/PasswordChecklist';
+import { validatePassword } from '../../lib/password';
 import { getWards } from '../../mock/wards';
 import { getSchools } from '../../mock/schools';
+import PolicyModal from '../policy/PolicyModal';
+
+const CONSENT_ITEMS = [
+  { key: 'service', title: 'Cung cấp và duy trì dịch vụ', desc: 'Tạo lập tài khoản, đăng nhập, mua gói Plus, thanh toán, cấp chứng nhận', required: true },
+  { key: 'support', title: 'Hỗ trợ và chăm sóc người dùng', desc: 'Giải đáp thắc mắc, xử lý khiếu nại, khảo sát cải tiến', required: true },
+  { key: 'security', title: 'An ninh và tuân thủ pháp luật', desc: 'Xác thực tài khoản, phát hiện gian lận, nghĩa vụ pháp lý (NĐ 13)', required: true },
+  { key: 'quality', title: 'Nâng cao chất lượng dịch vụ', desc: 'Phân tích tương tác, cá nhân hóa, đề xuất khóa học, cải thiện ViMi AI', required: true },
+  { key: 'marketing', title: 'Truyền thông và tiếp thị', desc: 'Gửi khuyến mãi, bản tin, đo lường quảng cáo', required: false },
+];
+const REQUIRED_CONSENTS = CONSENT_ITEMS.filter(c => c.required).map(c => c.key);
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [isForgot, setIsForgot] = useState(false);
-  const [email, setEmail] = useState('teacher@vmg-edunext.com');
-  const [password, setPassword] = useState('2026demo');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [ward, setWard] = useState('');
   const [school, setSchool] = useState('');
@@ -21,6 +34,9 @@ export default function Login() {
   const [showPw, setShowPw] = useState(false);
   const [wards, setWards] = useState([]);
   const [schools, setSchools] = useState([]);
+  const [step, setStep] = useState(1);
+  const [consents, setConsents] = useState({ service: false, support: false, security: false, quality: false, marketing: false });
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
   const { login, signup } = useAuth();
   const navigate = useNavigate();
 
@@ -39,26 +55,70 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setInfo('');
-    setBusy(true);
-    try {
-      if (isForgot) {
+    if (isForgot) {
+      setBusy(true);
+      try {
         const redirectTo = `${window.location.origin}/reset-password`;
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
         if (error) throw error;
         setInfo('Đã gửi link đặt lại mật khẩu vào email của bạn. Vui lòng kiểm tra hộp thư.');
-      } else if (isLogin) {
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+    if (isLogin) {
+      setBusy(true);
+      try {
         await login(email, password);
         navigate('/dashboard');
-      } else {
-        await signup(email, password, fullName, school, ward);
-        navigate('/dashboard');
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setBusy(false);
       }
+      return;
+    }
+    if (step === 1) {
+      const v = validatePassword(password);
+      if (!v.ok) {
+        setError('Mật khẩu yếu — cần: ' + v.failed.join(', '));
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('Mật khẩu xác nhận không khớp');
+        return;
+      }
+      setStep(2);
+      return;
+    }
+    const missing = REQUIRED_CONSENTS.filter(k => !consents[k]);
+    if (missing.length > 0) {
+      setError('Vui lòng tích các mục bắt buộc về xử lý dữ liệu');
+      return;
+    }
+    setBusy(true);
+    try {
+      await signup(email, password, fullName, school, ward);
+      try {
+        await api.auth.consent(CONSENT_ITEMS.map(c => ({ key: c.key, version: 1, accepted: consents[c.key] })));
+      } catch (consentErr) {
+        console.error('[consent]', consentErr.message);
+      }
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message);
     } finally {
       setBusy(false);
     }
   };
+
+  const title = isForgot ? 'Quên mật khẩu' : (isLogin ? 'Đăng nhập' : 'Tạo tài khoản');
+  const subtitle = isForgot
+    ? 'Nhập email của bạn, chúng tôi sẽ gửi link đặt lại mật khẩu.'
+    : (isLogin ? 'Chào mừng bạn quay trở lại!' : 'Bắt đầu hành trình học tập của bạn');
 
   return (
     <div className="auth-page">
@@ -82,8 +142,8 @@ export default function Login() {
       </div>
       <div className="auth-form-wrap">
         <div className="auth-form-inner">
-          <h2>{isForgot ? 'Quên mật khẩu' : (isLogin ? 'Đăng nhập' : 'Đăng ký')}</h2>
-          <p>{isForgot ? 'Nhập email của bạn, chúng tôi sẽ gửi link đặt lại mật khẩu.' : (isLogin ? 'Chào mừng bạn quay trở lại!' : 'Tạo tài khoản mới để bắt đầu học tập.')}</p>
+          <h2>{title}</h2>
+          <p>{subtitle}</p>
 
           {error && (
             <div style={{ padding: '12px 16px', background: 'var(--red-bg)', color: 'var(--red)', borderRadius: 12, fontSize: 13, marginBottom: 16 }}>
@@ -97,59 +157,146 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit}>
-            {!isForgot && !isLogin && (<>
-              <div className="form-group">
-                <label>Họ và tên</label>
-                <input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nguyễn Văn A" required />
-              </div>
-              <div className="form-group">
-                <label>Phường/Xã</label>
-                <select value={ward} onChange={e => setWard(e.target.value)} required>
-                  <option value="">Chọn phường/xã...</option>
-                  {wards.map(w => (
-                    <option key={w.id} value={w.name}>{w.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Trường học</label>
-                <select value={school} onChange={e => setSchool(e.target.value)} disabled={!ward} required>
-                  <option value="">{ward ? 'Chọn trường...' : 'Chọn phường/xã trước'}</option>
-                  {filteredSchools.map(s => (
-                    <option key={s.id} value={s.name}>{s.name}</option>
-                  ))}
-                </select>
-              </div>
-            </>)}
-            <div className="form-group">
-              <label>Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="teacher@vmg-edunext.com" required />
-            </div>
-            {!isForgot && (
-            <div className="form-group">
-              <label>Mật khẩu</label>
-              <div className="pw-wrap">
-                <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
-                <button type="button" className="pw-toggle" onClick={() => setShowPw(!showPw)} tabIndex={-1}>
-                  {showPw
-                    ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                    : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
-                </button>
-              </div>
-              {isLogin && (
-                <div style={{ textAlign: 'right', marginTop: 6 }}>
-                  <a
-                    onClick={() => { setIsForgot(true); setError(''); setInfo(''); }}
-                    style={{ fontSize: 12, color: 'var(--red)', cursor: 'pointer', fontWeight: 600 }}
-                  >Quên mật khẩu?</a>
+            {!isForgot && !isLogin && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--red)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>1</div>
+                  <span style={{ fontSize: 13, fontWeight: step === 1 ? 700 : 500, color: step === 1 ? 'var(--ink)' : 'var(--muted)', whiteSpace: 'nowrap' }}>Thông tin cá nhân</span>
                 </div>
-              )}
-              {!isLogin && !isForgot && <PasswordChecklist password={password} />}
-            </div>
+                <div style={{ flex: 1, height: 2, background: step >= 2 ? 'var(--red)' : 'var(--line)', margin: '0 12px' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: step >= 2 ? 'var(--red)' : 'var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>2</div>
+                  <span style={{ fontSize: 13, fontWeight: step === 2 ? 700 : 500, color: step === 2 ? 'var(--ink)' : 'var(--muted)', whiteSpace: 'nowrap' }}>Xác nhận</span>
+                </div>
+              </div>
             )}
+
+            {step === 1 && (
+              <>
+                {!isLogin && (
+                  <>
+                    <div className="form-group">
+                      <label>Họ và tên</label>
+                      <input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nguyễn Văn A" required />
+                      <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>* Hóa đơn sẽ được xuất theo tên này</div>
+                    </div>
+                    <div className="form-group">
+                      <label>Phường/Xã</label>
+                      <select value={ward} onChange={e => setWard(e.target.value)} required>
+                        <option value="">Chọn phường/xã...</option>
+                        {wards.map(w => (
+                          <option key={w.id} value={w.name}>{w.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Trường học</label>
+                      <select value={school} onChange={e => setSchool(e.target.value)} disabled={!ward} required>
+                        <option value="">{ward ? 'Chọn trường...' : 'Chọn phường/xã trước'}</option>
+                        {filteredSchools.map(s => (
+                          <option key={s.id} value={s.name}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
+                <div className="form-group">
+                  <label>Email</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="teacher@vmg-edunext.com" required />
+                </div>
+                {!isForgot && (
+                  <>
+                    <div className="form-group">
+                      <label>Mật khẩu</label>
+                      <div className="pw-wrap">
+                        <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
+                        <button type="button" className="pw-toggle" onClick={() => setShowPw(!showPw)} tabIndex={-1}>
+                          {showPw
+                            ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                            : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                        </button>
+                      </div>
+                      {!isLogin && <PasswordChecklist password={password} />}
+                    </div>
+                    {!isLogin && (
+                      <div className="form-group">
+                        <label>Xác nhận mật khẩu</label>
+                        <input
+                          type={showPw ? 'text' : 'password'}
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          placeholder="Xác nhận mật khẩu"
+                          required
+                          style={password && confirmPassword && password !== confirmPassword ? { borderColor: 'var(--red)' } : {}}
+                        />
+                        {password && confirmPassword && password !== confirmPassword && (
+                          <div style={{ fontSize: 12, color: 'var(--red)', marginTop: 4 }}>Mật khẩu không khớp</div>
+                        )}
+                      </div>
+                    )}
+                    {isLogin && (
+                      <div style={{ textAlign: 'right', marginTop: 6, marginBottom: 16 }}>
+                        <a
+                          onClick={() => { setIsForgot(true); setError(''); setInfo(''); }}
+                          style={{ fontSize: 12, color: 'var(--red)', cursor: 'pointer', fontWeight: 600 }}
+                        >Quên mật khẩu?</a>
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+
+            {!isLogin && !isForgot && step === 2 && (
+              <div style={{ marginBottom: 16 }}>
+                {CONSENT_ITEMS.map(item => (
+                  <label
+                    key={item.key}
+                    style={{
+                      display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer',
+                      padding: '12px 14px', borderRadius: 12, marginBottom: 8,
+                      border: '1px solid var(--line)', background: 'var(--surface-hover)',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!consents[item.key]}
+                      onChange={e => setConsents({ ...consents, [item.key]: e.target.checked })}
+                      style={{ marginTop: 3, flexShrink: 0, width: 16, height: 16 }}
+                    />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <b style={{ fontSize: 13 }}>
+                        {item.title}{' '}
+                        {item.required
+                          ? <span style={{ color: 'var(--red)', fontSize: 11 }}>(bắt buộc)</span>
+                          : <span style={{ color: 'var(--muted)', fontSize: 11 }}>(tùy chọn)</span>}
+                      </b>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginTop: 3 }}>{item.desc}</div>
+                    </span>
+                  </label>
+                ))}
+                <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginTop: 12 }}>
+                  Bằng cách đăng ký, bạn đồng ý với Điều khoản dịch vụ và{' '}
+                  <a
+                    onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }}
+                    style={{ color: 'var(--red)', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}
+                  >
+                    Chính sách bảo mật
+                  </a>
+                  {' '}của VMG EduNext.
+                </p>
+              </div>
+            )}
+
             <Button type="submit" variant="primary" style={{ width: '100%', justifyContent: 'center', padding: '16px 24px', fontSize: 15 }} isDisabled={busy}>
-              {busy ? 'Đang xử lý...' : isForgot ? 'Gửi link đặt lại mật khẩu' : (isLogin ? 'Đăng nhập' : 'Đăng ký')}
+              {busy ? 'Đang xử lý...' : isForgot ? 'Gửi link đặt lại mật khẩu' : isLogin ? 'Đăng nhập' : (step === 2 ? 'Tạo tài khoản' : 'Tiếp tục')}
             </Button>
+            {!isForgot && !isLogin && step === 2 && (
+              <Button variant="ghost" type="button" style={{ width: '100%', justifyContent: 'center', marginTop: 8 }}
+                onClick={() => { setStep(1); setError(''); }}>
+                ← Quay lại
+              </Button>
+            )}
           </form>
 
           <div className="auth-toggle">
@@ -163,13 +310,15 @@ export default function Login() {
                   setIsLogin(toLogin);
                   setError('');
                   setInfo('');
-                  if (!toLogin) { setEmail(''); setPassword(''); }
+                  if (toLogin) { setEmail(''); setPassword(''); setConfirmPassword(''); setStep(1); }
                 }}>{isLogin ? 'Đăng ký ngay' : 'Đăng nhập'}</a>
               </>
             )}
           </div>
         </div>
       </div>
+
+      {showPolicyModal && <PolicyModal slug="chinh-sach-bao-mat" onClose={() => setShowPolicyModal(false)} />}
     </div>
   );
 }

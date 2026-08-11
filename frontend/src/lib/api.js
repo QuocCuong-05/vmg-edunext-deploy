@@ -70,6 +70,7 @@ export const api = {
       if (error) throw error;
       return data;
     },
+    consent: async (items) => request('/auth/consent', { method: 'POST', body: JSON.stringify({ items }) }),
   },
   courses: {
     list: async () => request('/courses'),

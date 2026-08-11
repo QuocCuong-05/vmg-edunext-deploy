@@ -123,4 +123,41 @@ router.post('/sync-xp', async (req, res) => {
   }
 });
 
+router.post('/consent', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'No token' });
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error) return res.status(401).json({ error: error.message });
+
+    const { items } = req.body;
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'items (mảng) là bắt buộc' });
+    }
+
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+      || req.socket?.remoteAddress || null;
+    const rows = items
+      .filter(it => it && it.key)
+      .map(it => ({
+        user_id: user.id,
+        policy_key: String(it.key),
+        version: Number(it.version) || 1,
+        accepted: !!it.accepted,
+        ip,
+      }));
+    if (rows.length === 0) return res.status(400).json({ error: 'Không có mục hợp lệ' });
+
+    const { data, error: insertError } = await supabaseAdmin
+      .from('consent_log')
+      .upsert(rows, { onConflict: 'user_id,policy_key,version' });
+    if (insertError) throw insertError;
+
+    res.json({ saved: rows.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
