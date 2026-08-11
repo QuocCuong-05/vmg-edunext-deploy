@@ -100,11 +100,11 @@ export default function Login() {
             {!isForgot && !isLogin && (<>
               <div className="form-group">
                 <label>Họ và tên</label>
-                <input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nguyễn Văn A" />
+                <input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nguyễn Văn A" required />
               </div>
               <div className="form-group">
                 <label>Phường/Xã</label>
-                <select value={ward} onChange={e => setWard(e.target.value)}>
+                <select value={ward} onChange={e => setWard(e.target.value)} required>
                   <option value="">Chọn phường/xã...</option>
                   {wards.map(w => (
                     <option key={w.id} value={w.name}>{w.name}</option>
@@ -113,7 +113,7 @@ export default function Login() {
               </div>
               <div className="form-group">
                 <label>Trường học</label>
-                <select value={school} onChange={e => setSchool(e.target.value)} disabled={!ward}>
+                <select value={school} onChange={e => setSchool(e.target.value)} disabled={!ward} required>
                   <option value="">{ward ? 'Chọn trường...' : 'Chọn phường/xã trước'}</option>
                   {filteredSchools.map(s => (
                     <option key={s.id} value={s.name}>{s.name}</option>
