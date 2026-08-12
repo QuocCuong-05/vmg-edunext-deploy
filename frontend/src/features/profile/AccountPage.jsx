@@ -275,14 +275,14 @@ export default function AccountPage() {
               display: 'inline-flex',
               border: '1px solid var(--red)',
               background: 'var(--red-bg)',
-              borderRadius: 10,
-              padding: 3,
+              borderRadius: 8,
+              padding: 1,
             }}
           >
             <Button
               variant="ghost"
               size="sm"
-              style={{ color: 'var(--red)', fontWeight: 700 }}
+              style={{ color: 'var(--red)', fontWeight: 700, padding: '6px 12px', fontSize: 12 }}
               isDisabled={anonymizing}
               onClick={() => setShowAnonymizeModal(true)}
             >
