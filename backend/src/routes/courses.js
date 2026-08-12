@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabase, supabaseAdmin } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
 import { hasActivePlus } from '../lib/plus.js';
+import { logActivity } from '../lib/activity.js';
 
 const router = Router();
 
@@ -70,6 +71,8 @@ router.get('/:slug', authenticate, async (req, res) => {
     }
 
     if (!course) return res.status(404).json({ error: 'Course not found' });
+
+    await logActivity(req.user.id, 'course_view', `Xem khóa học "${course.title}"`, req);
 
     const { data: lessons, error: lessonsError } = await supabase
       .from('lessons')

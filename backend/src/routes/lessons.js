@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabase, supabaseAdmin } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
 import { hasActivePlus } from '../lib/plus.js';
+import { logActivity } from '../lib/activity.js';
 
 const router = Router();
 
@@ -15,6 +16,8 @@ router.get('/:id', authenticate, async (req, res) => {
       .single();
 
     if (error) return res.status(404).json({ error: 'Lesson not found' });
+
+    await logActivity(req.user.id, 'lesson_view', `Xem bài học "${lesson.title}"`, req);
 
     if (lesson.is_free || (await hasActivePlus(req.user.id))) {
       return res.json({ data: lesson });

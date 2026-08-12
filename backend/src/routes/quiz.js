@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabase, supabaseAdmin } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
 import { hasActivePlus } from '../lib/plus.js';
+import { logActivity } from '../lib/activity.js';
 
 const router = Router();
 
@@ -77,6 +78,8 @@ router.post('/submit', authenticate, async (req, res, next) => {
       total_questions: total,
       correct_answers: correct,
     });
+
+    await logActivity(req.user.id, 'quiz_submit', `Nộp bài quiz (điểm ${score}%)`, req);
 
     res.json({ data: { score, correct, total } });
   } catch (err) {

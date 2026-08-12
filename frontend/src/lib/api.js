@@ -73,6 +73,8 @@ export const api = {
     consent: async (items) => request('/auth/consent', { method: 'POST', body: JSON.stringify({ items }) }),
     consents: async () => request('/auth/consents'),
     anonymize: async () => request('/auth/anonymize', { method: 'POST' }),
+    devices: async () => request('/auth/devices'),
+    activity: async () => request('/auth/activity'),
   },
   courses: {
     list: async () => request('/courses'),

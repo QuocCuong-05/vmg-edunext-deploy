@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { supabase, supabaseAdmin } from '../config/database.js';
 import { getPlusStatus, getAiRemaining } from '../lib/plus.js';
 import { getClientIp } from '../lib/ip.js';
+import { parseDeviceName } from '../lib/device.js';
+import { logActivity } from '../lib/activity.js';
 
 const router = Router();
 
@@ -52,13 +54,37 @@ router.post('/login', async (req, res) => {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return res.status(401).json({ error: error.message });
+
+    const ua = req.headers['user-agent'] || null;
+    await supabaseAdmin
+      .from('login_sessions')
+      .insert({
+        user_id: data.user.id,
+        ip: getClientIp(req),
+        user_agent: ua,
+        device_name: parseDeviceName(ua),
+      })
+      .then(() => {})
+      .catch(() => {});
+    await logActivity(data.user.id, 'login', `Đăng nhập bằng ${email}`, req);
+
     res.json({ user: data.user, session: data.session });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.post('/logout', async (_req, res) => {
+router.post('/logout', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      const token = authHeader.split(' ')[1];
+      const { data: { user } } = await supabase.auth.getUser(token);
+      if (user) await logActivity(user.id, 'logout', 'Đăng xuất', req);
+    }
+  } catch {
+    // logout không được chặn
+  }
   await supabase.auth.signOut();
   res.json({ message: 'Logged out' });
 });
@@ -154,6 +180,8 @@ router.post('/consent', async (req, res) => {
       .upsert(rows, { onConflict: 'user_id,policy_key,version' });
     if (insertError) throw insertError;
 
+    await logActivity(user.id, 'consent_update', `Cập nhật lựa chọn xử lý dữ liệu (version mới nhất)`, req);
+
     res.json({ saved: rows.length });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -210,9 +238,56 @@ router.post('/anonymize', async (req, res) => {
     await supabaseAdmin.from('user_follows').delete().eq('following_id', userId);
     await supabaseAdmin.from('plus_subscriptions').delete().eq('user_id', userId);
 
+    await logActivity(userId, 'delete_request', 'Yêu cầu xóa dữ liệu (khử nhận dạng)', req);
     await supabaseAdmin.auth.admin.deleteUser(userId);
 
     res.json({ anonymized: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /auth/devices — thiết bị đăng nhập của user (Facebook-style)
+router.get('/devices', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'No token' });
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error) return res.status(401).json({ error: error.message });
+
+    const { data, error: listError } = await supabaseAdmin
+      .from('login_sessions')
+      .select('id, ip, device_name, logged_in_at, last_active_at')
+      .eq('user_id', user.id)
+      .order('logged_in_at', { ascending: false })
+      .limit(50);
+    if (listError) throw listError;
+
+    res.json({ data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /auth/activity — event log của user (Moodle-style)
+router.get('/activity', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'No token' });
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error) return res.status(401).json({ error: error.message });
+
+    const { data, error: listError } = await supabaseAdmin
+      .from('access_log')
+      .select('event, description, origin, ip, user_agent, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (listError) throw listError;
+
+    res.json({ data });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
