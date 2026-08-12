@@ -208,6 +208,11 @@ export default function LessonView() {
 
   function handleEnded() {
     setVideoComplete(true);
+    const d = Math.round(videoRef.current?.duration || 0);
+    if (d > 0) {
+      api.lessons.progress(lessonId, { watched_seconds: d, video_duration: d })
+        .catch(err => console.error('[progress duration]', err.message));
+    }
   }
 
   if (isLocked) {
@@ -232,8 +237,18 @@ export default function LessonView() {
   const lessonHasVideo = !!lesson.video_url;
   const completeBlockedByVideo = lessonHasVideo && !videoComplete;
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (lessonHasVideo && !videoComplete) return;
+    try {
+      await api.lessons.progress(lessonId, {
+        completed: true,
+        watched_seconds: Math.round(maxWatchedRef.current),
+        video_duration: Math.round(videoRef.current?.duration || 0) || undefined,
+      });
+    } catch (err) {
+      setVideoError(err.message);
+      return;
+    }
     setCompleted(true);
     updateStreak();
     addXp(60);
@@ -249,10 +264,6 @@ export default function LessonView() {
     e.progress_pct = Math.round((arr.length / total) * 100);
     e.enrolled = true;
     saveEnroll(slug, e);
-    api.lessons.progress(lessonId, {
-      completed: true,
-      watched_seconds: Math.round(maxWatchedRef.current),
-    }).catch(() => {});
   };
 
   return (
@@ -366,6 +377,9 @@ export default function LessonView() {
         <Button variant="primary" onClick={handleComplete} isDisabled={completed || isLessonCompleted || completeBlockedByVideo}>
           {completed || isLessonCompleted ? <><Icon.Check size={16} /> Đã hoàn thành</> : (completeBlockedByVideo ? 'Xem hết video để hoàn thành' : 'Đánh dấu hoàn thành')}
         </Button>
+        {videoError && (
+          <p style={{ fontSize: 12, color: 'var(--red)', margin: 0 }}>{videoError}</p>
+        )}
       </div>
 
       <div className="lesson-nav">

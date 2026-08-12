@@ -47,17 +47,50 @@ router.get('/:id', authenticate, async (req, res) => {
 // POST /api/lessons/:id/progress — update lesson progress
 router.post('/:id/progress', authenticate, async (req, res) => {
   try {
-    const { completed, watched_seconds, score } = req.body;
+    const { completed, watched_seconds, score, video_duration } = req.body;
+
+    const { data: lesson, error: lessonError } = await supabase
+      .from('lessons')
+      .select('id, video_url, video_duration_seconds')
+      .eq('id', req.params.id)
+      .maybeSingle();
+    if (lessonError) return res.status(400).json({ error: lessonError.message });
+    if (!lesson) return res.status(404).json({ error: 'Lesson not found' });
+
+    // Lưu duration thật từ client lần đầu (video đang phát) — để có mốc verify
+    const needsDuration = lesson.video_duration_seconds == null;
+    if (needsDuration && Number(video_duration) > 0) {
+      const upd = await supabaseAdmin
+        .from('lessons')
+        .update({ video_duration_seconds: Number(video_duration) })
+        .eq('id', lesson.id);
+      if (upd.error) return res.status(400).json({ error: upd.error.message });
+      lesson.video_duration_seconds = Number(video_duration);
+    }
+
+    let willComplete = !!completed;
+    if (willComplete) {
+      if (!lesson.video_url) {
+        return res.status(400).json({ error: 'Bài học chưa có video, không thể hoàn thành' });
+      }
+      const duration = Number(lesson.video_duration_seconds);
+      if (!duration || duration <= 0) {
+        return res.status(400).json({ error: 'Chưa xác định thời lượng video — hãy xem hết video trước khi hoàn thành' });
+      }
+      if (Number(watched_seconds) < duration - 5) {
+        return res.status(400).json({ error: 'Chưa xem hết video — không thể hoàn thành' });
+      }
+    }
 
     const { data, error } = await supabaseAdmin
       .from('lesson_progress')
       .upsert({
         user_id: req.user.id,
         lesson_id: req.params.id,
-        completed: completed || false,
+        completed: willComplete,
         watched_seconds: watched_seconds || 0,
         score: score || null,
-        completed_at: completed ? new Date().toISOString() : null
+        completed_at: willComplete ? new Date().toISOString() : null
       }, { onConflict: 'user_id, lesson_id' })
       .select()
       .single();
