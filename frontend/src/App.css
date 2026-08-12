@@ -461,7 +461,7 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 
 /* Video player placeholder */
 .video-player {
-  width: 100%; aspect-ratio: 16/9; background: var(--ink); border-radius: var(--radius);
+  width: 100%; aspect-ratio: 16/9; background: #000; border-radius: var(--radius);
   display: grid; place-items: center; color: #fff; margin-bottom: 20px;
   overflow: hidden; position: relative;
 }
