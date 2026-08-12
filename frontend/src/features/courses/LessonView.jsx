@@ -45,8 +45,15 @@ export default function LessonView() {
     api.courses.get(slug).then(data => {
       setCourse(data);
       setLoading(false);
-    }).catch(() => setLoading(false));
-  }, [slug]);
+    }).catch(err => {
+      const msg = (err?.message || '') + ' ' + (err?.status || '');
+      if (/authorization|expired|Invalid token|401/i.test(msg)) {
+        navigate('/login');
+        return;
+      }
+      setLoading(false);
+    });
+  }, [slug, navigate]);
 
   useEffect(() => {
     if ((course?.access_type === 'premium' || course?.access_type === 'paid') && user?.id) {

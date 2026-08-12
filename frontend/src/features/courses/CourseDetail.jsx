@@ -49,8 +49,19 @@ export default function CourseDetail() {
         } catch {}
       }
       setLoading(false);
-    }).catch(() => setLoading(false));
-  }, [slug, user?.id]);
+    }).catch(err => {
+      const msg = (err?.message || '') + ' ' + (err?.status || '');
+      if (/authorization|expired|Invalid token|401/i.test(msg)) {
+        navigate('/login');
+        return;
+      }
+      if (slug === 'pronunciation-all-in-one') {
+        navigate('/courses/pronunciation-vowels', { replace: true });
+        return;
+      }
+      setLoading(false);
+    });
+  }, [slug, user?.id, navigate]);
 
   if (loading) {
     return <p style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Đang tải...</p>;

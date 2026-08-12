@@ -5,6 +5,10 @@ import { hasActivePlus } from '../lib/plus.js';
 
 const router = Router();
 
+const LEGACY_SLUGS = {
+  'pronunciation-all-in-one': 'pronunciation-vowels',
+};
+
 function sanitizeLessons(lessons, canAccessFull) {
   return (lessons || []).map(l => {
     if (canAccessFull || l.is_free) return l;
@@ -42,14 +46,30 @@ router.get('/', async (_req, res) => {
 // GET /api/courses/:slug — single course with lessons (sanitized theo quyền)
 router.get('/:slug', authenticate, async (req, res) => {
   try {
-    const { data: course, error: courseError } = await supabase
+    let slug = req.params.slug;
+    let { data: course, error: courseError } = await supabase
       .from('courses')
       .select('*')
-      .eq('slug', req.params.slug)
+      .eq('slug', slug)
       .eq('is_published', true)
-      .single();
+      .maybeSingle();
 
-    if (courseError) return res.status(404).json({ error: 'Course not found' });
+    if (courseError) return res.status(400).json({ error: courseError.message });
+
+    if (!course && LEGACY_SLUGS[slug]) {
+      slug = LEGACY_SLUGS[slug];
+      const legacy = await supabase
+        .from('courses')
+        .select('*')
+        .eq('slug', slug)
+        .eq('is_published', true)
+        .maybeSingle();
+      course = legacy.data;
+      courseError = legacy.error;
+      if (courseError) return res.status(400).json({ error: courseError.message });
+    }
+
+    if (!course) return res.status(404).json({ error: 'Course not found' });
 
     const { data: lessons, error: lessonsError } = await supabase
       .from('lessons')
