@@ -72,7 +72,7 @@ router.get('/:slug', authenticate, async (req, res) => {
 
     if (!course) return res.status(404).json({ error: 'Course not found' });
 
-    await logActivity(req.user.id, 'course_view', `Xem khóa học "${course.title}"`, req);
+    await logActivity(req.user.id, 'course_view', `Xem khóa học "${course.title}"`, req, `Khóa học: ${course.title}`);
 
     const { data: lessons, error: lessonsError } = await supabase
       .from('lessons')

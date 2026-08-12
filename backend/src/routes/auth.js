@@ -1,9 +1,14 @@
 import { Router } from 'express';
+import { createHash } from 'crypto';
 import { supabase, supabaseAdmin } from '../config/database.js';
 import { getPlusStatus, getAiRemaining } from '../lib/plus.js';
 import { getClientIp } from '../lib/ip.js';
 import { parseDeviceName } from '../lib/device.js';
-import { logActivity } from '../lib/activity.js';
+import { logActivity, EVENT_COMPONENT } from '../lib/activity.js';
+
+function sha256(text) {
+  return createHash('sha256').update(text || '').digest('hex');
+}
 
 const router = Router();
 
@@ -63,10 +68,11 @@ router.post('/login', async (req, res) => {
         ip: getClientIp(req),
         user_agent: ua,
         device_name: parseDeviceName(ua),
+        token_hash: sha256(data.session?.refresh_token || ''),
       })
       .then(() => {})
       .catch(() => {});
-    await logActivity(data.user.id, 'login', `Đăng nhập bằng ${email}`, req);
+    await logActivity(data.user.id, 'login', `Đăng nhập bằng ${email}`, req, 'Hệ thống');
 
     res.json({ user: data.user, session: data.session });
   } catch (err) {
@@ -80,7 +86,7 @@ router.post('/logout', async (req, res) => {
     if (authHeader) {
       const token = authHeader.split(' ')[1];
       const { data: { user } } = await supabase.auth.getUser(token);
-      if (user) await logActivity(user.id, 'logout', 'Đăng xuất', req);
+      if (user) await logActivity(user.id, 'logout', 'Đăng xuất', req, 'Hệ thống');
     }
   } catch {
     // logout không được chặn
@@ -180,7 +186,7 @@ router.post('/consent', async (req, res) => {
       .upsert(rows, { onConflict: 'user_id,policy_key,version' });
     if (insertError) throw insertError;
 
-    await logActivity(user.id, 'consent_update', `Cập nhật lựa chọn xử lý dữ liệu (version mới nhất)`, req);
+    await logActivity(user.id, 'consent_update', `Cập nhật lựa chọn xử lý dữ liệu (version mới nhất)`, req, 'Hệ thống');
 
     res.json({ saved: rows.length });
   } catch (err) {
@@ -238,7 +244,7 @@ router.post('/anonymize', async (req, res) => {
     await supabaseAdmin.from('user_follows').delete().eq('following_id', userId);
     await supabaseAdmin.from('plus_subscriptions').delete().eq('user_id', userId);
 
-    await logActivity(userId, 'delete_request', 'Yêu cầu xóa dữ liệu (khử nhận dạng)', req);
+    await logActivity(userId, 'delete_request', 'Yêu cầu xóa dữ liệu (khử nhận dạng)', req, 'Hệ thống');
     await supabaseAdmin.auth.admin.deleteUser(userId);
 
     res.json({ anonymized: true });
@@ -270,6 +276,41 @@ router.get('/devices', async (req, res) => {
   }
 });
 
+// POST /auth/devices/:id/signout — đăng xuất khỏi 1 thiết bị cụ thể (revoke refresh token)
+router.post('/devices/:id/signout', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'No token' });
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error) return res.status(401).json({ error: error.message });
+
+    const { data: session, error: findError } = await supabaseAdmin
+      .from('login_sessions')
+      .select('id, token_hash')
+      .eq('id', req.params.id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (findError) throw findError;
+    if (!session) return res.status(404).json({ error: 'Không tìm thấy thiết bị' });
+
+    if (session.token_hash) {
+      const { error: revokeError } = await supabaseAdmin.rpc('revoke_session', {
+        p_user_id: user.id,
+        p_token_hash: session.token_hash,
+      });
+      if (revokeError) throw revokeError;
+    }
+
+    await supabaseAdmin.from('login_sessions').delete().eq('id', session.id);
+    await logActivity(user.id, 'logout', 'Đăng xuất khỏi một thiết bị', req, 'Hệ thống');
+
+    res.json({ data: { signedOut: true } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /auth/activity — event log của user (Moodle-style)
 router.get('/activity', async (req, res) => {
   try {
@@ -279,15 +320,28 @@ router.get('/activity', async (req, res) => {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     if (error) return res.status(401).json({ error: error.message });
 
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .maybeSingle();
+
     const { data, error: listError } = await supabaseAdmin
       .from('access_log')
-      .select('event, description, origin, ip, user_agent, created_at')
+      .select('event, description, context, origin, ip, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50);
     if (listError) throw listError;
 
-    res.json({ data });
+    res.json({
+      data: (data || []).map(a => ({
+        ...a,
+        full_name: profile?.full_name || user.email,
+        affected_user: null,
+        component: EVENT_COMPONENT[a.event] || 'Hệ thống',
+      })),
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

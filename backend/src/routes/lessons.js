@@ -17,7 +17,7 @@ router.get('/:id', authenticate, async (req, res) => {
 
     if (error) return res.status(404).json({ error: 'Lesson not found' });
 
-    await logActivity(req.user.id, 'lesson_view', `Xem bài học "${lesson.title}"`, req);
+    await logActivity(req.user.id, 'lesson_view', `Xem bài học "${lesson.title}"`, req, `Bài học: ${lesson.title}`);
 
     if (lesson.is_free || (await hasActivePlus(req.user.id))) {
       return res.json({ data: lesson });

@@ -18,16 +18,6 @@ const TABS = [
   { key: 'activity', label: 'Lịch sử hoạt động', icon: 'Clock' },
 ];
 
-const COLLECTED_DATA = [
-  'Thông tin tài khoản (email, họ tên, trường, phường/xã)',
-  'Địa chỉ IP và thiết bị truy cập',
-  'Tiến độ học tập (bài học đã xem, thời lượng xem)',
-  'Kết quả trắc nghiệm và XP',
-  'Lượt sử dụng AI (ViMi)',
-  'Bài viết và tương tác cộng đồng',
-  'Lịch sử lựa chọn xử lý dữ liệu (consent)',
-];
-
 const DEVICE_ICONS = ['💻', '📱', '📱', '💻', '🖥️', '💻'];
 
 function getInitials(name) {
@@ -179,6 +169,17 @@ export default function AccountPage() {
     } catch (e) {
       window.__vimi_toast?.(e.message || 'Không thể xóa dữ liệu', 'error');
       setAnonymizing(false);
+    }
+  };
+
+  const handleDeviceSignout = async (device) => {
+    if (!window.confirm(`Đăng xuất khỏi thiết bị "${device.device_name || 'Thiết bị'}"? Bạn sẽ phải đăng nhập lại trên thiết bị đó.`)) return;
+    try {
+      await api.auth.deviceSignout(device.id);
+      setDevices(prev => (prev || []).filter(d => d.id !== device.id));
+      window.__vimi_toast?.('Đã đăng xuất khỏi thiết bị', 'success');
+    } catch (e) {
+      window.__vimi_toast?.(e.message || 'Không thể đăng xuất thiết bị', 'error');
     }
   };
 
@@ -352,24 +353,15 @@ export default function AccountPage() {
             Email, họ tên, trường và địa chỉ IP của bạn sẽ bị xóa vĩnh viễn.
             Chỉ giữ lại dữ liệu học tập đã ẩn danh (không nhận dạng được bạn) để thống kê.
           </p>
-
-          <div style={{ borderTop: '1px solid var(--line)', marginTop: 20, paddingTop: 16 }}>
-            <h4 style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>
-              Dữ liệu chúng tôi thu thập
-            </h4>
-            <ul style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 2, margin: 0, paddingLeft: 18 }}>
-              {COLLECTED_DATA.map(d => <li key={d}>{d}</li>)}
-            </ul>
-            <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 12, lineHeight: 1.6 }}>
-              Xem chi tiết tại{' '}
-              <a
-                onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }}
-                style={{ color: 'var(--red)', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}
-              >
-                Chính sách bảo mật
-              </a>
-            </p>
-          </div>
+          <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 16, marginBottom: 0 }}>
+            Xem chi tiết tại{' '}
+            <a
+              onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }}
+              style={{ color: 'var(--red)', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}
+            >
+              Chính sách bảo mật
+            </a>
+          </p>
         </Card>
       )}
 
@@ -397,11 +389,21 @@ export default function AccountPage() {
               >
                 <div style={{ fontSize: 22 }}>{DEVICE_ICONS[i % DEVICE_ICONS.length]}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <b style={{ fontSize: 13 }}>{d.device_name || 'Thiết bị'}</b>
+                  <b style={{ fontSize: 13 }}>
+                    {d.device_name || 'Thiết bị'}{' '}
+                    {i === 0 && (
+                      <span className="pill" style={{ fontSize: 10, background: 'var(--green-bg)', color: 'var(--green)', marginLeft: 6 }}>
+                        Thiết bị hiện tại
+                      </span>
+                    )}
+                  </b>
                   <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
                     IP: {d.ip || '-'} · {fmtTime(d.logged_in_at)}
                   </div>
                 </div>
+                <Button variant="ghost" size="sm" style={{ color: 'var(--red)', fontWeight: 600, flexShrink: 0 }} onClick={() => handleDeviceSignout(d)}>
+                  Đăng xuất
+                </Button>
               </div>
             ))
           )}
@@ -421,30 +423,38 @@ export default function AccountPage() {
           ) : activity.length === 0 ? (
             <p style={{ fontSize: 13, color: 'var(--muted)' }}>Chưa có hoạt động nào.</p>
           ) : (
-            activity.map(a => (
-              <div
-                key={a.id || a.created_at}
-                style={{
-                  display: 'flex', gap: 12,
-                  padding: '12px 14px', borderRadius: 12, marginBottom: 8,
-                  border: '1px solid var(--line)', background: 'var(--surface-hover)',
-                }}
-              >
-                <div style={{ fontSize: 13, color: 'var(--red)', fontWeight: 700, flexShrink: 0, width: 14, textAlign: 'center' }}>•</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                    <b style={{ fontSize: 13 }}>{a.event}</b>
-                    <span style={{ fontSize: 11, color: 'var(--muted)', flexShrink: 0 }}>{fmtTime(a.created_at)}</span>
-                  </div>
-                  {a.description && (
-                    <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginTop: 3 }}>{a.description}</div>
-                  )}
-                  {a.ip && (
-                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>IP: {a.ip}</div>
-                  )}
-                </div>
-              </div>
-            ))
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr style={{ textAlign: 'left', color: 'var(--muted)' }}>
+                    <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>Thời gian</th>
+                    <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>Tên đầy đủ</th>
+                    <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>Người bị ảnh hưởng</th>
+                    <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>Bối cảnh</th>
+                    <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>Thành phần</th>
+                    <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>Tên sự kiện</th>
+                    <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)' }}>Mô tả</th>
+                    <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>Nguyên thủy</th>
+                    <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>IP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activity.map(a => (
+                    <tr key={a.id || a.created_at} style={{ verticalAlign: 'top' }}>
+                      <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{fmtTime(a.created_at)}</td>
+                      <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>{a.full_name || '-'}</td>
+                      <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{a.affected_user || '-'}</td>
+                      <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>{a.context || '-'}</td>
+                      <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>{a.component || '-'}</td>
+                      <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap', fontWeight: 700 }}>{a.event}</td>
+                      <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', color: 'var(--muted)' }}>{a.description || '-'}</td>
+                      <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{a.origin || 'web'}</td>
+                      <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{a.ip || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </Card>
       )}

@@ -1,7 +1,17 @@
 import { supabaseAdmin } from '../config/database.js';
 import { getClientIp } from './ip.js';
 
-export async function logActivity(userId, event, description, req = null) {
+export const EVENT_COMPONENT = {
+  login: 'Hệ thống',
+  logout: 'Hệ thống',
+  consent_update: 'Hệ thống',
+  delete_request: 'Hệ thống',
+  course_view: 'Khóa học',
+  lesson_view: 'Khóa học',
+  quiz_submit: 'Bài tập',
+};
+
+export async function logActivity(userId, event, description, req = null, context = null) {
   try {
     const ua = req?.headers?.['user-agent'] || null;
     await supabaseAdmin
@@ -10,6 +20,7 @@ export async function logActivity(userId, event, description, req = null) {
         user_id: userId,
         event,
         description: description || null,
+        context: context || null,
         origin: 'web',
         ip: req ? getClientIp(req) : null,
         user_agent: ua,

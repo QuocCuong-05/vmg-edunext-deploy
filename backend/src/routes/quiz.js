@@ -79,7 +79,7 @@ router.post('/submit', authenticate, async (req, res, next) => {
       correct_answers: correct,
     });
 
-    await logActivity(req.user.id, 'quiz_submit', `Nộp bài quiz (điểm ${score}%)`, req);
+    await logActivity(req.user.id, 'quiz_submit', `Nộp bài quiz (điểm ${score}%)`, req, 'Bài tập');
 
     res.json({ data: { score, correct, total } });
   } catch (err) {
