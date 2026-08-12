@@ -266,32 +266,34 @@ export default function AccountPage() {
           );
         })}
 
-        <Button variant="primary" size="sm" isDisabled={savingConsent} onClick={handleSaveConsents}>
-          {savingConsent ? 'Đang lưu...' : 'Lưu lựa chọn'}
-        </Button>
-
-        <div
-          style={{
-            border: '1px solid var(--red)',
-            background: 'var(--red-bg)',
-            borderRadius: 12,
-            padding: '14px 16px',
-            marginTop: 20,
-          }}
-        >
-          <Button
-            variant="ghost"
-            style={{ color: 'var(--red)', fontWeight: 700 }}
-            isDisabled={anonymizing}
-            onClick={() => setShowAnonymizeModal(true)}
-          >
-            Xóa dữ liệu của tôi
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+          <Button variant="primary" size="sm" isDisabled={savingConsent} onClick={handleSaveConsents}>
+            {savingConsent ? 'Đang lưu...' : 'Lưu lựa chọn'}
           </Button>
-          <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8, lineHeight: 1.6, marginBottom: 0 }}>
-            Email, họ tên, trường và địa chỉ IP của bạn sẽ bị xóa vĩnh viễn.
-            Chỉ giữ lại dữ liệu học tập đã ẩn danh (không nhận dạng được bạn) để thống kê.
-          </p>
+          <span
+            style={{
+              display: 'inline-flex',
+              border: '1px solid var(--red)',
+              background: 'var(--red-bg)',
+              borderRadius: 10,
+              padding: 3,
+            }}
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              style={{ color: 'var(--red)', fontWeight: 700 }}
+              isDisabled={anonymizing}
+              onClick={() => setShowAnonymizeModal(true)}
+            >
+              Xóa dữ liệu của tôi
+            </Button>
+          </span>
         </div>
+        <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10, lineHeight: 1.6 }}>
+          Email, họ tên, trường và địa chỉ IP của bạn sẽ bị xóa vĩnh viễn.
+          Chỉ giữ lại dữ liệu học tập đã ẩn danh (không nhận dạng được bạn) để thống kê.
+        </p>
       </Card>
 
       {showAnonymizeModal && (
