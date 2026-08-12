@@ -76,6 +76,7 @@ export const api = {
     devices: async () => request('/auth/devices'),
     deviceSignout: async (id) => request(`/auth/devices/${id}/signout`, { method: 'POST' }),
     sessionTouch: async () => request('/auth/sessions/touch', { method: 'POST' }),
+    sessionCheck: async () => request('/auth/session-check'),
     activity: async () => request('/auth/activity'),
   },
   courses: {

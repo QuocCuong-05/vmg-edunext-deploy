@@ -257,6 +257,26 @@ router.post('/anonymize', async (req, res) => {
   }
 });
 
+// GET /auth/session-check — session còn sống không (đá thiết bị bị revoke ngay khi chuyển trang)
+router.get('/session-check', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'No token' });
+    const token = authHeader.split(' ')[1];
+    const sid = getSessionId(token);
+    if (!sid) return res.json({ data: { ok: true } });
+
+    const { data: alive, error: rpcError } = await supabaseAdmin.rpc('session_alive', {
+      p_session_id: sid,
+    });
+    if (rpcError) throw rpcError;
+
+    res.json({ data: { ok: !!alive } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /auth/sessions/touch — ghi nhận thiết bị đang hoạt động (mọi luồng login/restore)
 router.post('/sessions/touch', async (req, res) => {
   try {
