@@ -208,11 +208,6 @@ export default function LessonView() {
 
   function handleEnded() {
     setVideoComplete(true);
-    const d = Math.round(videoRef.current?.duration || 0);
-    if (d > 0) {
-      api.lessons.progress(lessonId, { watched_seconds: d, video_duration: d })
-        .catch(err => console.error('[progress duration]', err.message));
-    }
   }
 
   if (isLocked) {
@@ -243,7 +238,6 @@ export default function LessonView() {
       await api.lessons.progress(lessonId, {
         completed: true,
         watched_seconds: Math.round(maxWatchedRef.current),
-        video_duration: Math.round(videoRef.current?.duration || 0) || undefined,
       });
     } catch (err) {
       setVideoError(err.message);
