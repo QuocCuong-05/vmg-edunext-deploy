@@ -151,7 +151,7 @@ export const TABLES = [
     importOrder: 9,
     idInCsv: false,
     onConflict: 'name',
-    selectColumns: 'name, desc_text, price, icon_type, content_type, category, content_json, stock, is_active',
+    selectColumns: 'name, desc_text, price, icon_type, content_type, category, content_json, stock, is_active, tier',
   },
   {
     name: 'courses',

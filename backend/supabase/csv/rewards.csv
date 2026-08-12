@@ -1,20 +1,25 @@
-name,desc_text,price,icon_type,content_type,category,content_json,stock,is_active
-"Bộ prompt AI dành cho giáo viên","Prompt hỗ trợ thiết kế bài giảng, hoạt động và phản hồi học viên",200,sparkles,prompts,hoc_lieu,{},,true
-"Bộ worksheet và trò chơi tương tác","Hoạt động theo độ tuổi và trình độ",300,book,lessons,hoc_lieu,{},,true
-"Bộ rubric Speaking/Writing","Tiêu chí đánh giá và mẫu phản hồi",400,bar-chart,prompts,hoc_lieu,{},,true
-"Bộ 10 giáo án song ngữ","Giáo án có thể chỉnh sửa, phân loại theo môn và cấp độ",500,book-open,lessons,hoc_lieu,{},,true
-"Bộ đề kiểm tra Cambridge","Đề, đáp án và hướng dẫn chấm",600,book,lessons,hoc_lieu,{},,true
-"Teaching Toolkit theo kỹ năng","Tài nguyên dạy Listening, Speaking, Reading hoặc Writing",700,flask,lessons,hoc_lieu,{},,true
-"Bộ slide bài giảng hoàn chỉnh","Slide có thể chỉnh sửa và sử dụng trực tiếp",800,pen,lessons,hoc_lieu,{},,true
-"Vé tham gia workshop nội bộ","Một workshop chuyên môn tự chọn",500,calendar,webinar,phat_trien,{},,true
-"Khóa microlearning có chứng nhận","Khóa học ngắn trên EduNext kèm chứng nhận hoàn thành",800,play,lessons,phat_trien,{},,true
-"Webinar độc quyền cùng chuyên gia","Chuyên đề chuyên sâu và phần hỏi đáp",1000,monitor,webinar,phat_trien,{},,true
-"Coaching 1:1 với Academic Expert","Tư vấn chuyên môn hoặc xử lý vấn đề giảng dạy cụ thể",1500,user,webinar,phat_trien,{},,true
-"Masterclass hoặc dự giờ lớp mẫu","Quan sát thực tế và nhận tài liệu tổng kết",2000,book-open,webinar,phat_trien,{},,true
-"Khóa đào tạo chuyên sâu","Tham gia chương trình đào tạo nâng cao được lựa chọn",3000,brain,lessons,phat_trien,{},,true
-"Badge chuyên môn trên hồ sơ","Huy hiệu năng lực hiển thị trên EduNext",700,target,info,cong_nhan,{},,true
-"Chứng nhận EduNext Active Educator","Ghi nhận mức độ tham gia và phát triển chuyên môn",1000,check,info,cong_nhan,{},,true
-"Hồ sơ giáo viên nổi bật","Giới thiệu giáo viên trên EduNext hoặc kênh nội bộ VMG",1500,globe,info,cong_nhan,{},,true
-"Quyền ưu tiên đăng ký chương trình","Ưu tiên workshop, chương trình pilot hoặc lớp chuyên đề",2000,arrow-right,info,phat_trien,{},,true
-"Cơ hội trở thành Content Contributor","Tham gia phát triển học liệu và chia sẻ chuyên môn",3000,pen,info,phat_trien,{},,true
-"Đề cử EduNext Educator of the Quarter","Xét duyệt danh hiệu giáo viên nổi bật theo quý",5000,sparkles,info,cong_nhan,{},,true
+﻿id,name,desc_text,price,icon_type,content_type,content_json,stock,is_active,created_at,updated_at,category,tier
+a7d466b7-a937-533c-a681-045428861b09,EduNext Starter Badge,Hoàn thành những hoạt động đầu tiên trên EduNext.,100,badge,digital_badge,"{""code"":""edunext_starter""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,achievement,free
+5f205029-2a15-5952-97b9-79a332d3b3b8,Classroom Survival Badge,Vượt Level 1 – Classroom Survival.,220,badge,digital_badge,"{""code"":""level_1_survival""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,achievement,free
+a43652a4-2a1e-5129-b802-d81e326ad93f,Classroom Routines Badge,Vượt Level 2 – Classroom Routines.,300,badge,digital_badge,"{""code"":""level_2_routines""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,achievement,free
+fbd7f9c1-304d-55c8-b152-478a8b936523,Teacher Interaction Badge,Vượt Level 3 – Teacher Interaction.,420,badge,digital_badge,"{""code"":""level_3_interaction""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,achievement,free
+020fe2cf-0876-53a9-959c-612af05819bf,Explain Your Subject Badge,Vượt Level 4 – Explaining Subject Content.,550,badge,digital_badge,"{""code"":""level_4_explain""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,achievement,free
+02e0f5b7-81db-50e4-868e-bbfb8dceee00,Teaching Through English Badge,Vượt Level 5 – Teaching Through English.,700,badge,digital_badge,"{""code"":""level_5_tte""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,achievement,free
+044d1f1f-7402-500f-aec6-ebccccabb7e2,Professional Classroom Communication Badge,Vượt Level 6 – Professional Classroom Communication.,900,badge,digital_badge,"{""code"":""level_6_professional""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,achievement,free
+a187c7b4-02aa-5565-9dbf-586a2e4cda3b,7-Day Learning Streak,Huy hiệu duy trì chuỗi học 7 ngày.,180,badge,digital_badge,"{""code"":""streak_7""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,achievement,free
+9fe81f8b-e383-5b1e-9980-33760357fda4,30-Day Learning Streak,Huy hiệu duy trì chuỗi học 30 ngày.,650,badge,digital_badge,"{""code"":""streak_30""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,achievement,free
+052acd4b-22c9-5d5b-bd38-8df69573356c,Teacher Title: Classroom Communicator,Danh hiệu hiển thị trên hồ sơ giáo viên.,400,title,profile_title,"{""title"":""Classroom Communicator""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,profile,free
+50588313-1627-511d-8f2f-d77bea4d0333,Teacher Title: English-Medium Educator,Danh hiệu cho giáo viên phát triển năng lực dạy môn học bằng tiếng Anh.,800,title,profile_title,"{""title"":""English-Medium Educator""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,profile,free
+082dc596-b380-5a26-9c1b-925f9267ea2a,Teacher Title: Reflective Practitioner,Danh hiệu dành cho người học tích cực phản tư và hoàn thiện thực hành.,900,title,profile_title,"{""title"":""Reflective Practitioner""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,profile,free
+fe98eb45-efae-56db-a923-5a595fab186d,Nori Teacher Sticker Pack,Bộ sticker Nori dành cho cộng đồng giáo viên EduNext.,220,sticker,sticker_pack,"{""pack"":""nori_teacher""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,profile,free
+9c0e5943-37e4-53ec-9140-97567ae2b33c,EduNext Focus Theme,Giao diện học tập tối giản.,350,theme,theme,"{""theme"":""edunext_focus""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,profile,free
+bb82bd04-d57c-55e8-b15d-bcfccffe719d,Classic Certificate Skin,Mẫu hiển thị chứng nhận Classic.,850,certificate,certificate_skin,"{""skin"":""classic""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,profile,free
+9a112e48-dfa2-5326-8ad8-6b53634d4538,Modern Teacher Certificate Skin,Mẫu chứng nhận dành cho hồ sơ phát triển nghề nghiệp.,1100,certificate,certificate_skin,"{""skin"":""modern_teacher""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,profile,free
+d57b3399-ab2d-5aaf-86b6-d5b916b970eb,Plus: Professional Avatar Frame,Khung avatar Premium dành cho tài khoản Plus.,1300,frame,avatar_frame,"{""frame"":""professional_plus""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,profile,plus
+736aae36-4989-5be7-9913-bd0c9a05c001,Plus: EduNext Aurora Theme,Giao diện Aurora dành cho Plus.,1500,theme,theme,"{""theme"":""edunext_aurora""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,profile,plus
+e39c4f6b-96fd-5712-84a8-540925e61e17,Plus: Teacher Leader Title,Danh hiệu Teacher Leader dành cho Plus.,1800,title,profile_title,"{""title"":""Teacher Leader""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,profile,plus
+b10f6a6e-ff99-5015-91c4-9e611de16ee8,Plus: Quiz Retry Pack x3,Gói 3 lượt làm lại bài quiz.,1900,token,quiz_retry,"{""uses"":3}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,learning,plus
+250fdc9d-e715-5549-af2c-a28566f529ad,Plus: XP Booster 20%,Tăng 20% XP cho bài quiz tiếp theo.,2000,boost,xp_boost,"{""percent"":20,""uses"":1}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,learning,plus
+7469e721-28ee-5955-bd70-b627f0eb0869,Plus: Premium Certificate Skin,Mẫu chứng nhận Premium.,2300,certificate,certificate_skin,"{""skin"":""premium_teacher""}",9999,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,profile,plus
+1a6ddab1-4dc0-502c-af60-44459778c493,Plus: Expert Mini-Consult Voucher,Voucher ưu tiên một phiên mentoring ngắn với chuyên gia.,3600,voucher,expert_voucher,"{""minutes"":20}",100,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,service,plus
+823f35ff-f65a-52d6-9231-365c4786d813,Plus: Classroom Coaching Voucher,Voucher ưu tiên một phiên coaching thực hành classroom English.,5000,voucher,coaching_voucher,"{""minutes"":30}",60,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z,service,plus

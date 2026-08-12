@@ -1,65 +1,121 @@
-category_id,phrase_en,phrase_vi,purpose,level,sort_order,is_published
-126d21c3-6ac1-614a-2d9d-188f6e68055e,"Good morning, everyone. Please take your seats.",Chào buổi sáng cả lớp. Mời các em ngồi xuống.,Ổn định,A2,1,true
-2de60a6a-57c5-9a3b-8be6-ae2586d7103d,Form groups of four.,Chia nhóm bốn người.,Chia nhóm,A2,1,true
-1f82e99d-b049-dcad-c2a5-2b44c9536ec5,Let us warm up with a quick question.,Chúng ta hãy khởi động với một câu hỏi nhanh.,Khởi động,A2,1,true
-e26677f5-8b1c-8374-5cfd-3ccb631a5e57,Open your book to page 25.,Mở sách trang 25.,Hướng dẫn,A2,1,true
-3b2cc72a-f141-b51a-1dd3-be11f38701d4,Great job! That is an excellent answer.,Làm tốt lắm! Đó là một câu trả lời xuất sắc.,Khen ngợi,A2,1,true
-4c3f4858-5056-5776-88ac-004e9e99bd99,Does everyone understand the task?,Mọi người có hiểu nhiệm vụ không?,Kiểm tra bài tập,B1,1,true
-90d39ca7-0337-fe54-ed4b-4546f5c3b06a,"Now, let us move on to the next activity.",Bây giờ chúng ta chuyển sang hoạt động tiếp theo.,Chuyển tiếp,A2,1,true
-e26677f5-8b1c-8374-5cfd-3ccb631a5e57,Read the passage silently.,Đọc thầm đoạn văn.,Đọc hiểu,A2,2,true
-3b2cc72a-f141-b51a-1dd3-be11f38701d4,Almost there — check your spelling.,Gần đúng rồi — hãy kiểm tra lỗi chính tả.,Sửa lỗi,A2,2,true
-126d21c3-6ac1-614a-2d9d-188f6e68055e,Let us settle down and get ready to learn.,Chúng ta hãy ổn định để sẵn sàng học tập.,Ổn định,A2,2,true
-1f82e99d-b049-dcad-c2a5-2b44c9536ec5,Think about this question for 30 seconds.,Suy nghĩ về câu hỏi này trong 30 giây.,Tư duy,B1,2,true
-4c3f4858-5056-5776-88ac-004e9e99bd99,Do you have any questions so far?,Các em có câu hỏi gì không?,Kiểm tra hiểu bài,A2,2,true
-2de60a6a-57c5-9a3b-8be6-ae2586d7103d,Find a partner for this activity.,Tìm một bạn cùng cặp cho hoạt động này.,Bắt cặp,A2,2,true
-90d39ca7-0337-fe54-ed4b-4546f5c3b06a,We have 5 minutes left for this task.,Chúng ta còn 5 phút cho nhiệm vụ này.,Cảnh báo thời gian,A2,2,true
-126d21c3-6ac1-614a-2d9d-188f6e68055e,"When I raise my hand, please finish your sentence and look this way.","Khi tôi giơ tay, các em hãy dừng lại và nhìn lên đây.",Thu hút sự chú ý,B1,3,true
-2de60a6a-57c5-9a3b-8be6-ae2586d7103d,Move quietly to your group area.,Di chuyển nhẹ nhàng đến khu vực nhóm của mình.,Di chuyển,B1,3,true
-3b2cc72a-f141-b51a-1dd3-be11f38701d4,Good effort! Try adding more detail next time.,Cố gắng tốt! Lần sau thử thêm chi tiết nhé.,Khích lệ,B1,3,true
-4c3f4858-5056-5776-88ac-004e9e99bd99,Can you repeat that in your own words?,Em có thể nhắc lại bằng từ ngữ của mình không?,Hiểu bài,B1,3,true
-90d39ca7-0337-fe54-ed4b-4546f5c3b06a,Please wrap up your discussions.,Vui lòng kết thúc phần thảo luận.,Kết thúc,B1,3,true
-1f82e99d-b049-dcad-c2a5-2b44c9536ec5,Turn to your partner and discuss.,Quay sang bạn bên cạnh và thảo luận.,Cặp đôi,A2,3,true
-e26677f5-8b1c-8374-5cfd-3ccb631a5e57,Follow along as I read aloud.,Đọc theo khi tôi đọc to.,Đọc theo,A2,3,true
-4c3f4858-5056-5776-88ac-004e9e99bd99,Show me a thumbs up if you understand.,Giơ ngón cái nếu em hiểu bài.,Kiểm tra nhanh,A2,4,true
-90d39ca7-0337-fe54-ed4b-4546f5c3b06a,Put away your materials and prepare for the next subject.,Cất đồ dùng và chuẩn bị cho môn học tiếp theo.,Chuẩn bị,B1,4,true
-1f82e99d-b049-dcad-c2a5-2b44c9536ec5,What do you already know about this topic?,Các em đã biết gì về chủ đề này?,Kích hoạt kiến thức,B1,4,true
-e26677f5-8b1c-8374-5cfd-3ccb631a5e57,Complete the worksheet on page 10.,Hoàn thành phiếu bài tập trang 10.,Bài tập,A2,4,true
-2de60a6a-57c5-9a3b-8be6-ae2586d7103d,Choose one person to be the spokesperson.,Chọn một người làm phát ngôn viên.,Vai trò,B1,4,true
-126d21c3-6ac1-614a-2d9d-188f6e68055e,"I need your attention, please.",Tôi cần các em chú ý.,Thu hút sự chú ý,A2,4,true
-3b2cc72a-f141-b51a-1dd3-be11f38701d4,You are on the right track.,Em đang đi đúng hướng.,Khích lệ,A2,4,true
-90d39ca7-0337-fe54-ed4b-4546f5c3b06a,Take out your homework and pass it forward.,Lấy bài tập về nhà và chuyển lên trên.,Thu bài,A2,5,true
-4c3f4858-5056-5776-88ac-004e9e99bd99,Give an example of what I just explained.,Cho tôi một ví dụ về điều tôi vừa giải thích.,Kiểm tra hiểu bài,B2,5,true
-126d21c3-6ac1-614a-2d9d-188f6e68055e,"Can I have your attention, please?",Các em chú ý giúp tôi.,Thu hút sự chú ý,A2,5,true
-2de60a6a-57c5-9a3b-8be6-ae2586d7103d,Everyone in the group must contribute.,Mọi thành viên trong nhóm đều phải đóng góp.,Hợp tác,B2,5,true
-1f82e99d-b049-dcad-c2a5-2b44c9536ec5,Share one idea with the class.,Chia sẻ một ý tưởng với cả lớp.,Chia sẻ,A2,5,true
-e26677f5-8b1c-8374-5cfd-3ccb631a5e57,You have 15 minutes to finish this task.,Các em có 15 phút để hoàn thành nhiệm vụ này.,Quản lý thời gian,B1,5,true
-3b2cc72a-f141-b51a-1dd3-be11f38701d4,That is an interesting point of view.,Đó là một quan điểm thú vị.,Ghi nhận,B1,5,true
-3b2cc72a-f141-b51a-1dd3-be11f38701d4,Can you explain your reasoning?,Em có thể giải thích lý do của mình không?,Khuyến khích tư duy,B1,6,true
-1f82e99d-b049-dcad-c2a5-2b44c9536ec5,Let us brainstorm ideas together.,Chúng ta hãy cùng nhau động não.,Động não,B1,6,true
-2de60a6a-57c5-9a3b-8be6-ae2586d7103d,Switch roles after 10 minutes.,Đổi vai sau 10 phút.,Luân chuyển,B1,6,true
-4c3f4858-5056-5776-88ac-004e9e99bd99,What is the main idea of the text?,Ý chính của bài đọc là gì?,Đọc hiểu,B1,6,true
-90d39ca7-0337-fe54-ed4b-4546f5c3b06a,Let us review what we learned today.,Chúng ta hãy ôn lại những gì đã học hôm nay.,Ôn tập,A2,6,true
-126d21c3-6ac1-614a-2d9d-188f6e68055e,Are you ready to start the lesson?,Các em đã sẵn sàng bắt đầu bài học chưa?,Bắt đầu,A2,6,true
-e26677f5-8b1c-8374-5cfd-3ccb631a5e57,Work individually for the first 5 minutes.,Làm việc cá nhân trong 5 phút đầu.,Làm việc cá nhân,B1,6,true
-1f82e99d-b049-dcad-c2a5-2b44c9536ec5,Here is a picture. What do you see?,Đây là một bức tranh. Các em thấy gì?,Quan sát,A2,7,true
-126d21c3-6ac1-614a-2d9d-188f6e68055e,Let us begin today's lesson.,Chúng ta hãy bắt đầu bài học hôm nay.,Bắt đầu,A2,7,true
-e26677f5-8b1c-8374-5cfd-3ccb631a5e57,Underline the key words in the text.,Gạch chân các từ khóa trong văn bản.,Kỹ thuật đọc,B1,7,true
-2de60a6a-57c5-9a3b-8be6-ae2586d7103d,Share your group's findings with the class.,Chia sẻ kết quả của nhóm với cả lớp.,Trình bày,B1,7,true
-4c3f4858-5056-5776-88ac-004e9e99bd99,"Complete this sentence: ""The author argues that...""","Hoàn thành câu sau: ""Tác giả lập luận rằng...""",Kiểm tra hiểu bài,B2,7,true
-3b2cc72a-f141-b51a-1dd3-be11f38701d4,I like how you used evidence from the text.,Tôi thích cách em sử dụng bằng chứng từ văn bản.,Khen ngợi,B1,7,true
-90d39ca7-0337-fe54-ed4b-4546f5c3b06a,Write one thing you learned in your journal.,Viết một điều em học được vào nhật ký.,Phản tư,B1,7,true
-4c3f4858-5056-5776-88ac-004e9e99bd99,True or false: Water boils at 100 degrees Celsius.,Đúng hay sai: Nước sôi ở 100 độ C.,Kiểm tra kiến thức,A2,8,true
-2de60a6a-57c5-9a3b-8be6-ae2586d7103d,Listen to your classmates' presentations.,Lắng nghe bài trình bày của các bạn.,Lắng nghe,A2,8,true
-90d39ca7-0337-fe54-ed4b-4546f5c3b06a,Thank you for your hard work today.,Cảm ơn các em vì sự chăm chỉ hôm nay.,Kết thúc,A2,8,true
-3b2cc72a-f141-b51a-1dd3-be11f38701d4,Let us look at the first sentence together.,Chúng ta hãy cùng xem xét câu đầu tiên.,Hướng dẫn sửa,A2,8,true
-e26677f5-8b1c-8374-5cfd-3ccb631a5e57,Write your answers in complete sentences.,Viết câu trả lời thành câu hoàn chỉnh.,Viết,B1,8,true
-1f82e99d-b049-dcad-c2a5-2b44c9536ec5,Watch this short video clip.,Các em hãy xem đoạn video ngắn này.,Xem video,A2,8,true
-126d21c3-6ac1-614a-2d9d-188f6e68055e,Please put away your phones and other distractions.,Vui lòng cất điện thoại và các vật gây sao nhãng.,Kỷ luật,B1,8,true
-3b2cc72a-f141-b51a-1dd3-be11f38701d4,Try using a different word here.,Thử dùng một từ khác ở đây.,Gợi ý,B1,9,true
-1f82e99d-b049-dcad-c2a5-2b44c9536ec5,What questions do you have after watching?,Các em có câu hỏi gì sau khi xem?,Phản hồi,B1,9,true
-4c3f4858-5056-5776-88ac-004e9e99bd99,You have 30 seconds to discuss with your partner.,Các em có 30 giây để thảo luận với bạn cùng cặp.,Thảo luận,A2,9,true
-126d21c3-6ac1-614a-2d9d-188f6e68055e,"Eyes on the board, please.",Các em nhìn lên bảng.,Thu hút sự chú ý,A2,9,true
-2de60a6a-57c5-9a3b-8be6-ae2586d7103d,Give a round of applause to group 3.,Hãy vỗ tay cho nhóm 3.,Khích lệ,A2,9,true
-e26677f5-8b1c-8374-5cfd-3ccb631a5e57,Check your answers with a partner.,Kiểm tra đáp án với bạn cùng bàn.,Kiểm tra chéo,A2,9,true
-e26677f5-8b1c-8374-5cfd-3ccb631a5e57,Raise your hand if you need help.,Giơ tay nếu em cần giúp đỡ.,Hỗ trợ,A2,10,true
-126d21c3-6ac1-614a-2d9d-188f6e68055e,Listen carefully to the instructions.,Lắng nghe hướng dẫn một cách cẩn thận.,Thu hút sự chú ý,A2,10,true
+﻿id,category_id,phrase_en,phrase_vi,purpose,level,sort_order,is_published,created_at,updated_at
+81a81b09-294f-5764-af86-e3568baf0d6c,de16e25a-1912-53f1-b25f-7fefbab9c322,"Good morning, everyone. Let's get started.",Chào buổi sáng cả lớp. Chúng ta bắt đầu nhé.,open_class,1,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+e5f8c977-3139-5c88-b68f-6aa0537ffc4a,de16e25a-1912-53f1-b25f-7fefbab9c322,How are you feeling today?,Hôm nay các em cảm thấy thế nào?,rapport,1,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+d4a284f1-b068-5dac-91a5-976158c9c34d,de16e25a-1912-53f1-b25f-7fefbab9c322,"Before we begin, let's review the last lesson.","Trước khi bắt đầu, chúng ta ôn lại bài trước nhé.",review,1,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+8432ed11-cf38-5304-8f16-7ca2fbbb3eed,de16e25a-1912-53f1-b25f-7fefbab9c322,Take one minute to think about this question.,Dành một phút suy nghĩ về câu hỏi này nhé.,thinking_time,2,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+1d8eb179-52d5-584f-939f-0027e09a7bed,de16e25a-1912-53f1-b25f-7fefbab9c322,Turn to your partner and share one idea.,Quay sang bạn cùng cặp và chia sẻ một ý nhé.,peer_share,2,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+1a970ef1-a7ce-5546-904b-b41ba20a60fa,de16e25a-1912-53f1-b25f-7fefbab9c322,Who can connect today's topic to something we learned before?,Ai có thể kết nối chủ đề hôm nay với điều chúng ta đã học trước đó?,activate_prior_knowledge,3,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+91a7d585-9899-5899-8dd1-49fd7fef28da,de16e25a-1912-53f1-b25f-7fefbab9c322,Today we'll focus on one key question.,Hôm nay chúng ta sẽ tập trung vào một câu hỏi trọng tâm.,lesson_focus,4,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+d71c4e77-077a-5bc2-8bc7-0b10f0cb5ce6,de16e25a-1912-53f1-b25f-7fefbab9c322,"By the end of the lesson, you should be able to explain this process clearly in English.","Cuối buổi, các em sẽ có thể giải thích quy trình này rõ ràng bằng tiếng Anh.",integrated_objective,5,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+88261027-5f8e-503d-aa84-815a1a291537,d2946d89-8baf-56c7-bc33-9ab9d73d7e18,"Open your books to page 12, please.",Mở sách đến trang 12 nhé.,open_book,1,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+44e9f67b-fac3-5660-a0d8-e6da74bf6b7d,d2946d89-8baf-56c7-bc33-9ab9d73d7e18,"Listen first, then repeat after me.","Nghe trước, sau đó lặp lại theo cô/thầy.",listen_repeat,1,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+21638003-7871-5e16-baad-0d85ca9ea0ec,d2946d89-8baf-56c7-bc33-9ab9d73d7e18,Write one answer in your notebook.,Viết một câu trả lời vào vở.,write_answer,1,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+1e03dba4-2084-535d-82da-93107e049812,d2946d89-8baf-56c7-bc33-9ab9d73d7e18,Circle the correct answer.,Khoanh đáp án đúng.,circle_answer,1,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+aea1f564-fa5a-5ab0-ae6f-de6438480fcf,d2946d89-8baf-56c7-bc33-9ab9d73d7e18,"First, read the paragraph. Then, answer questions 1 to 3.",Đầu tiên đọc đoạn văn. Sau đó trả lời câu 1 đến 3.,multistep_instruction,2,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+68c7182f-4d6d-5c34-9212-2a56abf32bcf,d2946d89-8baf-56c7-bc33-9ab9d73d7e18,"Use the example as a model, but write your own response.","Dùng ví dụ làm mẫu, nhưng hãy viết câu trả lời của riêng em.",use_model,2,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+21a44bc0-3813-52b0-b741-d255e614ac1b,d2946d89-8baf-56c7-bc33-9ab9d73d7e18,You have five minutes to complete the task.,Các em có năm phút để hoàn thành nhiệm vụ.,time_limit,2,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+f64e00c9-7e42-5782-a26a-aead5c3db051,d2946d89-8baf-56c7-bc33-9ab9d73d7e18,Focus on explaining your idea clearly; we can polish the language after you finish.,Tập trung giải thích ý cho rõ; chúng ta sẽ chỉnh ngôn ngữ sau khi em hoàn thành.,prioritize_meaning,5,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+2cfff5ba-050a-5c54-904d-8e7792b1ed46,e683a202-a45a-56fb-9c43-4652a4898740,"Quiet, please.",Cả lớp trật tự nhé.,noise,1,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+94e12f5a-3d4b-5d96-8389-d74c326c60ef,e683a202-a45a-56fb-9c43-4652a4898740,"Eyes on the board, please.",Cả lớp nhìn lên bảng nhé.,attention,1,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+0486e408-1253-5fb0-a696-af62595ecf9e,e683a202-a45a-56fb-9c43-4652a4898740,"Wait for a moment, please.",Chờ một chút nhé.,wait,1,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+8a618e89-d07c-5f39-9560-78dea930af58,e683a202-a45a-56fb-9c43-4652a4898740,"Finish your sentence, then eyes on me.",Hoàn thành câu đang nói rồi nhìn lên cô/thầy nhé.,transition,2,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+2d11fc65-545e-5fc9-9ef2-e9a0a4db172e,e683a202-a45a-56fb-9c43-4652a4898740,Please return to your seats.,Các em quay lại chỗ ngồi nhé.,reset,2,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+2bae3e45-5442-50f0-9ba9-0b464fcf9f17,e683a202-a45a-56fb-9c43-4652a4898740,"You have one minute left, so start finishing your answer.","Còn một phút, bắt đầu hoàn thiện câu trả lời nhé.",time_warning,2,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+3297ba17-adb8-5d13-9b68-ab30ec1b9e74,e683a202-a45a-56fb-9c43-4652a4898740,Let's hear from someone who hasn't shared yet.,Chúng ta nghe một bạn chưa chia sẻ ý kiến nhé.,equitable_participation,3,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+7fb2fae4-54ed-58eb-99a9-c10fe7b1b214,e683a202-a45a-56fb-9c43-4652a4898740,"Challenge the idea, not the person.","Hãy phản biện ý tưởng, không công kích người đưa ra ý tưởng.",discussion_norm,6,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+42a3b3bd-3310-51d7-9c0a-8e004ea42323,c7d5be57-7918-57b5-9489-03751e2925cd,Work with a partner.,Làm việc với một bạn nhé.,pair_work,1,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+0a90872c-29cf-58ff-adef-4600d0d61077,c7d5be57-7918-57b5-9489-03751e2925cd,Take turns asking and answering the questions.,Luân phiên hỏi và trả lời câu hỏi nhé.,turn_taking,2,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+cced2036-2103-5631-972d-ae2e10e77020,c7d5be57-7918-57b5-9489-03751e2925cd,Choose one spokesperson to share your group's answer.,Chọn một người đại diện để trình bày câu trả lời của nhóm.,role_assign,2,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+be4ab194-1c82-51c7-bdc6-82ae49711c51,c7d5be57-7918-57b5-9489-03751e2925cd,Make sure everyone has a chance to speak.,Đảm bảo mọi người đều có cơ hội nói.,participation,2,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+9c4a97ad-2e4b-558b-8be4-17394de77fc8,c7d5be57-7918-57b5-9489-03751e2925cd,Compare your answers and agree on one final answer.,So sánh đáp án và thống nhất một đáp án cuối.,consensus,2,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+b86b36c4-395d-5dd7-91e7-67d5bfa2e280,c7d5be57-7918-57b5-9489-03751e2925cd,Build on your partner's idea before you add a new one.,Hãy phát triển ý của bạn trước khi thêm ý mới.,build_on,3,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+f8043226-ce18-5a4c-9251-9e4e943d2511,c7d5be57-7918-57b5-9489-03751e2925cd,"Use these stems to agree, disagree and give reasons.","Dùng các khung câu này để đồng ý, phản biện và đưa lý do.",discourse_support,4,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+59342da7-ae11-5d9f-9ed9-2aa255cc0c08,c7d5be57-7918-57b5-9489-03751e2925cd,"Agree on the strongest evidence, not just the most popular answer.","Thống nhất bằng chứng mạnh nhất, không chỉ chọn đáp án được nhiều người thích nhất.",evidence_based_consensus,5,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+9705f5b4-e4bd-566f-83f0-94b9bbb002ad,33c23d30-4018-52a9-926b-fecddae07db8,What are you going to do first?,Đầu tiên các em sẽ làm gì?,icq_first_step,2,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+de6f68b3-512d-5f62-be8c-3fc3ecf0a47a,33c23d30-4018-52a9-926b-fecddae07db8,How much time do you have?,Các em có bao nhiêu thời gian?,icq_time,2,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+55554f50-115f-5072-a912-478af4e0730c,33c23d30-4018-52a9-926b-fecddae07db8,Are you working alone or with a partner?,Các em làm cá nhân hay với bạn?,icq_grouping,2,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+8dc96565-0b22-5d07-b5e6-38f26b15d199,33c23d30-4018-52a9-926b-fecddae07db8,How many answers do you need to write?,Các em cần viết bao nhiêu câu trả lời?,icq_quantity,2,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+1e497d33-921b-5d8f-abd9-c94cf4f0c46a,33c23d30-4018-52a9-926b-fecddae07db8,Are you writing the answer or saying it to your partner?,Các em sẽ viết hay nói câu trả lời với bạn?,icq_mode,2,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+e0551d68-f0e5-5e52-b163-61c80827645c,33c23d30-4018-52a9-926b-fecddae07db8,Who will report your group's answer?,Ai sẽ trình bày câu trả lời của nhóm?,icq_role,2,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+0833d094-da21-5726-9d62-1c86e696e4b0,33c23d30-4018-52a9-926b-fecddae07db8,Show me the first step you will take.,Cho cô/thầy thấy bước đầu tiên các em sẽ làm.,demonstrate_instruction,3,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+b2e89e6d-d63d-5dff-b135-138e58002309,33c23d30-4018-52a9-926b-fecddae07db8,Explain the task to your partner in your own words.,Hãy giải thích nhiệm vụ cho bạn bằng lời của mình.,paraphrase_instruction,3,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+8279706b-8f05-5a36-9a24-d5b2dfbfd4eb,c9cfcb17-0521-5b0c-ae88-e31b22998397,Is that clear?,Phần đó rõ chưa?,basic_check,1,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+6b0115d0-febf-556a-bbbd-97771b4d0c98,c9cfcb17-0521-5b0c-ae88-e31b22998397,Can you give me an example?,Em có thể cho cô/thầy một ví dụ không?,example_check,2,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+fb8c0214-d7f9-53ca-89b5-d490ef1452da,c9cfcb17-0521-5b0c-ae88-e31b22998397,Can you explain that in your own words?,Em có thể giải thích lại bằng lời của mình không?,paraphrase_check,3,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+1b5942e8-ec16-5571-bfb5-2b506083314e,c9cfcb17-0521-5b0c-ae88-e31b22998397,Why is that answer correct?,Vì sao đáp án đó đúng?,reason_check,3,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+492bdd8b-97ec-5b22-9686-e9b347480db6,c9cfcb17-0521-5b0c-ae88-e31b22998397,What makes you think that?,Điều gì khiến em nghĩ như vậy?,probe_reasoning,3,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+382da106-7999-538f-976b-38b7b213a423,c9cfcb17-0521-5b0c-ae88-e31b22998397,Which evidence supports your conclusion?,Bằng chứng nào hỗ trợ kết luận của em?,evidence_check,4,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+ff4fdf96-f72e-56b2-9899-271511f1d8d1,c9cfcb17-0521-5b0c-ae88-e31b22998397,Which part of your reasoning are you least certain about?,Phần nào trong lập luận em ít chắc chắn nhất?,diagnose_uncertainty,5,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+8bf87473-d96e-540e-85d9-5c2a5a468337,c9cfcb17-0521-5b0c-ae88-e31b22998397,What evidence would change your interpretation?,Bằng chứng nào có thể khiến em thay đổi cách diễn giải?,evaluate_understanding,6,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+ebd3c496-051d-5cba-bdc8-e3022316a203,13e0bfc3-145c-599c-a1bc-57ce6293c03c,What do you notice?,Các em nhận thấy điều gì?,observation,2,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+bc86ac3c-475c-5880-af00-63c85d0a641d,13e0bfc3-145c-599c-a1bc-57ce6293c03c,Can you tell us a little more about that?,Em có thể nói thêm một chút về ý đó không?,elaborate,3,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+7e0779a2-e0d7-51eb-94c1-60f39bbbb4a6,13e0bfc3-145c-599c-a1bc-57ce6293c03c,Who can build on that idea?,Ai có thể phát triển thêm ý đó?,build_on,3,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+cd45144f-70a1-584e-9719-aeebce517a47,13e0bfc3-145c-599c-a1bc-57ce6293c03c,How does this connect to what we learned before?,Điều này liên hệ thế nào với bài trước?,connect,3,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+20b38d9f-cae0-54a0-8313-d1981b13b8e9,13e0bfc3-145c-599c-a1bc-57ce6293c03c,What pattern can you see in the data?,Em thấy mẫu hình nào trong dữ liệu?,pattern,4,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+714090d9-3471-567c-b4f7-d185d376e431,13e0bfc3-145c-599c-a1bc-57ce6293c03c,What would change if this condition were different?,Điều gì sẽ thay đổi nếu điều kiện này khác đi?,counterfactual,5,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+55288965-03e2-5fa1-ba01-32f888752aaa,13e0bfc3-145c-599c-a1bc-57ce6293c03c,"Which explanation is more convincing, and why?","Lời giải thích nào thuyết phục hơn, và vì sao?",evaluate,5,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+68a25e2a-0c30-52ab-a6e4-b0672c77cd3b,13e0bfc3-145c-599c-a1bc-57ce6293c03c,What assumption does this argument depend on?,Lập luận này phụ thuộc vào giả định nào?,analyze_assumption,6,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+7dad6e07-ea18-54f1-8db4-25ad6b9d877d,2c652a0f-4edf-51f9-99de-5cd2280e47fc,Good effort. Try that one more time.,Cố gắng tốt. Thử lại một lần nữa nhé.,encourage_retry,1,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+ce5bd01a-c7c3-5e2c-9545-bfbbd2a198fe,2c652a0f-4edf-51f9-99de-5cd2280e47fc,That's correct. Check the spelling before you move on.,Đúng rồi. Kiểm tra chính tả trước khi chuyển tiếp nhé.,correct_with_next_step,1,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+1ec15e93-9bc4-5b6f-ab00-c9f50dd20d06,2c652a0f-4edf-51f9-99de-5cd2280e47fc,You're on the right track. Check the second step.,Em đang đi đúng hướng. Hãy kiểm tra bước thứ hai.,targeted_feedback,3,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+ed4e7283-0033-5e1f-b341-b953226d1be7,2c652a0f-4edf-51f9-99de-5cd2280e47fc,Your idea is clear. Make the final sentence more precise.,Ý của em rõ. Hãy làm câu cuối chính xác hơn.,precision_feedback,3,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+1b102aff-b7d2-56fd-b6bc-dcafb771c405,2c652a0f-4edf-51f9-99de-5cd2280e47fc,Listen to your sentence again. Can you self-correct the tense?,Nghe lại câu của em nhé. Em có thể tự sửa thì không?,self_correction,3,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+f2246b42-692a-5d80-aabb-eeae169fa454,2c652a0f-4edf-51f9-99de-5cd2280e47fc,Your evidence is relevant. Now explain how it supports your claim.,Bằng chứng phù hợp. Bây giờ hãy giải thích nó hỗ trợ nhận định thế nào.,reasoning_feedback,4,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+e6c8b2df-9dc1-5cde-b737-706154c203bd,2c652a0f-4edf-51f9-99de-5cd2280e47fc,The concept is strong. Let's improve the language without changing your idea.,Khái niệm rất chắc. Chúng ta cải thiện ngôn ngữ mà không thay đổi ý nhé.,content_language_feedback,5,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+8d09a192-2a5b-52b8-a569-9d8e8985ec46,2c652a0f-4edf-51f9-99de-5cd2280e47fc,Your argument is persuasive. Now address the strongest counterargument.,Lập luận thuyết phục. Bây giờ hãy xử lý phản biện mạnh nhất.,advanced_feedback,6,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+e981908f-fb33-5030-9cd7-377f08469829,b69fe1fe-df0b-5ada-bd9e-d26a6ace4577,"In simple terms, this means...","Nói một cách đơn giản, điều này có nghĩa là...",simplify,3,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+6d9ae117-38e0-54de-bb08-436f18057050,b69fe1fe-df0b-5ada-bd9e-d26a6ace4577,We use this term to describe...,Chúng ta dùng thuật ngữ này để mô tả...,define,4,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+cfd669d4-7709-50e3-b7d2-aa9bfd59da20,b69fe1fe-df0b-5ada-bd9e-d26a6ace4577,The key idea here is...,Ý chính ở đây là...,main_idea,4,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+fb5f4e67-4a73-541d-9f96-dd390402a2f8,b69fe1fe-df0b-5ada-bd9e-d26a6ace4577,There are three main factors we need to consider.,Có ba yếu tố chính chúng ta cần xem xét.,signpost_factors,4,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+9d87cdc0-4c60-508f-b231-c471c618aeb5,b69fe1fe-df0b-5ada-bd9e-d26a6ace4577,This works because...,Điều này hoạt động/xảy ra vì...,explain_cause,4,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+8f8a26b6-be53-5aa4-be4e-7b2ce3abe9bc,b69fe1fe-df0b-5ada-bd9e-d26a6ace4577,One useful way to think about it is...,Một cách hữu ích để hình dung điều này là...,analogy,4,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+1b21f13f-8e9b-5820-968a-c250a2ae7af5,b69fe1fe-df0b-5ada-bd9e-d26a6ace4577,"The concept stays the same, but the example changes.","Khái niệm vẫn giống nhau, nhưng ví dụ thay đổi.",transfer,5,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+7d792af0-63f7-5dbb-a778-294dbc8f6a56,b69fe1fe-df0b-5ada-bd9e-d26a6ace4577,This distinction matters because it changes how we interpret the evidence.,Sự phân biệt này quan trọng vì nó thay đổi cách chúng ta diễn giải bằng chứng.,disciplinary_significance,6,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+87b36969-26d9-5122-ac7b-df536aca21dc,0381c6fe-ed10-5588-9e81-796106205a8b,"For example, ...","Ví dụ,...",give_example,2,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+0b4f8c24-ee05-5d34-ab06-5f10fa363340,0381c6fe-ed10-5588-9e81-796106205a8b,Here's another example.,Đây là một ví dụ khác.,add_example,3,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+5a688764-2eac-5971-9a3a-cce290b1888d,0381c6fe-ed10-5588-9e81-796106205a8b,This is a non-example because...,Đây là một phản ví dụ vì...,non_example,4,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+902cd3d2-3b3b-5654-8758-dd8a6da3f034,0381c6fe-ed10-5588-9e81-796106205a8b,Let's apply the definition to this case.,Hãy áp dụng định nghĩa vào trường hợp này.,apply_definition,4,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+1d942331-b8d6-570e-acb3-c2e9645069b6,0381c6fe-ed10-5588-9e81-796106205a8b,"In this context, the term means...","Trong ngữ cảnh này, thuật ngữ có nghĩa là...",contextual_definition,4,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+1609bb03-5d4a-5d62-aca3-cf8f13031410,0381c6fe-ed10-5588-9e81-796106205a8b,Create your own example and explain why it fits the definition.,Hãy tự tạo một ví dụ và giải thích vì sao nó phù hợp với định nghĩa.,generate_example,5,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+fa5f7570-2106-526c-9e8a-e31b0bcc0e84,0381c6fe-ed10-5588-9e81-796106205a8b,Which feature is essential for this to count as an example?,Đặc điểm nào là bắt buộc để trường hợp này được xem là ví dụ?,defining_feature,5,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+8efd2b22-dbf6-506a-b2e0-9ba747f1a56f,0381c6fe-ed10-5588-9e81-796106205a8b,How would you refine the definition to deal with this borderline case?,Em sẽ tinh chỉnh định nghĩa thế nào để xử lý trường hợp ranh giới này?,refine_definition,6,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+a54d763e-e253-5911-90d7-6d24ad654395,3697ffc4-b06c-56fa-b772-9d0cc705ef6b,The main difference between A and B is...,Khác biệt chính giữa A và B là...,contrast,3,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+f90e2315-ba22-58eb-9912-da33a6ddbbd8,3697ffc4-b06c-56fa-b772-9d0cc705ef6b,"Both methods..., but only method A...","Cả hai phương pháp đều..., nhưng chỉ phương pháp A...",compare_contrast,4,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+9ea8841f-7a78-52e2-a737-a31cd103641c,3697ffc4-b06c-56fa-b772-9d0cc705ef6b,This happens because...,Điều này xảy ra vì...,cause,4,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+01ad3dbc-61ee-5cfe-a5cb-c04642feab6d,3697ffc4-b06c-56fa-b772-9d0cc705ef6b,"As a result, ...","Do đó/Kết quả là,...",effect,4,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+2460cd15-dade-5fdf-998d-2565a0fd2b9a,3697ffc4-b06c-56fa-b772-9d0cc705ef6b,How do these results differ?,Các kết quả này khác nhau như thế nào?,compare_results,4,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+c5513bad-90c5-57d8-8b67-c44f2fccc0d3,3697ffc4-b06c-56fa-b772-9d0cc705ef6b,"Which factor has the greatest effect, and what evidence supports that?","Yếu tố nào có tác động lớn nhất, và bằng chứng nào hỗ trợ điều đó?",evaluate_cause,5,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+5f9a73a6-4812-500d-9750-67e881e47244,3697ffc4-b06c-56fa-b772-9d0cc705ef6b,"If we change this variable, what do you predict will happen?","Nếu thay đổi biến này, em dự đoán điều gì sẽ xảy ra?",predict,5,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+cee981c9-d9e6-5b19-8c3d-b40bde8dca54,3697ffc4-b06c-56fa-b772-9d0cc705ef6b,"Do these variables move together, or do we have evidence that one causes the other?",Các biến này chỉ thay đổi cùng nhau hay có bằng chứng một biến gây ra biến kia?,correlation_causation,6,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+d9617e87-7bac-5fcf-bbe9-07e5528539b6,9816c44a-a050-57a7-92c8-15bda0e7e649,Take a look at the diagram.,Hãy nhìn vào sơ đồ.,direct_attention,2,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+23d52dac-264e-56b6-9a62-9883315a5657,9816c44a-a050-57a7-92c8-15bda0e7e649,What do you notice first?,Em nhận thấy điều gì đầu tiên?,observe_visual,3,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+6363b401-19a9-5f03-8ddb-beb10da964e3,9816c44a-a050-57a7-92c8-15bda0e7e649,The value increases steadily over the period.,Giá trị tăng đều trong khoảng thời gian này.,describe_trend,4,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+f0688d8c-730a-5b6c-90ef-0e2f0dde75d7,9816c44a-a050-57a7-92c8-15bda0e7e649,The peak occurs at...,Mức cao nhất xuất hiện tại...,describe_peak,4,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+2074dff2-75cd-597e-8137-778db0408966,9816c44a-a050-57a7-92c8-15bda0e7e649,What pattern can you see in the results?,Em thấy mẫu hình nào trong kết quả?,pattern,4,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+e6ee291f-56fc-55d3-b270-16874898fe09,9816c44a-a050-57a7-92c8-15bda0e7e649,Which part of the graph supports your answer?,Phần nào của biểu đồ hỗ trợ câu trả lời của em?,visual_evidence,4,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+6f7fec69-1242-55ae-a2c3-964cddcb760e,9816c44a-a050-57a7-92c8-15bda0e7e649,"Explain what this pattern might mean, not just what it looks like.","Hãy giải thích mẫu hình này có thể có ý nghĩa gì, không chỉ mô tả hình dạng.",interpret,5,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+51ab714e-b211-5326-bd89-d1d029699b75,9816c44a-a050-57a7-92c8-15bda0e7e649,"Which interpretation is best supported by the data, and what are its limitations?","Cách diễn giải nào được dữ liệu hỗ trợ tốt nhất, và giới hạn của nó là gì?",evaluate_data,6,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+f356edfd-cba4-57f5-bb27-8deaface62d0,8e01547f-4e3d-518f-a0f5-291669ba9b47,"First, do this. Then, do that.",Đầu tiên làm bước này. Sau đó làm bước kia.,basic_sequence,1,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+46e2bfa1-9a76-5437-a7f7-fb8eda5d9e36,8e01547f-4e3d-518f-a0f5-291669ba9b47,What happens next?,Điều gì xảy ra tiếp theo?,next_step,2,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+d167e6e7-0d73-5242-a1cd-012b98794b07,8e01547f-4e3d-518f-a0f5-291669ba9b47,"First..., next..., then..., and finally...","Đầu tiên..., tiếp theo..., sau đó..., và cuối cùng...",process_sequence,4,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+5aea4599-0f31-5d91-a2cf-9b81859d7251,8e01547f-4e3d-518f-a0f5-291669ba9b47,"After this stage, the process moves to...","Sau giai đoạn này, quy trình chuyển sang...",process_transition,4,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+1b387c4f-3a33-5268-a585-833c29ac91b1,8e01547f-4e3d-518f-a0f5-291669ba9b47,Why must this step happen before the next one?,Vì sao bước này phải xảy ra trước bước tiếp theo?,sequence_reason,5,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+ba8d1322-a2b6-51ef-aad0-b5920ff7deb0,8e01547f-4e3d-518f-a0f5-291669ba9b47,"Which step is essential, and what would happen if we removed it?","Bước nào là thiết yếu, và điều gì sẽ xảy ra nếu bỏ bước đó?",counterfactual_process,5,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+a93b6ecb-3c29-565b-b02c-a54d75c03677,8e01547f-4e3d-518f-a0f5-291669ba9b47,Summarize the process in three stages without losing the key mechanism.,Tóm tắt quy trình trong ba giai đoạn mà không làm mất cơ chế chính.,synthesize_process,5,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+7ec460dc-99a2-5113-b920-34ac2d27b516,8e01547f-4e3d-518f-a0f5-291669ba9b47,"Where is the critical decision point in this process, and what evidence should guide it?","Điểm quyết định quan trọng trong quy trình nằm ở đâu, và bằng chứng nào nên định hướng quyết định?",evaluate_process,6,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+99dc83ce-07de-5893-93ca-1f67533d63b1,cae3e0f4-57c3-540d-bb6f-a5014f6f05b2,Let's start with the first part. What do you already know?,Bắt đầu với phần đầu nhé. Em đã biết gì?,activate_scaffold,3,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+5f64b3b2-03ea-5b58-9f64-f8e0b13bde15,cae3e0f4-57c3-540d-bb6f-a5014f6f05b2,Use this sentence frame to organize your explanation.,Dùng khung câu này để tổ chức lời giải thích.,sentence_frame,4,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+a9fd36e1-e504-5d61-ad67-0d286b3a10f5,cae3e0f4-57c3-540d-bb6f-a5014f6f05b2,What evidence would support that conclusion?,Bằng chứng nào sẽ hỗ trợ kết luận đó?,evidence_reasoning,5,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+6a7f4ac6-b7ce-54ed-b76a-f054e082377c,cae3e0f4-57c3-540d-bb6f-a5014f6f05b2,Which criteria should we use to compare these options?,Chúng ta nên dùng tiêu chí nào để so sánh các lựa chọn?,criteria,5,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+f5c47feb-51ef-5903-ab81-7529e754756d,cae3e0f4-57c3-540d-bb6f-a5014f6f05b2,How would your answer change if the condition were different?,Câu trả lời sẽ thay đổi thế nào nếu điều kiện khác đi?,transfer,5,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+1d8a97fd-e475-51c4-b5d0-33706ae1ebbd,cae3e0f4-57c3-540d-bb6f-a5014f6f05b2,Combine the two sources to form one conclusion.,Kết hợp hai nguồn để tạo một kết luận chung.,synthesize,5,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+6d1e7736-f295-5eea-a4b1-da88f012320e,cae3e0f4-57c3-540d-bb6f-a5014f6f05b2,Which assumption is most vulnerable in this argument?,Giả định nào dễ bị thách thức nhất trong lập luận này?,evaluate_assumption,6,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+a512a9d9-da5b-523c-9365-c460d3572493,cae3e0f4-57c3-540d-bb6f-a5014f6f05b2,How should we revise the claim in light of the counterevidence?,Chúng ta nên điều chỉnh nhận định thế nào khi xét đến bằng chứng phản lại?,revise_claim,6,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+1d1eba4e-0d8d-57b3-86ff-0b88110e3a98,a021f072-bb3d-54d8-a799-b5598fde786c,That's all for today. See you next class.,Hôm nay đến đây thôi. Hẹn gặp lại buổi sau.,close_class,1,1,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+009ff307-1400-5c81-a01f-428576992f65,a021f072-bb3d-54d8-a799-b5598fde786c,Don't forget your homework for next class.,Đừng quên bài tập về nhà cho buổi sau.,homework_reminder,1,2,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+10b5076c-ab14-5664-834d-bacfc705ecd8,a021f072-bb3d-54d8-a799-b5598fde786c,"Before you leave, answer this exit question.","Trước khi ra về, trả lời câu hỏi cuối giờ này nhé.",exit_check,2,3,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+143b91a2-6e75-512a-b534-8ea5de82cf59,a021f072-bb3d-54d8-a799-b5598fde786c,What is one thing you learned today?,Một điều em học được hôm nay là gì?,reflection,3,4,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+7c3f5cf2-85fa-592d-8391-c0f7c9bb73d2,a021f072-bb3d-54d8-a799-b5598fde786c,Which part is still difficult for you?,Phần nào vẫn còn khó với em?,diagnose,3,5,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+0a5194d4-4e15-5623-bb61-e5b19b51e804,a021f072-bb3d-54d8-a799-b5598fde786c,"Which strategy helped you most today, and why?","Chiến lược nào giúp em nhiều nhất hôm nay, và vì sao?",metacognition,5,6,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+f84f755d-c1bb-5143-a25e-0e6725696cd9,a021f072-bb3d-54d8-a799-b5598fde786c,What would you do differently if you solved this task again?,"Nếu làm lại nhiệm vụ này, em sẽ làm gì khác?",strategy_reflection,5,7,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
+0864eb68-8a9f-5fc4-949d-24e09c5c030a,a021f072-bb3d-54d8-a799-b5598fde786c,"How has your understanding changed, and what evidence of learning can you point to?","Hiểu biết của em đã thay đổi thế nào, và em có thể chỉ ra bằng chứng học tập nào?",advanced_reflection,6,8,true,2026-08-11T09:15:00Z,2026-08-11T09:15:00Z
