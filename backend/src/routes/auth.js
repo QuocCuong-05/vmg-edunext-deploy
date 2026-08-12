@@ -1,13 +1,17 @@
 import { Router } from 'express';
-import { createHash } from 'crypto';
 import { supabase, supabaseAdmin } from '../config/database.js';
 import { getPlusStatus, getAiRemaining } from '../lib/plus.js';
 import { getClientIp } from '../lib/ip.js';
 import { parseDeviceName } from '../lib/device.js';
 import { logActivity, EVENT_COMPONENT } from '../lib/activity.js';
 
-function sha256(text) {
-  return createHash('sha256').update(text || '').digest('hex');
+function getSessionId(accessToken) {
+  try {
+    const payload = JSON.parse(Buffer.from(accessToken.split('.')[1], 'base64url').toString());
+    return payload.session_id || null;
+  } catch {
+    return null;
+  }
 }
 
 const router = Router();
@@ -68,7 +72,7 @@ router.post('/login', async (req, res) => {
         ip: getClientIp(req),
         user_agent: ua,
         device_name: parseDeviceName(ua),
-        token_hash: sha256(data.session?.refresh_token || ''),
+        session_id: getSessionId(data.session?.access_token),
       })
       .then(() => {})
       .catch(() => {});
@@ -287,17 +291,16 @@ router.post('/devices/:id/signout', async (req, res) => {
 
     const { data: session, error: findError } = await supabaseAdmin
       .from('login_sessions')
-      .select('id, token_hash')
+      .select('id, session_id')
       .eq('id', req.params.id)
       .eq('user_id', user.id)
       .maybeSingle();
     if (findError) throw findError;
     if (!session) return res.status(404).json({ error: 'Không tìm thấy thiết bị' });
 
-    if (session.token_hash) {
+    if (session.session_id) {
       const { error: revokeError } = await supabaseAdmin.rpc('revoke_session', {
-        p_user_id: user.id,
-        p_token_hash: session.token_hash,
+        p_session_id: session.session_id,
       });
       if (revokeError) throw revokeError;
     }

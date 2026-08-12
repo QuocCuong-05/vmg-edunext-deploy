@@ -1,24 +1,25 @@
 -- ============================================================
--- VMG EduNext — đăng xuất từng thiết bị + context event log
+-- VMG EduNext — đăng xuất từng thiết bị (revoke theo session_id) + context event log
 -- Chạy 1 lần trên Supabase SQL Editor (cả staging + production)
 -- Lưu ý: chạy SAU migration_access_log.sql
 -- ============================================================
 
--- token hash (SHA-256 của refresh token — khớp cột auth.refresh_tokens.token)
-alter table public.login_sessions add column token_hash text;
+-- session_id (lấy từ JWT claim của access token) để revoke chính xác từng thiết bị
+alter table public.login_sessions add column session_id uuid;
+alter table public.login_sessions drop column if exists token_hash;
 
--- RPC: xóa đúng refresh token của 1 thiết bị (revoke chính xác)
-create or replace function public.revoke_session(p_user_id uuid, p_token_hash text)
+-- RPC: hủy đúng session của 1 thiết bị (xóa refresh tokens theo session)
+create or replace function public.revoke_session(p_session_id uuid)
 returns void
 language sql
 security definer
 set search_path = auth, public
 as $$
-  delete from auth.refresh_tokens
-  where user_id = p_user_id::text and token = p_token_hash;
+  delete from auth.refresh_tokens where session_id = p_session_id;
 $$;
 
-grant execute on function public.revoke_session(uuid, text) to service_role;
+grant execute on function public.revoke_session(uuid) to service_role;
+drop function if exists public.revoke_session(uuid, text);
 
 -- context cho event log (mẫu Uplearn: Bối cảnh của sự kiện)
 alter table public.access_log add column context text;
