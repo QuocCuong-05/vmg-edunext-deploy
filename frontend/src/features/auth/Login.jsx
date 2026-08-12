@@ -9,15 +9,7 @@ import { validatePassword } from '../../lib/password';
 import { getWards } from '../../mock/wards';
 import { getSchools } from '../../mock/schools';
 import PolicyModal from '../policy/PolicyModal';
-
-const CONSENT_ITEMS = [
-  { key: 'service', title: 'Cung cấp và duy trì dịch vụ', desc: 'Tạo lập tài khoản, đăng nhập, mua gói Plus, thanh toán, cấp chứng nhận', required: true },
-  { key: 'support', title: 'Hỗ trợ và chăm sóc người dùng', desc: 'Giải đáp thắc mắc, xử lý khiếu nại, khảo sát cải tiến', required: true },
-  { key: 'security', title: 'An ninh và tuân thủ pháp luật', desc: 'Xác thực tài khoản, phát hiện gian lận, nghĩa vụ pháp lý (NĐ 13)', required: true },
-  { key: 'quality', title: 'Nâng cao chất lượng dịch vụ', desc: 'Phân tích tương tác, cá nhân hóa, đề xuất khóa học, cải thiện ViMi AI', required: true },
-  { key: 'marketing', title: 'Truyền thông và tiếp thị', desc: 'Gửi khuyến mãi, bản tin, đo lường quảng cáo', required: false },
-];
-const REQUIRED_CONSENTS = CONSENT_ITEMS.filter(c => c.required).map(c => c.key);
+import { CONSENT_ITEMS } from '../../lib/consent';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -92,11 +84,6 @@ export default function Login() {
         return;
       }
       setStep(2);
-      return;
-    }
-    const missing = REQUIRED_CONSENTS.filter(k => !consents[k]);
-    if (missing.length > 0) {
-      setError('Vui lòng tích các mục bắt buộc về xử lý dữ liệu');
       return;
     }
     setBusy(true);
@@ -274,9 +261,7 @@ export default function Login() {
                     <span style={{ flex: 1, minWidth: 0 }}>
                       <b style={{ fontSize: 13 }}>
                         {item.title}{' '}
-                        {item.required
-                          ? <span style={{ color: 'var(--red)', fontSize: 11 }}>(bắt buộc)</span>
-                          : <span style={{ color: 'var(--muted)', fontSize: 11 }}>(tùy chọn)</span>}
+                        <span style={{ color: 'var(--muted)', fontSize: 11 }}>(tùy chọn)</span>
                       </b>
                       <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginTop: 3 }}>{item.desc}</div>
                     </span>

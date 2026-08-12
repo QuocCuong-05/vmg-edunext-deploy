@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabase, supabaseAdmin } from '../config/database.js';
 import { getPlusStatus, getAiRemaining } from '../lib/plus.js';
+import { getClientIp } from '../lib/ip.js';
 
 const router = Router();
 
@@ -136,8 +137,7 @@ router.post('/consent', async (req, res) => {
       return res.status(400).json({ error: 'items (mảng) là bắt buộc' });
     }
 
-    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
-      || req.socket?.remoteAddress || null;
+    const ip = getClientIp(req);
     const rows = items
       .filter(it => it && it.key)
       .map(it => ({
@@ -155,6 +155,64 @@ router.post('/consent', async (req, res) => {
     if (insertError) throw insertError;
 
     res.json({ saved: rows.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /auth/consents — lịch sử đồng ý của user (trang cá nhân)
+router.get('/consents', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'No token' });
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error) return res.status(401).json({ error: error.message });
+
+    const { data, error: listError } = await supabaseAdmin
+      .from('consent_log')
+      .select('policy_key, accepted, version, ip, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (listError) throw listError;
+
+    res.json({ data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /auth/anonymize — khử nhận dạng: xóa PII, giữ dữ liệu học tập ẩn danh
+router.post('/anonymize', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'No token' });
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error) return res.status(401).json({ error: error.message });
+    const userId = user.id;
+
+    await supabaseAdmin
+      .from('consent_log')
+      .upsert({ user_id: userId, policy_key: 'deletion_request', version: 1, accepted: true, ip: null },
+        { onConflict: 'user_id,policy_key,version' });
+
+    await supabaseAdmin.from('profiles').delete().eq('id', userId);
+    await supabaseAdmin.from('orders').delete().eq('user_id', userId);
+    await supabaseAdmin.from('enrollments').delete().eq('user_id', userId);
+    await supabaseAdmin.from('user_vocabulary').delete().eq('user_id', userId);
+    await supabaseAdmin.from('notifications').delete().eq('user_id', userId);
+    await supabaseAdmin.from('community_posts').delete().eq('user_id', userId);
+    await supabaseAdmin.from('community_comments').delete().eq('user_id', userId);
+    await supabaseAdmin.from('community_likes').delete().eq('user_id', userId);
+    await supabaseAdmin.from('community_reports').delete().eq('user_id', userId);
+    await supabaseAdmin.from('user_follows').delete().eq('follower_id', userId);
+    await supabaseAdmin.from('user_follows').delete().eq('following_id', userId);
+    await supabaseAdmin.from('plus_subscriptions').delete().eq('user_id', userId);
+
+    await supabaseAdmin.auth.admin.deleteUser(userId);
+
+    res.json({ anonymized: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

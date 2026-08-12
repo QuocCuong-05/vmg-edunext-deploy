@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { api } from '../../lib/api';
+import { CONSENT_ITEMS } from '../../lib/consent';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -13,12 +15,18 @@ function getInitials(name) {
 }
 
 export default function AccountPage() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, logout } = useAuth();
+  const navigate = useNavigate();
   const [wards, setWards] = useState([]);
   const [schools, setSchools] = useState([]);
   const [form, setForm] = useState({ full_name: '', bio: '', ward: '', school: '' });
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [consents, setConsents] = useState([]);
+  const [consentChoices, setConsentChoices] = useState({});
+  const [savingConsent, setSavingConsent] = useState(false);
+  const [showAnonymizeModal, setShowAnonymizeModal] = useState(false);
+  const [anonymizing, setAnonymizing] = useState(false);
 
   useEffect(() => {
     if (user && !loaded) {
@@ -43,6 +51,63 @@ export default function AccountPage() {
     }
     api.ranking.schools(form.ward).then(setSchools).catch(() => setSchools([]));
   }, [form.ward]);
+
+  useEffect(() => {
+    if (!user) return;
+    api.auth.consents().then(rows => {
+      const list = rows || [];
+      setConsents(list);
+      const latest = {};
+      list.forEach(r => {
+        if (latest[r.policy_key] === undefined || r.version >= latest[r.policy_key].version) latest[r.policy_key] = r;
+      });
+      const choices = {};
+      CONSENT_ITEMS.forEach(c => { choices[c.key] = !!latest[c.key]?.accepted; });
+      setConsentChoices(choices);
+    }).catch(() => {});
+  }, [user]);
+
+  const latestVersionFor = (key) => {
+    let v = 0;
+    consents.forEach(r => { if (r.policy_key === key) v = Math.max(v, r.version || 0); });
+    return v;
+  };
+  const latestAtFor = (key) => {
+    const rows = consents.filter(r => r.policy_key === key);
+    return rows.length ? rows[rows.length - 1].created_at : null;
+  };
+
+  const handleSaveConsents = async () => {
+    setSavingConsent(true);
+    try {
+      const maxV = consents.reduce((m, r) => Math.max(m, r.version || 0), 0);
+      await api.auth.consent(CONSENT_ITEMS.map(c => ({
+        key: c.key,
+        version: maxV + 1,
+        accepted: !!consentChoices[c.key],
+      })));
+      const rows = await api.auth.consents();
+      setConsents(rows || []);
+      window.__vimi_toast?.('Đã cập nhật lựa chọn xử lý dữ liệu', 'success');
+    } catch (e) {
+      window.__vimi_toast?.(e.message || 'Lưu thất bại', 'error');
+    } finally {
+      setSavingConsent(false);
+    }
+  };
+
+  const handleAnonymize = async () => {
+    setAnonymizing(true);
+    try {
+      await api.auth.anonymize();
+      window.__vimi_toast?.('Dữ liệu của bạn đã được khử nhận dạng', 'success');
+      await logout();
+      navigate('/');
+    } catch (e) {
+      window.__vimi_toast?.(e.message || 'Không thể xóa dữ liệu', 'error');
+      setAnonymizing(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!form.full_name.trim()) {
@@ -162,6 +227,92 @@ export default function AccountPage() {
           {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
         </Button>
       </Card>
+
+      <Card style={{ padding: 24, marginTop: 20 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Icon.Globe size={16} /> Quyền riêng tư & dữ liệu
+        </h3>
+        <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16, lineHeight: 1.6 }}>
+          Bạn có thể bật/tắt từng mục đích xử lý dữ liệu bất kỳ lúc nào. Mục đã tắt sẽ ngừng thu thập và xử lý.
+        </p>
+
+        {CONSENT_ITEMS.map(item => {
+          const v = latestVersionFor(item.key);
+          return (
+            <label
+              key={item.key}
+              style={{
+                display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer',
+                padding: '12px 14px', borderRadius: 12, marginBottom: 8,
+                border: '1px solid var(--line)', background: 'var(--surface-hover)',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={!!consentChoices[item.key]}
+                onChange={e => setConsentChoices({ ...consentChoices, [item.key]: e.target.checked })}
+                style={{ marginTop: 3, flexShrink: 0, width: 16, height: 16 }}
+              />
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <b style={{ fontSize: 13 }}>
+                  {item.title}{' '}
+                  <span style={{ color: 'var(--muted)', fontSize: 11 }}>
+                    {v > 0 ? `· lần cập nhật #${v}` : '· chưa từng chọn'}
+                  </span>
+                </b>
+                <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginTop: 3 }}>{item.desc}</div>
+              </span>
+            </label>
+          );
+        })}
+
+        <Button variant="primary" size="sm" isDisabled={savingConsent} onClick={handleSaveConsents}>
+          {savingConsent ? 'Đang lưu...' : 'Lưu lựa chọn'}
+        </Button>
+
+        <div style={{ borderTop: '1px solid var(--line)', marginTop: 20, paddingTop: 16 }}>
+          <Button
+            variant="ghost"
+            style={{ color: 'var(--red)', fontWeight: 700 }}
+            isDisabled={anonymizing}
+            onClick={() => setShowAnonymizeModal(true)}
+          >
+            Xóa dữ liệu của tôi
+          </Button>
+          <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8, lineHeight: 1.6 }}>
+            Dữ liệu cá nhân (email, họ tên, trường, địa chỉ IP...) sẽ bị xóa và khử nhận dạng vĩnh viễn.
+            Dữ liệu học tập còn lại không còn nhận dạng được bạn và được sử dụng cho thống kê ẩn danh.
+          </p>
+        </div>
+      </Card>
+
+      {showAnonymizeModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,.55)',
+            display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 16,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget && !anonymizing) setShowAnonymizeModal(false); }}
+        >
+          <Card style={{ maxWidth: 460, width: '100%', padding: 24 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 8, color: 'var(--red)' }}>
+              Xóa dữ liệu của tôi?
+            </h3>
+            <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.7 }}>
+              Toàn bộ dữ liệu cá nhân của bạn sẽ bị <b>xóa và khử nhận dạng vĩnh viễn</b> —
+              không thể khôi phục. Tài khoản sẽ bị đăng xuất. Bạn vẫn có thể tạo tài khoản mới sau này.
+            </p>
+            <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
+              <Button variant="ghost" isDisabled={anonymizing} onClick={() => setShowAnonymizeModal(false)}>
+                Hủy
+              </Button>
+              <Button variant="primary" isDisabled={anonymizing} onClick={handleAnonymize}>
+                {anonymizing ? 'Đang xử lý...' : 'Xác nhận xóa'}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
