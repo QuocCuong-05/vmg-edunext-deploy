@@ -16,6 +16,24 @@ export function AuthProvider({ children }) {
     setUser(data?.user || null);
   }
 
+  async function sendPendingConsent() {
+    const raw = localStorage.getItem('vmg_consent_pending');
+    if (!raw) return;
+    const token = localStorage.getItem('vmg_token');
+    if (!token) return;
+    try {
+      const items = JSON.parse(raw);
+      const res = await fetch(`${API_BASE}/auth/consent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ items }),
+      });
+      if (res.ok) localStorage.removeItem('vmg_consent_pending');
+    } catch {
+      // giữ lại pending để lần đăng nhập sau thử lại
+    }
+  }
+
   useEffect(() => {
     restoreSession();
   }, []);
@@ -39,6 +57,7 @@ export function AuthProvider({ children }) {
         applyUser(data);
         localStorage.setItem('vmg_token', session.access_token);
         syncXp();
+        await sendPendingConsent();
       } else {
         localStorage.removeItem('vmg_token');
       }
@@ -87,6 +106,7 @@ export function AuthProvider({ children }) {
     const meData = await meRes.json();
     applyUser(meData);
     syncXp();
+    await sendPendingConsent();
     return meData.user;
   }, []);
 

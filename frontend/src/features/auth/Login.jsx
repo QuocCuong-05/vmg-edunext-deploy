@@ -109,7 +109,14 @@ export default function Login() {
       }
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      if (/kiểm tra email|xác nhận|confirm/i.test(err.message)) {
+        localStorage.setItem('vmg_consent_pending', JSON.stringify(
+          CONSENT_ITEMS.map(c => ({ key: c.key, version: 1, accepted: consents[c.key] }))
+        ));
+        setInfo(err.message + ' Sau khi xác nhận và đăng nhập, lựa chọn của bạn sẽ được lưu tự động.');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setBusy(false);
     }
