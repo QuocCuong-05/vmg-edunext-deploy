@@ -270,7 +270,15 @@ export default function AccountPage() {
           {savingConsent ? 'Đang lưu...' : 'Lưu lựa chọn'}
         </Button>
 
-        <div style={{ borderTop: '1px solid var(--line)', marginTop: 20, paddingTop: 16 }}>
+        <div
+          style={{
+            border: '1px solid var(--red)',
+            background: 'var(--red-bg)',
+            borderRadius: 12,
+            padding: '14px 16px',
+            marginTop: 20,
+          }}
+        >
           <Button
             variant="ghost"
             style={{ color: 'var(--red)', fontWeight: 700 }}
@@ -279,9 +287,9 @@ export default function AccountPage() {
           >
             Xóa dữ liệu của tôi
           </Button>
-          <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8, lineHeight: 1.6 }}>
-            Dữ liệu cá nhân (email, họ tên, trường, địa chỉ IP...) sẽ bị xóa và khử nhận dạng vĩnh viễn.
-            Dữ liệu học tập còn lại không còn nhận dạng được bạn và được sử dụng cho thống kê ẩn danh.
+          <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8, lineHeight: 1.6, marginBottom: 0 }}>
+            Email, họ tên, trường và địa chỉ IP của bạn sẽ bị xóa vĩnh viễn.
+            Chỉ giữ lại dữ liệu học tập đã ẩn danh (không nhận dạng được bạn) để thống kê.
           </p>
         </div>
       </Card>
@@ -299,8 +307,9 @@ export default function AccountPage() {
               Xóa dữ liệu của tôi?
             </h3>
             <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.7 }}>
-              Toàn bộ dữ liệu cá nhân của bạn sẽ bị <b>xóa và khử nhận dạng vĩnh viễn</b> —
-              không thể khôi phục. Tài khoản sẽ bị đăng xuất. Bạn vẫn có thể tạo tài khoản mới sau này.
+              Toàn bộ dữ liệu cá nhân của bạn sẽ bị xóa vĩnh viễn —{' '}
+              <b>tài khoản (kể cả email đăng nhập) sẽ bị xóa luôn</b> và không thể hoàn tác.
+              Bạn có thể tạo tài khoản mới bất kỳ lúc nào.
             </p>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
               <Button variant="ghost" isDisabled={anonymizing} onClick={() => setShowAnonymizeModal(false)}>
