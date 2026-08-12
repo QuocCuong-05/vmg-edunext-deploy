@@ -266,7 +266,7 @@ export default function AccountPage() {
           );
         })}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, marginTop: 8 }}>
           <Button variant="primary" size="sm" isDisabled={savingConsent} onClick={handleSaveConsents}>
             {savingConsent ? 'Đang lưu...' : 'Lưu lựa chọn'}
           </Button>
