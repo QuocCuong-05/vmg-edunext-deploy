@@ -257,6 +257,34 @@ router.post('/anonymize', async (req, res) => {
   }
 });
 
+// POST /auth/sessions/touch — ghi nhận thiết bị đang hoạt động (mọi luồng login/restore)
+router.post('/sessions/touch', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'No token' });
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error) return res.status(401).json({ error: error.message });
+
+    const ua = req.headers['user-agent'] || null;
+    const { error: touchError } = await supabaseAdmin
+      .from('login_sessions')
+      .upsert({
+        user_id: user.id,
+        session_id: getSessionId(token),
+        ip: getClientIp(req),
+        user_agent: ua,
+        device_name: parseDeviceName(ua),
+        last_active_at: new Date().toISOString(),
+      }, { onConflict: 'session_id' });
+    if (touchError) throw touchError;
+
+    res.json({ data: { touched: true } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /auth/devices — thiết bị đăng nhập của user (Facebook-style)
 router.get('/devices', async (req, res) => {
   try {

@@ -75,6 +75,7 @@ export const api = {
     anonymize: async () => request('/auth/anonymize', { method: 'POST' }),
     devices: async () => request('/auth/devices'),
     deviceSignout: async (id) => request(`/auth/devices/${id}/signout`, { method: 'POST' }),
+    sessionTouch: async () => request('/auth/sessions/touch', { method: 'POST' }),
     activity: async () => request('/auth/activity'),
   },
   courses: {

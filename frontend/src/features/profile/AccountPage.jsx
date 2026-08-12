@@ -20,6 +20,13 @@ const TABS = [
 
 const DEVICE_ICONS = ['💻', '📱', '📱', '💻', '🖥️', '💻'];
 
+function getDeviceIcon(deviceName) {
+  const n = deviceName || '';
+  if (/android|ios|iphone|ipad/i.test(n)) return '📱';
+  if (/windows|mac|linux/i.test(n)) return '💻';
+  return '🖥️';
+}
+
 function getInitials(name) {
   return (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
@@ -387,7 +394,7 @@ export default function AccountPage() {
                   border: '1px solid var(--line)', background: 'var(--surface-hover)',
                 }}
               >
-                <div style={{ fontSize: 22 }}>{DEVICE_ICONS[i % DEVICE_ICONS.length]}</div>
+                <div style={{ fontSize: 22 }}>{getDeviceIcon(d.device_name)}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <b style={{ fontSize: 13 }}>
                     {d.device_name || 'Thiết bị'}{' '}

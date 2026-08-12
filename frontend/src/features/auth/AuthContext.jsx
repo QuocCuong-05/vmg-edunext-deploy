@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { supabase } from '../../lib/supabase';
 import { syncXp, setPlusFlag } from '../../lib/xp';
 import { validatePassword } from '../../lib/password';
+import { api } from '../../lib/api';
 
 const AuthContext = createContext(null);
 
@@ -58,6 +59,7 @@ export function AuthProvider({ children }) {
         localStorage.setItem('vmg_token', session.access_token);
         syncXp();
         await sendPendingConsent();
+        api.auth.sessionTouch().catch(() => {});
       } else {
         localStorage.removeItem('vmg_token');
       }
@@ -107,6 +109,7 @@ export function AuthProvider({ children }) {
     applyUser(meData);
     syncXp();
     await sendPendingConsent();
+    api.auth.sessionTouch().catch(() => {});
     return meData.user;
   }, []);
 
