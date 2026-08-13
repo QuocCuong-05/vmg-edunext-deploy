@@ -340,6 +340,18 @@ router.post('/subscriptions/:id/cancel', async (req, res, next) => {
   }
 });
 
+async function profileMapFor(userIds) {
+  const ids = [...new Set((userIds || []).filter(Boolean))];
+  if (!ids.length) return {};
+  const { data } = await supabaseAdmin
+    .from('profiles')
+    .select('id, full_name, email')
+    .in('id', ids);
+  const map = {};
+  (data || []).forEach(p => { map[p.id] = p; });
+  return map;
+}
+
 // GET /admin/trace/activity — access_log toàn bộ user (truy vết IP)
 router.get('/trace/activity', async (req, res, next) => {
   try {
@@ -350,7 +362,7 @@ router.get('/trace/activity', async (req, res, next) => {
 
     let query = supabaseAdmin
       .from('access_log')
-      .select('id, event, description, context, origin, ip, user_agent, created_at, user_id, profiles(id, full_name, email)', { count: 'exact' })
+      .select('id, event, description, context, origin, ip, user_agent, created_at, user_id', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limitNum - 1);
 
@@ -362,11 +374,12 @@ router.get('/trace/activity', async (req, res, next) => {
     const { data, error, count } = await query;
     if (error) throw error;
 
+    const pmap = await profileMapFor((data || []).map(a => a.user_id));
     res.json({
       data: (data || []).map(a => ({
         ...a,
-        email: a.profiles?.email || a.user_id || '(đã ẩn danh)',
-        full_name: a.profiles?.full_name || '-',
+        email: pmap[a.user_id]?.email || (a.user_id ? '' : '(đã ẩn danh)'),
+        full_name: pmap[a.user_id]?.full_name || '-',
       })),
       total: count || 0,
       page: pageNum,
@@ -380,27 +393,24 @@ router.get('/trace/activity', async (req, res, next) => {
 // GET /admin/trace/consents — consent_log theo user
 router.get('/trace/consents', async (req, res, next) => {
   try {
-    const { email, page = 1, limit = 50 } = req.query;
+    const { page = 1, limit = 50 } = req.query;
     const pageNum = Math.max(1, parseInt(page) || 1);
     const limitNum = Math.min(200, Math.max(1, parseInt(limit) || 50));
     const offset = (pageNum - 1) * limitNum;
 
-    let query = supabaseAdmin
+    const { data, error, count } = await supabaseAdmin
       .from('consent_log')
-      .select('user_id, policy_key, accepted, version, ip, created_at, profiles(id, full_name, email)', { count: 'exact' })
+      .select('user_id, policy_key, accepted, version, ip, created_at', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limitNum - 1);
-
-    if (email) query = query.or(`profiles.email.ilike.%${email}%,profiles.full_name.ilike.%${email}%`);
-
-    const { data, error, count } = await query;
     if (error) throw error;
 
+    const pmap = await profileMapFor((data || []).map(c => c.user_id));
     res.json({
       data: (data || []).map(c => ({
         ...c,
-        email: c.profiles?.email || '(đã ẩn danh)',
-        full_name: c.profiles?.full_name || '-',
+        email: pmap[c.user_id]?.email || (c.user_id ? '' : '(đã ẩn danh)'),
+        full_name: pmap[c.user_id]?.full_name || '-',
       })),
       total: count || 0,
       page: pageNum,
@@ -414,27 +424,24 @@ router.get('/trace/consents', async (req, res, next) => {
 // GET /admin/trace/devices — login_sessions mọi user (thiết bị + IP)
 router.get('/trace/devices', async (req, res, next) => {
   try {
-    const { email, page = 1, limit = 50 } = req.query;
+    const { page = 1, limit = 50 } = req.query;
     const pageNum = Math.max(1, parseInt(page) || 1);
     const limitNum = Math.min(200, Math.max(1, parseInt(limit) || 50));
     const offset = (pageNum - 1) * limitNum;
 
-    let query = supabaseAdmin
+    const { data, error, count } = await supabaseAdmin
       .from('login_sessions')
-      .select('id, device_name, ip, user_agent, logged_in_at, last_active_at, user_id, profiles(id, full_name, email)', { count: 'exact' })
+      .select('id, device_name, ip, user_agent, logged_in_at, last_active_at, user_id', { count: 'exact' })
       .order('logged_in_at', { ascending: false })
       .range(offset, offset + limitNum - 1);
-
-    if (email) query = query.or(`profiles.email.ilike.%${email}%,profiles.full_name.ilike.%${email}%`);
-
-    const { data, error, count } = await query;
     if (error) throw error;
 
+    const pmap = await profileMapFor((data || []).map(d => d.user_id));
     res.json({
       data: (data || []).map(d => ({
         ...d,
-        email: d.profiles?.email || '(đã ẩn danh)',
-        full_name: d.profiles?.full_name || '-',
+        email: pmap[d.user_id]?.email || (d.user_id ? '' : '(đã ẩn danh)'),
+        full_name: pmap[d.user_id]?.full_name || '-',
       })),
       total: count || 0,
       page: pageNum,
@@ -477,16 +484,18 @@ router.get('/trace/stats', async (_req, res, next) => {
 
     const { data: topUsers } = await supabaseAdmin
       .from('access_log')
-      .select('user_id, profiles(full_name, email)')
+      .select('user_id')
       .gte('created_at', weekAgo)
       .not('user_id', 'is', null)
       .limit(1000);
 
+    const pmap = await profileMapFor((topUsers || []).map(r => r.user_id));
     const userCount = {};
     (topUsers || []).forEach(r => {
-      const key = r.user_id;
-      if (!userCount[key]) userCount[key] = { count: 0, name: r.profiles?.full_name || '-', email: r.profiles?.email || key };
-      userCount[key].count += 1;
+      if (!userCount[r.user_id]) {
+        userCount[r.user_id] = { count: 0, name: pmap[r.user_id]?.full_name || '-', email: pmap[r.user_id]?.email || r.user_id };
+      }
+      userCount[r.user_id].count += 1;
     });
     const topUserList = Object.values(userCount).sort((a, b) => b.count - a.count).slice(0, 10);
 

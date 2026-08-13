@@ -107,7 +107,7 @@ router.get('/me', async (req, res) => {
 
   await supabaseAdmin
     .from('profiles')
-    .update({ last_active_at: new Date().toISOString() })
+    .update({ last_active_at: new Date().toISOString(), email: user.email })
     .eq('id', user.id)
     .then(() => {})
     .catch(() => {});
