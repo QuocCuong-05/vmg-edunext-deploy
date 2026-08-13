@@ -6,6 +6,7 @@ import { updateStreak } from '../../lib/streak';
 import { logActivity } from '../../lib/activity';
 import { addXp } from '../../lib/xp';
 import { dispatchAction } from '../../lib/quest-engine';
+import { trackEvent } from '../../lib/ga';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -45,6 +46,8 @@ export default function LessonView() {
     api.courses.get(slug).then(data => {
       setCourse(data);
       setLoading(false);
+      const l = (data?.lessons || []).find(x => x.id === lessonId);
+      if (l) trackEvent('Course', 'lesson_view', l.title);
     }).catch(err => {
       const msg = (err?.message || '') + ' ' + (err?.status || '');
       if (/authorization|expired|Invalid token|401/i.test(msg)) {

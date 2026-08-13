@@ -10,6 +10,7 @@ import { getWards } from '../../mock/wards';
 import { getSchools } from '../../mock/schools';
 import PolicyModal from '../policy/PolicyModal';
 import { CONSENT_ITEMS } from '../../lib/consent';
+import { trackEvent } from '../../lib/ga';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -91,6 +92,7 @@ export default function Login() {
       await signup(email, password, fullName, school, ward);
       try {
         await api.auth.consent(CONSENT_ITEMS.map(c => ({ key: c.key, version: 1, accepted: consents[c.key] })));
+        trackEvent('Consent', 'signup_consent', String(CONSENT_ITEMS.filter(c => consents[c.key]).length));
       } catch (consentErr) {
         console.error('[consent]', consentErr.message);
       }

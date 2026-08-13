@@ -1,5 +1,7 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuth } from './features/auth/AuthContext';
+import { initGa, trackPage } from './lib/ga';
 import ProtectedRoute from './features/auth/ProtectedRoute';
 import Layout from './features/layout/Layout';
 import Landing from './features/landing/Landing';
@@ -34,6 +36,15 @@ import PolicyPage from './features/policy/PolicyPage';
 
 export default function App() {
   const { user, loading } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    initGa();
+  }, []);
+
+  useEffect(() => {
+    trackPage(location.pathname + location.search);
+  }, [location.pathname, location.search]);
 
   if (loading) {
     return (

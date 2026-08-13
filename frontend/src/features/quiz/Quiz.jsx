@@ -3,6 +3,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Icon } from '../../lib/icons';
 import { updateStreak } from '../../lib/streak';
+import { trackEvent } from '../../lib/ga';
 import { logActivity } from '../../lib/activity';
 import { addXp } from '../../lib/xp';
 import { dispatchAction } from '../../lib/quest-engine';
@@ -122,7 +123,7 @@ export default function Quiz() {
     if (isLast) {
       setFinished(true);
       api.quiz.submit(quizSet.id, results.map(r => ({ question_id: r.question_id, option_id: r.option_id })))
-        .then(res => setServerScore(res?.score ?? null))
+        .then(res => { setServerScore(res?.score ?? null); trackEvent('Quiz', 'submit', `${quizSet.slug || ''} (${res?.score ?? 0}%)`); })
         .catch(() => {});
     } else {
       setCurrentQ(prev => prev + 1);

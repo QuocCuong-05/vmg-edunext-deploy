@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { api } from '../../lib/api';
 import { CONSENT_ITEMS } from '../../lib/consent';
+import { trackEvent } from '../../lib/ga';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -158,6 +159,7 @@ export default function AccountPage() {
       const rows = await api.auth.consents();
       setConsents(rows || []);
       setActivity(null);
+      trackEvent('Consent', 'update', String(CONSENT_ITEMS.filter(c => consentChoices[c.key]).length));
       window.__vimi_toast?.('Đã cập nhật lựa chọn xử lý dữ liệu', 'success');
     } catch (e) {
       window.__vimi_toast?.(e.message || 'Lưu thất bại', 'error');
@@ -170,6 +172,7 @@ export default function AccountPage() {
     setAnonymizing(true);
     try {
       await api.auth.anonymize();
+      trackEvent('Privacy', 'delete_data');
       window.__vimi_toast?.('Dữ liệu của bạn đã được khử nhận dạng', 'success');
       await logout();
       navigate('/');

@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { syncXp, setPlusFlag } from '../../lib/xp';
 import { validatePassword } from '../../lib/password';
 import { api } from '../../lib/api';
+import { trackEvent } from '../../lib/ga';
 
 const AuthContext = createContext(null);
 
@@ -110,6 +111,7 @@ export function AuthProvider({ children }) {
     syncXp();
     await sendPendingConsent();
     api.auth.sessionTouch().catch(() => {});
+    trackEvent('Auth', 'login', email);
     return meData.user;
   }, []);
 
@@ -157,6 +159,7 @@ export function AuthProvider({ children }) {
     const meData = await meRes.json();
     applyUser(meData);
     syncXp();
+    trackEvent('Auth', 'signup', email);
     return meData.user;
   }, []);
 

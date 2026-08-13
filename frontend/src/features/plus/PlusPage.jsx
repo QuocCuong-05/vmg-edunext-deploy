@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode';
 import { api } from '../../lib/api';
+import { trackEvent } from '../../lib/ga';
 import { useAuth } from '../auth/AuthContext';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -68,6 +69,7 @@ export default function PlusPage() {
     try {
       const res = await api.orders.createPlus(p);
       setOrder(res.order);
+      trackEvent('Order', 'create', `${p} tháng`);
       setRemaining(Math.max(0, Math.floor((new Date(res.order.expires_at).getTime() - Date.now()) / 1000)));
       if (res.qr_type === 'approve' && res.approve_url) {
         QRCode.toDataURL(res.approve_url, { width: 220, margin: 1 }).then(setQrDataUrl).catch(() => {});
