@@ -281,8 +281,8 @@ export default function PlusPage() {
             </Card>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 1fr', gap: 16, alignItems: 'start' }}>
-          <Card style={{ padding: 'min(28px, 6vw)', marginBottom: isNarrow ? 16 : 0, position: isNarrow ? undefined : 'sticky', top: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 1fr', gap: 16 }}>
+          <Card style={{ padding: 'min(28px, 6vw)', marginBottom: isNarrow ? 16 : 0, height: '100%' }}>
             <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Icon.Gem size={16} style={{ color: '#8b5cf6' }} /> Quyền lợi gói Plus
             </h3>
@@ -304,7 +304,7 @@ export default function PlusPage() {
 
             {!showPayment && !isPlusActive ? (
               <div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, marginBottom: 18 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 18 }}>
                   {PLANS.map(p => (
                     <button
                       key={p.period}
@@ -330,7 +330,7 @@ export default function PlusPage() {
               <div>
                 {!order && (
                   <div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, marginBottom: 18 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 18 }}>
                       {PLANS.map(p => (
                         <button
                           key={p.period}
