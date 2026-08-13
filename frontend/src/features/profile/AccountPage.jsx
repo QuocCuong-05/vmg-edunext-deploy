@@ -179,17 +179,6 @@ export default function AccountPage() {
     }
   };
 
-  const handleDeviceSignout = async (device) => {
-    if (!window.confirm(`Đăng xuất khỏi thiết bị "${device.device_name || 'Thiết bị'}"? Bạn sẽ phải đăng nhập lại trên thiết bị đó.`)) return;
-    try {
-      await api.auth.deviceSignout(device.id);
-      setDevices(prev => (prev || []).filter(d => d.id !== device.id));
-      window.__vimi_toast?.('Đã đăng xuất khỏi thiết bị', 'success');
-    } catch (e) {
-      window.__vimi_toast?.(e.message || 'Không thể đăng xuất thiết bị', 'error');
-    }
-  };
-
   const avatarColor = COLORS[parseInt(user?.id?.slice(-1) || '0') % COLORS.length];
   const roleLabel = user?.role === 'admin' ? 'Quản trị viên' : 'Giáo viên';
 
@@ -408,9 +397,6 @@ export default function AccountPage() {
                     IP: {d.ip || '-'} · {fmtTime(d.logged_in_at)}
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" style={{ color: 'var(--red)', fontWeight: 600, flexShrink: 0 }} onClick={() => handleDeviceSignout(d)}>
-                  Đăng xuất
-                </Button>
               </div>
             ))
           )}
