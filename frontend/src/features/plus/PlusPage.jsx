@@ -61,6 +61,8 @@ export default function PlusPage() {
   const [done, setDone] = useState(false);
   const [remaining, setRemaining] = useState(0);
   const [history, setHistory] = useState(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyLimit, setHistoryLimit] = useState(5);
   const [cancelBusy, setCancelBusy] = useState('');
   const submittingRef = useRef(false);
   const payRef = useRef(null);
@@ -438,45 +440,68 @@ export default function PlusPage() {
 
           {history && history.length > 0 && (
             <Card style={{ padding: 'min(24px, 5vw)', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Icon.CartAlt size={16} style={{ color: 'var(--red)' }} /> Lịch sử thanh toán
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {history.map(o => {
-                  const st = ORDER_STATUS[o.status] || { label: o.status, color: 'var(--muted)' };
-                  const alive = ['pending', 'awaiting'].includes(o.status) && o.expires_at && new Date(o.expires_at) > new Date();
-                  return (
-                    <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--surface)', borderRadius: 10 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12, fontFamily: 'monospace', fontWeight: 700 }}>{o.order_no}</div>
-                        <div style={{ fontSize: 11, color: 'var(--muted)' }}>
-                          {o.item_type === 'plus' ? `Plus ${o.period} tháng` : 'Khóa học'} · {(o.amount || 0).toLocaleString('vi-VN')}đ · {o.created_at ? new Date(o.created_at).toLocaleDateString('vi-VN') : ''}
+              <button
+                onClick={() => setHistoryOpen(o => !o)}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}
+              >
+                <h3 style={{ fontSize: 15, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, flex: 1, margin: 0 }}>
+                  <Icon.CartAlt size={16} style={{ color: 'var(--red)' }} /> Lịch sử thanh toán
+                </h3>
+                {(() => {
+                  const open = (history || []).filter(o => ['pending', 'awaiting'].includes(o.status)).length;
+                  return open > 0 ? (
+                    <span style={{ fontSize: 10, fontWeight: 800, background: 'var(--gold-bg)', color: 'var(--gold)', borderRadius: 999, padding: '2px 8px' }}>{open} chưa xong</span>
+                  ) : null;
+                })()}
+                <Icon.ArrowLeft size={16} style={{ color: 'var(--muted)', transform: historyOpen ? 'rotate(90deg)' : 'rotate(-90deg)', transition: 'transform .2s' }} />
+              </button>
+
+              {historyOpen && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+                  {history.slice(0, historyLimit).map(o => {
+                    const st = ORDER_STATUS[o.status] || { label: o.status, color: 'var(--muted)' };
+                    const alive = ['pending', 'awaiting'].includes(o.status) && o.expires_at && new Date(o.expires_at) > new Date();
+                    return (
+                      <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--surface)', borderRadius: 10 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontFamily: 'monospace', fontWeight: 700 }}>{o.order_no}</div>
+                          <div style={{ fontSize: 11, color: 'var(--muted)' }}>
+                            {o.item_type === 'plus' ? `Plus ${o.period} tháng` : 'Khóa học'} · {(o.amount || 0).toLocaleString('vi-VN')}đ · {o.created_at ? new Date(o.created_at).toLocaleDateString('vi-VN') : ''}
+                          </div>
                         </div>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: st.color }}>{st.label}</span>
+                        {alive && o.status === 'pending' && (
+                          <Button size="sm" variant="primary" style={{ whiteSpace: 'nowrap' }} onClick={() => handleContinue(o)}>
+                            Tiếp tục
+                          </Button>
+                        )}
+                        {alive && o.status === 'awaiting' && (
+                          <Button size="sm" style={{ whiteSpace: 'nowrap' }} onClick={() => handleContinue(o)}>
+                            Xem trạng thái
+                          </Button>
+                        )}
+                        {(o.status === 'pending' || o.status === 'awaiting') && (
+                          <button
+                            onClick={() => handleCancel(o)}
+                            disabled={!!cancelBusy}
+                            style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 11, textDecoration: 'underline' }}
+                          >
+                            {cancelBusy === o.id ? '...' : 'Hủy'}
+                          </button>
+                        )}
                       </div>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: st.color }}>{st.label}</span>
-                      {alive && o.status === 'pending' && (
-                        <Button size="sm" variant="primary" style={{ whiteSpace: 'nowrap' }} onClick={() => handleContinue(o)}>
-                          Tiếp tục
-                        </Button>
-                      )}
-                      {alive && o.status === 'awaiting' && (
-                        <Button size="sm" style={{ whiteSpace: 'nowrap' }} onClick={() => handleContinue(o)}>
-                          Xem trạng thái
-                        </Button>
-                      )}
-                      {(o.status === 'pending' || o.status === 'awaiting') && (
-                        <button
-                          onClick={() => handleCancel(o)}
-                          disabled={!!cancelBusy}
-                          style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 11, textDecoration: 'underline' }}
-                        >
-                          {cancelBusy === o.id ? '...' : 'Hủy'}
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                  {history.length > historyLimit && (
+                    <button
+                      onClick={() => setHistoryLimit(l => (l >= history.length ? 5 : l + 5))}
+                      style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', fontSize: 12, fontWeight: 600, marginTop: 4 }}
+                    >
+                      {historyLimit >= history.length ? 'Thu gọn' : `Xem thêm (${history.length - historyLimit})`}
+                    </button>
+                  )}
+                </div>
+              )}
             </Card>
           )}
         </>
