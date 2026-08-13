@@ -25,7 +25,7 @@ const BENEFITS = [
   'Thiết kế bài dạy AI không giới hạn',
   'Sổ từ không giới hạn',
   'Lịch sử làm quiz + xem lại',
-  'XP nhân 1.2x',
+  'x1.2 XP',
   'Quà cửa hàng hạng Plus',
   'Chứng chỉ khóa premium + tải PDF',
 ];
