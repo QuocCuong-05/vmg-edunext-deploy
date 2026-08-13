@@ -26,6 +26,20 @@ async function request(url, options = {}) {
   return json.data !== undefined ? json.data : json;
 }
 
+async function requestRaw(url, options = {}) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}${url}`, { ...options, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Request failed' }));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 function fromDb(result) {
   if (result.error) throw result.error;
   return result.data;
@@ -448,15 +462,15 @@ export const api = {
       request(`/admin/subscriptions/${id}/cancel`, { method: 'POST' }),
     traceActivity: async (params = {}) => {
       const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
-      return request(`/admin/trace/activity${qs ? '?' + qs : ''}`);
+      return requestRaw(`/admin/trace/activity${qs ? '?' + qs : ''}`);
     },
     traceConsents: async (params = {}) => {
       const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
-      return request(`/admin/trace/consents${qs ? '?' + qs : ''}`);
+      return requestRaw(`/admin/trace/consents${qs ? '?' + qs : ''}`);
     },
     traceDevices: async (params = {}) => {
       const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
-      return request(`/admin/trace/devices${qs ? '?' + qs : ''}`);
+      return requestRaw(`/admin/trace/devices${qs ? '?' + qs : ''}`);
     },
     traceStats: async () => request('/admin/trace/stats'),
   },
