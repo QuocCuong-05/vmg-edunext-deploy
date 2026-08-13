@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { supabase } from '../config/database.js';
-import { optionalAuth } from '../middleware/auth.js';
+import { supabase, supabaseAdmin } from '../config/database.js';
+import { optionalAuth, authenticate } from '../middleware/auth.js';
+import { logActivity } from '../lib/activity.js';
 
 const router = Router();
 
@@ -598,6 +599,84 @@ router.post('/groups/:id/join', optionalAuth, async (req, res) => {
   } catch (err) {
     console.error('[Community] POST /groups/:id/join error:', err.message);
     res.json({ joined: true });
+  }
+});
+
+async function profileName(userId) {
+  const { data } = await supabaseAdmin
+    .from('profiles')
+    .select('full_name')
+    .eq('id', userId)
+    .maybeSingle();
+  return data?.full_name || 'thành viên';
+}
+
+// POST /api/community/follow — follow user + ghi event log (người bị ảnh hưởng)
+router.post('/follow', authenticate, async (req, res) => {
+  try {
+    const { target_user_id } = req.body;
+    if (!target_user_id) return res.status(400).json({ error: 'target_user_id là bắt buộc' });
+    if (target_user_id === req.user.id) return res.status(400).json({ error: 'Không thể follow chính mình' });
+
+    const { error } = await supabaseAdmin
+      .from('user_follows')
+      .upsert({ follower_id: req.user.id, following_id: target_user_id }, { onConflict: 'follower_id,following_id' });
+    if (error) throw error;
+
+    await supabaseAdmin
+      .from('notifications')
+      .insert({ user_id: target_user_id, from_user_id: req.user.id, type: 'follow', message: '' })
+      .then(() => {})
+      .catch(() => {});
+
+    const name = await profileName(target_user_id);
+    await logActivity(req.user.id, 'follow', `Follow ${name}`, req, `Thành viên: ${name}`, target_user_id);
+
+    res.json({ data: { followed: true } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/community/unfollow — hủy follow + ghi event log
+router.post('/unfollow', authenticate, async (req, res) => {
+  try {
+    const { target_user_id } = req.body;
+    if (!target_user_id) return res.status(400).json({ error: 'target_user_id là bắt buộc' });
+
+    await supabaseAdmin
+      .from('user_follows')
+      .delete()
+      .eq('follower_id', req.user.id)
+      .eq('following_id', target_user_id);
+
+    const name = await profileName(target_user_id);
+    await logActivity(req.user.id, 'unfollow', `Hủy follow ${name}`, req, `Thành viên: ${name}`, target_user_id);
+
+    res.json({ data: { unfollowed: true } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/community/remind — nhắc học + ghi event log
+router.post('/remind', authenticate, async (req, res) => {
+  try {
+    const { target_user_id } = req.body;
+    if (!target_user_id) return res.status(400).json({ error: 'target_user_id là bắt buộc' });
+    if (target_user_id === req.user.id) return res.status(400).json({ error: 'Không thể nhắc chính mình' });
+
+    const { error } = await supabaseAdmin
+      .from('notifications')
+      .insert({ user_id: target_user_id, from_user_id: req.user.id, type: 'remind', message: '' });
+    if (error) throw error;
+
+    const name = await profileName(target_user_id);
+    await logActivity(req.user.id, 'remind', `Nhắc ${name} học`, req, `Thành viên: ${name}`, target_user_id);
+
+    res.json({ data: { reminded: true } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

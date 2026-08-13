@@ -384,17 +384,27 @@ router.get('/activity', async (req, res) => {
 
     const { data, error: listError } = await supabaseAdmin
       .from('access_log')
-      .select('event, description, context, origin, ip, created_at')
+      .select('event, description, context, origin, ip, created_at, affected_user_id')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50);
     if (listError) throw listError;
 
+    const affectedIds = [...new Set((data || []).map(a => a.affected_user_id).filter(Boolean))];
+    let nameMap = {};
+    if (affectedIds.length) {
+      const { data: affectedProfiles } = await supabaseAdmin
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', affectedIds);
+      (affectedProfiles || []).forEach(p => { nameMap[p.id] = p.full_name; });
+    }
+
     res.json({
       data: (data || []).map(a => ({
         ...a,
         full_name: profile?.full_name || user.email,
-        affected_user: null,
+        affected_user: a.affected_user_id ? (nameMap[a.affected_user_id] || 'thành viên') : null,
         component: EVENT_COMPONENT[a.event] || 'Hệ thống',
       })),
     });

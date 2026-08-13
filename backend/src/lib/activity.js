@@ -9,9 +9,12 @@ export const EVENT_COMPONENT = {
   course_view: 'Khóa học',
   lesson_view: 'Khóa học',
   quiz_submit: 'Bài tập',
+  follow: 'Thành viên',
+  unfollow: 'Thành viên',
+  remind: 'Thành viên',
 };
 
-export async function logActivity(userId, event, description, req = null, context = null) {
+export async function logActivity(userId, event, description, req = null, context = null, affectedUserId = null) {
   try {
     const ua = req?.headers?.['user-agent'] || null;
     await supabaseAdmin
@@ -24,6 +27,7 @@ export async function logActivity(userId, event, description, req = null, contex
         origin: 'web',
         ip: req ? getClientIp(req) : null,
         user_agent: ua,
+        affected_user_id: affectedUserId || null,
       });
   } catch {
     // log lỗi không được làm hỏng request chính

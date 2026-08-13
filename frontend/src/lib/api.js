@@ -345,24 +345,14 @@ export const api = {
     },
     follow: async (followerId, followingId) => {
       try {
-        const { error } = await supabase.from('user_follows').insert({ follower_id: followerId, following_id: followingId });
-        if (error) throw error;
-        if (followerId !== followingId) {
-          await supabase.from('notifications').insert({
-            user_id: followingId,
-            from_user_id: followerId,
-            type: 'follow',
-            message: '',
-          });
-        }
+        await request('/community/follow', { method: 'POST', body: JSON.stringify({ target_user_id: followingId }) });
       } catch {
         followMockUser(followerId, followingId);
       }
     },
     unfollow: async (followerId, followingId) => {
       try {
-        const { error } = await supabase.from('user_follows').delete().eq('follower_id', followerId).eq('following_id', followingId);
-        if (error) throw error;
+        await request('/community/unfollow', { method: 'POST', body: JSON.stringify({ target_user_id: followingId }) });
       } catch {
         unfollowMockUser(followerId, followingId);
       }
@@ -393,8 +383,7 @@ export const api = {
     },
     remind: async (reminderId, targetId) => {
       try {
-        const { error } = await supabase.from('notifications').insert({ user_id: targetId, from_user_id: reminderId, type: 'remind', message: '' });
-        if (error) throw error;
+        await request('/community/remind', { method: 'POST', body: JSON.stringify({ target_user_id: targetId }) });
       } catch {
         sendMockRemind(reminderId, targetId);
       }

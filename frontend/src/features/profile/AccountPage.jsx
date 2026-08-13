@@ -427,7 +427,6 @@ export default function AccountPage() {
                     <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>Thành phần</th>
                     <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>Tên sự kiện</th>
                     <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)' }}>Mô tả</th>
-                    <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>Nguyên thủy</th>
                     <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>IP</th>
                   </tr>
                 </thead>
@@ -441,7 +440,6 @@ export default function AccountPage() {
                       <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>{a.component || '-'}</td>
                       <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap', fontWeight: 700 }}>{a.event}</td>
                       <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', color: 'var(--muted)' }}>{a.description || '-'}</td>
-                      <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{a.origin || 'web'}</td>
                       <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{a.ip || '-'}</td>
                     </tr>
                   ))}
