@@ -20,7 +20,10 @@ async function request(url, options = {}) {
   const res = await fetch(`${API_BASE}${url}`, { ...options, headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(err.error || `HTTP ${res.status}`);
+    const e = new Error(err.error || `HTTP ${res.status}`);
+    e.status = res.status;
+    if (err.code) e.code = err.code;
+    throw e;
   }
   const json = await res.json();
   return json.data !== undefined ? json.data : json;
@@ -35,7 +38,10 @@ async function requestRaw(url, options = {}) {
   const res = await fetch(`${API_BASE}${url}`, { ...options, headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(err.error || `HTTP ${res.status}`);
+    const e = new Error(err.error || `HTTP ${res.status}`);
+    e.status = res.status;
+    if (err.code) e.code = err.code;
+    throw e;
   }
   return res.json();
 }
@@ -423,6 +429,8 @@ export const api = {
       request('/orders/create', { method: 'POST', body: JSON.stringify({ plan: 'plus', period }) }),
     confirmTransfer: async (orderId) =>
       request(`/orders/${orderId}/confirm-transfer`, { method: 'POST' }),
+    cancel: async (orderId) =>
+      request(`/orders/${orderId}/cancel`, { method: 'POST' }),
     mine: async () => request('/orders/mine'),
     publicSettings: async () => request('/orders/public-settings'),
     approveInfo: async (orderId, token) =>
@@ -441,7 +449,14 @@ export const api = {
     },
   },
   admin: {
-    orders: async () => request('/admin/orders'),
+    orders: async (params = {}) => {
+      const q = new URLSearchParams();
+      if (params.status) q.set('status', params.status);
+      if (params.page) q.set('page', params.page);
+      if (params.limit) q.set('limit', params.limit);
+      const qs = q.toString();
+      return request(`/admin/orders${qs ? `?${qs}` : ''}`);
+    },
     approveOrder: async (id) => request(`/admin/orders/${id}/approve`, { method: 'POST' }),
     dashboardStats: async () => request('/admin/dashboard-stats'),
     setPremiumCourse: async (courseId) =>

@@ -9,7 +9,15 @@ const router = Router();
 const APPROVE_SECRET = process.env.PAYMENT_APPROVE_SECRET || JWT_SECRET;
 
 function genOrderNo() {
-  return 'VMG' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+  const ymd = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(2, 10).replace(/-/g, '');
+  let no = '';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  for (let i = 0; i < 6; i++) no += chars[Math.floor(Math.random() * chars.length)];
+  return `VMG${ymd}${no}`;
+}
+
+function isUniqueViolation(err) {
+  return err && (err.code === '23505' || /duplicate key/.test(err.message || ''));
 }
 
 function signApproveToken(orderId) {
@@ -126,15 +134,32 @@ async function createPlusOrder(req, res, next) {
       .eq('user_id', req.user.id)
       .eq('item_type', 'plus')
       .eq('status', 'pending')
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
-    if (existing && new Date(existing.expires_at) > new Date()) {
-      return res.json({ order: existing, existing: true });
+    if (existing) {
+      if (existing.period !== period) {
+        const err = Object.assign(
+          new Error(`Bạn đang có đơn ${existing.order_no} (Plus ${existing.period} tháng) chưa hoàn tất. Hãy hủy đơn cũ để chọn gói khác.`),
+          { status: 409, code: 'existing_order', order: existing },
+        );
+        throw err;
+      }
+      const role = await getProfileRole(req.user.id);
+      const isAdmin = ['admin', 'super_admin'].includes(role);
+      const result = { order: existing, existing: true, qr_type: isAdmin ? 'approve' : 'transfer' };
+      if (isAdmin) {
+        const origin = req.get('origin') || process.env.FRONTEND_URL || '';
+        result.approve_url = `${origin}/order-approve/${existing.id}?token=${signApproveToken(existing.id)}`;
+      }
+      return res.json(result);
     }
 
     const amount = await getPlusPrice(period);
     const ttlMinutes = await getOrderTtlMinutes();
-    const order = {
-      order_no: genOrderNo(),
+    let order = {
+      order_no: null,
       user_id: req.user.id,
       item_type: 'plus',
       plan: 'plus',
@@ -144,12 +169,18 @@ async function createPlusOrder(req, res, next) {
       status: 'pending',
       expires_at: new Date(Date.now() + ttlMinutes * 60 * 1000).toISOString(),
     };
-    const { data: created, error } = await supabaseAdmin
-      .from('orders')
-      .insert(order)
-      .select('*')
-      .single();
-    if (error) throw error;
+    let created;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      order.order_no = genOrderNo();
+      const { data, error } = await supabaseAdmin
+        .from('orders')
+        .insert(order)
+        .select('*')
+        .single();
+      if (!error) { created = data; break; }
+      if (!isUniqueViolation(error)) throw error;
+    }
+    if (!created) throw new Error('Không thể tạo mã đơn, vui lòng thử lại');
 
     const role = await getProfileRole(req.user.id);
     const isAdmin = ['admin', 'super_admin'].includes(role);
@@ -178,7 +209,14 @@ router.post('/create', authenticate, async (req, res, next) => {
 
 router.get('/mine', authenticate, async (req, res, next) => {
   try {
-    const { data, error } = await supabase
+    await supabaseAdmin
+      .from('orders')
+      .update({ status: 'expired' })
+      .eq('user_id', req.user.id)
+      .in('status', ['pending', 'awaiting'])
+      .lt('expires_at', new Date().toISOString());
+
+    const { data, error } = await supabaseAdmin
       .from('orders')
       .select('*, courses(title, slug, access_type)')
       .eq('user_id', req.user.id)
@@ -219,12 +257,63 @@ router.post('/:id/confirm-transfer', authenticate, async (req, res, next) => {
     if (order.status === 'paid') {
       return res.json({ unlocked: true, item_type: order.item_type, course_id: order.course_id });
     }
-    if (order.status !== 'pending') return res.status(400).json({ error: 'Đơn hàng đã xử lý' });
-    if (order.expires_at && new Date(order.expires_at) < new Date()) {
+    if (order.status === 'awaiting') {
+      return res.json({ status: 'awaiting_confirmation', item_type: order.item_type, course_id: order.course_id });
+    }
+    if (!['pending', 'expired'].includes(order.status)) {
+      return res.status(400).json({ error: 'Đơn hàng đã xử lý' });
+    }
+    if (order.status === 'expired' || (order.expires_at && new Date(order.expires_at) < new Date())) {
+      await supabaseAdmin.from('orders').update({ status: 'expired' }).eq('id', order.id);
       return res.status(400).json({ error: 'Đơn hàng đã hết hạn, vui lòng tạo đơn mới' });
     }
 
+    const { error: updErr } = await supabaseAdmin
+      .from('orders')
+      .update({ status: 'awaiting', confirmed_at: new Date().toISOString() })
+      .eq('id', order.id);
+    if (updErr) throw updErr;
+
+    const { data: admins } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .in('role', ['admin', 'super_admin']);
+    const adminRows = (admins || []).map(a => ({
+      user_id: a.id,
+      from_user_id: req.user.id,
+      type: 'payment_pending',
+      message: `Đơn ${order.order_no} (${(order.amount || 0).toLocaleString('vi-VN')}đ) đang chờ xác nhận chuyển khoản.`,
+    }));
+    if (adminRows.length) {
+      await supabaseAdmin.from('notifications').insert(adminRows);
+    }
+
     res.json({ status: 'awaiting_confirmation', item_type: order.item_type, course_id: order.course_id });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /orders/:id/cancel — hủy đơn chưa thanh toán (pending/awaiting còn hạn)
+router.post('/:id/cancel', authenticate, async (req, res, next) => {
+  try {
+    const { data: order, error } = await supabaseAdmin
+      .from('orders')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!order) return res.status(404).json({ error: 'Đơn hàng không tồn tại' });
+    if (order.user_id !== req.user.id) return res.status(403).json({ error: 'Không phải đơn của bạn' });
+    if (!['pending', 'awaiting', 'expired'].includes(order.status)) {
+      return res.status(400).json({ error: 'Đơn hàng đã xử lý, không thể hủy' });
+    }
+    const { error: updErr } = await supabaseAdmin
+      .from('orders')
+      .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
+      .eq('id', order.id);
+    if (updErr) throw updErr;
+    res.json({ ok: true });
   } catch (err) {
     next(err);
   }
@@ -269,7 +358,13 @@ router.post('/:id/approve', async (req, res, next) => {
     if (order.status === 'paid') {
       return res.json({ ok: true });
     }
-    if (order.status !== 'pending') return res.status(400).json({ error: 'Đơn hàng đã xử lý' });
+    if (order.status === 'expired' || (order.expires_at && new Date(order.expires_at) < new Date())) {
+      await supabaseAdmin.from('orders').update({ status: 'expired' }).eq('id', order.id);
+      return res.status(400).json({ error: 'Đơn hàng đã hết hạn, không thể xác nhận' });
+    }
+    if (!['pending', 'awaiting'].includes(order.status)) {
+      return res.status(400).json({ error: 'Đơn hàng đã xử lý' });
+    }
 
     if (order.item_type === 'plus') {
       await activatePlus(order.user_id, order.id, order.period, order.amount, null);

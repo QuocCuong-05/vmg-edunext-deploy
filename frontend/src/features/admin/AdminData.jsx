@@ -97,7 +97,8 @@ const TABS = [
 
 const badge = (status) => {
   if (status === 'paid') return <span className="admin-badge green">Đã thanh toán</span>;
-  if (status === 'pending') return <span className="admin-badge gold">Chờ xác nhận</span>;
+  if (status === 'pending') return <span className="admin-badge gold">Chờ thanh toán</span>;
+  if (status === 'awaiting') return <span className="admin-badge gold">Chờ xác nhận CK</span>;
   if (status === 'cancelled') return <span className="admin-badge gray">Đã hủy</span>;
   if (status === 'active') return <span className="admin-badge green">Hoạt động</span>;
   if (status === 'expired') return <span className="admin-badge red">Hết hạn</span>;
@@ -120,6 +121,9 @@ export default function AdminData() {
   const fileRef = useRef(null);
 
   const [orders, setOrders] = useState([]);
+  const [orderFilter, setOrderFilter] = useState('all');
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [ordersMeta, setOrdersMeta] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
   const [courses, setCourses] = useState([]);
   const [lessons, setLessons] = useState([]);
@@ -198,7 +202,11 @@ export default function AdminData() {
   }
 
   async function loadOrders() {
-    try { setOrders(await api.admin.orders()); } catch {}
+    try {
+      const data = await api.admin.orders({ status: orderFilter, page: ordersPage, limit: 30 });
+      setOrders(data.rows || []);
+      setOrdersMeta(data);
+    } catch {}
   }
   async function loadCourses() {
     try {
@@ -230,6 +238,11 @@ export default function AdminData() {
     if (tab === 'trace') loadTrace();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [traceSub, tracePage]);
+
+  useEffect(() => {
+    if (tab === 'orders') loadOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderFilter, ordersPage]);
 
   async function loadTrace() {
     setTraceLoading(true);
@@ -582,9 +595,24 @@ export default function AdminData() {
 
       {tab === 'orders' && (
         <div className="admin-panel">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <h3 style={{ margin: 0 }}>Đơn hàng</h3>
-            <button className="admin-btn-ghost" onClick={loadOrders}>Làm mới</button>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 10, flexWrap: 'wrap' }}>
+            <h3 style={{ margin: 0 }}>Đơn hàng {ordersMeta?.total ? `(${ordersMeta.total})` : ''}</h3>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <select
+                className="admin-input"
+                style={{ width: 'auto', padding: '6px 10px', fontSize: 12 }}
+                value={orderFilter}
+                onChange={e => { setOrderFilter(e.target.value); setOrdersPage(1); }}
+              >
+                <option value="all">Tất cả trạng thái</option>
+                <option value="pending">Chờ thanh toán</option>
+                <option value="awaiting">Chờ xác nhận CK</option>
+                <option value="paid">Đã thanh toán</option>
+                <option value="expired">Hết hạn</option>
+                <option value="cancelled">Đã hủy</option>
+              </select>
+              <button className="admin-btn-ghost" onClick={loadOrders}>Làm mới</button>
+            </div>
           </div>
           {orders.length === 0 ? (
             <p className="admin-note">Chưa có đơn hàng nào.</p>
@@ -605,7 +633,7 @@ export default function AdminData() {
                 </thead>
                 <tbody>
                   {orders.map(o => (
-                    <tr key={o.id}>
+                    <tr key={o.id} style={o.status === 'awaiting' ? { background: 'rgba(255, 193, 7, .07)' } : undefined}>
                       <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{o.order_no}</td>
                       <td>{o.full_name || o.profiles?.full_name || o.user_id?.slice(0, 8)}</td>
                       <td>
@@ -618,14 +646,23 @@ export default function AdminData() {
                       <td>{badge(o.status)}</td>
                       <td style={{ fontSize: 12, color: 'var(--muted)' }}>{o.created_at ? new Date(o.created_at).toLocaleString('vi-VN') : ''}</td>
                       <td>
-                        {o.status === 'pending' && (
-                          <button className="admin-btn" onClick={() => handleApproveOrder(o.id)}>Xác nhận</button>
+                        {['pending', 'awaiting'].includes(o.status) && (
+                          <button className="admin-btn" onClick={() => handleApproveOrder(o.id)}>
+                            {o.status === 'awaiting' ? 'Duyệt' : 'Xác nhận'}
+                          </button>
                         )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+          {ordersMeta?.pages > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 14 }}>
+              <button className="admin-btn-ghost" disabled={ordersPage <= 1} onClick={() => setOrdersPage(p => Math.max(1, p - 1))}>← Trước</button>
+              <span style={{ fontSize: 12, color: 'var(--muted)' }}>Trang {ordersPage}/{ordersMeta.pages}</span>
+              <button className="admin-btn-ghost" disabled={ordersPage >= ordersMeta.pages} onClick={() => setOrdersPage(p => p + 1)}>Sau →</button>
             </div>
           )}
         </div>

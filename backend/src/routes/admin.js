@@ -33,13 +33,24 @@ router.post('/import', async (req, res) => {
   }
 });
 
-router.get('/orders', async (_req, res, next) => {
+router.get('/orders', async (req, res, next) => {
   try {
-    const { data, error } = await supabaseAdmin
+    await supabaseAdmin
       .from('orders')
-      .select('*, courses(title, slug)')
-      .order('created_at', { ascending: false })
-      .limit(200);
+      .update({ status: 'expired' })
+      .in('status', ['pending', 'awaiting'])
+      .lt('expires_at', new Date().toISOString());
+
+    const status = req.query.status || 'all';
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(10, Number(req.query.limit) || 30));
+
+    let query = supabaseAdmin.from('orders').select('*, courses(title, slug)', { count: 'exact' });
+    if (status !== 'all') query = query.eq('status', status);
+    query = query.order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    const { data, error, count } = await query;
     if (error) throw error;
 
     const orders = data || [];
@@ -53,7 +64,13 @@ router.get('/orders', async (_req, res, next) => {
       profileMap = {};
       (profiles || []).forEach(p => { profileMap[p.id] = p.full_name; });
     }
-    res.json(orders.map(o => ({ ...o, full_name: profileMap[o.user_id] || null })));
+    res.json({
+      rows: orders.map(o => ({ ...o, full_name: profileMap[o.user_id] || null })),
+      total: count || 0,
+      page,
+      limit,
+      pages: Math.max(1, Math.ceil((count || 0) / limit)),
+    });
   } catch (err) {
     next(err);
   }
@@ -67,7 +84,14 @@ router.post('/orders/:id/approve', async (req, res, next) => {
       .eq('id', req.params.id)
       .maybeSingle();
     if (!order) return res.status(404).json({ error: 'Đơn hàng không tồn tại' });
-    if (order.status !== 'pending') return res.status(400).json({ error: 'Đơn hàng đã xử lý' });
+    if (order.status === 'paid') return res.json({ ok: true });
+    if (order.status === 'expired' || (order.expires_at && new Date(order.expires_at) < new Date())) {
+      await supabaseAdmin.from('orders').update({ status: 'expired' }).eq('id', order.id);
+      return res.status(400).json({ error: 'Đơn hàng đã hết hạn, không thể xác nhận' });
+    }
+    if (!['pending', 'awaiting'].includes(order.status)) {
+      return res.status(400).json({ error: 'Đơn hàng đã xử lý' });
+    }
 
     await supabaseAdmin
       .from('orders')

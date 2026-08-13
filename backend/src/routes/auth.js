@@ -238,7 +238,8 @@ router.post('/anonymize', async (req, res) => {
     await supabaseAdmin.from('community_reports').delete().eq('user_id', userId);
     await supabaseAdmin.from('user_follows').delete().eq('follower_id', userId);
     await supabaseAdmin.from('user_follows').delete().eq('following_id', userId);
-    await supabaseAdmin.from('plus_subscriptions').delete().eq('user_id', userId);
+    await supabaseAdmin.from('subscriptions').delete().eq('user_id', userId);
+    await supabaseAdmin.from('ai_usage').delete().eq('user_id', userId);
 
     await logActivity(userId, 'delete_request', 'Yêu cầu xóa dữ liệu (khử nhận dạng)', req, 'Hệ thống');
     await supabaseAdmin.auth.admin.deleteUser(userId);

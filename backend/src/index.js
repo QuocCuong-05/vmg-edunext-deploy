@@ -50,7 +50,11 @@ app.use('/api/admin', authenticate, requireAdmin, adminRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  const status = typeof err?.status === 'number' ? err.status : 500;
+  const body = { error: err?.message || 'Internal server error' };
+  if (err?.code) body.code = err.code;
+  if (err?.order) body.order = err.order;
+  res.status(status).json(body);
 });
 
 app.listen(PORT, () => {

@@ -29,6 +29,15 @@ const BENEFITS = [
   'Chứng chỉ khóa premium + tải PDF',
 ];
 
+const ORDER_STATUS = {
+  pending: { label: 'Chờ thanh toán', color: 'var(--gold)' },
+  awaiting: { label: 'Chờ xác nhận', color: 'var(--blue)' },
+  paid: { label: 'Đã thanh toán', color: 'var(--green)' },
+  expired: { label: 'Hết hạn', color: 'var(--muted)' },
+  cancelled: { label: 'Đã hủy', color: 'var(--muted)' },
+  failed: { label: 'Thất bại', color: 'var(--red)' },
+};
+
 function formatVnd(n) {
   return (n || 0).toLocaleString('vi-VN') + ' đ';
 }
@@ -51,8 +60,21 @@ export default function PlusPage() {
   const [awaiting, setAwaiting] = useState(false);
   const [done, setDone] = useState(false);
   const [remaining, setRemaining] = useState(0);
+  const [history, setHistory] = useState(null);
+  const [cancelBusy, setCancelBusy] = useState('');
   const submittingRef = useRef(false);
   const payRef = useRef(null);
+
+  const loadHistory = useCallback(async () => {
+    try {
+      const data = await api.orders.mine();
+      setHistory(data);
+      return data;
+    } catch {
+      setHistory([]);
+      return [];
+    }
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -61,7 +83,8 @@ export default function PlusPage() {
       } catch {}
       setLoading(false);
     })();
-  }, []);
+    loadHistory();
+  }, [loadHistory]);
 
   const createOrder = useCallback(async (p = period) => {
     setError('');
@@ -74,12 +97,66 @@ export default function PlusPage() {
       if (res.qr_type === 'approve' && res.approve_url) {
         QRCode.toDataURL(res.approve_url, { width: 220, margin: 1 }).then(setQrDataUrl).catch(() => {});
       }
+      loadHistory();
     } catch (err) {
-      setError(err.message);
+      if (err.status === 409) {
+        setError(err.message);
+        const h = await loadHistory();
+        setShowPayment(true);
+        const pending = (h || []).find(o => o.status === 'pending' && o.expires_at && new Date(o.expires_at) > new Date());
+        if (pending) setOrder(pending);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setBusy(false);
     }
-  }, [period]);
+  }, [period, loadHistory]);
+
+  const handleContinue = async (o) => {
+    setError('');
+    if (o.status === 'awaiting') {
+      setOrder(o);
+      setShowPayment(true);
+      setAwaiting(true);
+      return;
+    }
+    if (o.status === 'pending') {
+      try {
+        const res = await api.orders.createPlus(o.period);
+        setOrder(res.order);
+        setShowPayment(true);
+        setAwaiting(false);
+        setRemaining(Math.max(0, Math.floor((new Date(res.order.expires_at).getTime() - Date.now()) / 1000)));
+        if (res.qr_type === 'approve' && res.approve_url) {
+          QRCode.toDataURL(res.approve_url, { width: 220, margin: 1 }).then(setQrDataUrl).catch(() => {});
+        }
+      } catch (err) {
+        setError(err.message);
+        loadHistory();
+      }
+    }
+  };
+
+  const handleCancel = async (o) => {
+    if (cancelBusy) return;
+    if (!window.confirm(`Hủy đơn ${o.order_no}?`)) return;
+    setCancelBusy(o.id);
+    setError('');
+    try {
+      await api.orders.cancel(o.id);
+      if (order?.id === o.id) {
+        setOrder(null);
+        setQrDataUrl('');
+        setAwaiting(false);
+      }
+      loadHistory();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCancelBusy('');
+    }
+  };
 
   useEffect(() => {
     if (!order) return;
@@ -97,6 +174,7 @@ export default function PlusPage() {
     setBusy(true);
     try {
       const res = await api.orders.confirmTransfer(order.id);
+      loadHistory();
       if (res?.status === 'awaiting_confirmation') {
         setAwaiting(true);
       } else {
@@ -118,11 +196,12 @@ export default function PlusPage() {
         if (user?.plus?.active) {
           setAwaiting(false);
           setDone(true);
+          loadHistory();
         }
       } catch {}
     }, 10000);
     return () => clearInterval(timer);
-  }, [awaiting, refreshUser, user?.plus?.active]);
+  }, [awaiting, refreshUser, user?.plus?.active, loadHistory]);
 
   const handleScrollToPay = () => {
     setShowPayment(true);
@@ -277,6 +356,11 @@ export default function PlusPage() {
                     >
                       <Icon.ArrowLeft size={14} /> Quay lại
                     </button>
+                    {awaiting && (
+                      <div style={{ padding: '10px 14px', background: 'var(--blue-bg)', color: 'var(--blue)', borderRadius: 10, fontSize: 13, marginBottom: 14, textAlign: 'left' }}>
+                        Đơn đang <b>chờ xác nhận</b>. VMG sẽ kích hoạt Plus sau khi kiểm tra chuyển khoản thành công.
+                      </div>
+                    )}
                     <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--red)', marginBottom: 4 }}>
                       {formatVnd(order.amount)}
                     </div>
@@ -336,11 +420,65 @@ export default function PlusPage() {
                         {busy ? 'Đang xử lý...' : 'Tôi đã hoàn tất thanh toán'}
                       </Button>
                     )}
+
+                    {!expired && (order.status === 'pending' || order.status === 'awaiting') && (
+                      <button
+                        onClick={() => handleCancel(order)}
+                        disabled={!!cancelBusy}
+                        style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 12, marginTop: 12, textDecoration: 'underline' }}
+                      >
+                        {cancelBusy === order.id ? 'Đang hủy...' : 'Hủy đơn này'}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
             )}
           </Card>
+
+          {history && history.length > 0 && (
+            <Card style={{ padding: 'min(24px, 5vw)', marginBottom: 16 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Icon.CartAlt size={16} style={{ color: 'var(--red)' }} /> Lịch sử thanh toán
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {history.map(o => {
+                  const st = ORDER_STATUS[o.status] || { label: o.status, color: 'var(--muted)' };
+                  const alive = ['pending', 'awaiting'].includes(o.status) && o.expires_at && new Date(o.expires_at) > new Date();
+                  return (
+                    <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--surface)', borderRadius: 10 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontFamily: 'monospace', fontWeight: 700 }}>{o.order_no}</div>
+                        <div style={{ fontSize: 11, color: 'var(--muted)' }}>
+                          {o.item_type === 'plus' ? `Plus ${o.period} tháng` : 'Khóa học'} · {(o.amount || 0).toLocaleString('vi-VN')}đ · {o.created_at ? new Date(o.created_at).toLocaleDateString('vi-VN') : ''}
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: st.color }}>{st.label}</span>
+                      {alive && o.status === 'pending' && (
+                        <Button size="sm" variant="primary" style={{ whiteSpace: 'nowrap' }} onClick={() => handleContinue(o)}>
+                          Tiếp tục
+                        </Button>
+                      )}
+                      {alive && o.status === 'awaiting' && (
+                        <Button size="sm" style={{ whiteSpace: 'nowrap' }} onClick={() => handleContinue(o)}>
+                          Xem trạng thái
+                        </Button>
+                      )}
+                      {(o.status === 'pending' || o.status === 'awaiting') && (
+                        <button
+                          onClick={() => handleCancel(o)}
+                          disabled={!!cancelBusy}
+                          style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 11, textDecoration: 'underline' }}
+                        >
+                          {cancelBusy === o.id ? '...' : 'Hủy'}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
         </>
       )}
     </div>
