@@ -446,6 +446,19 @@ export const api = {
       request(`/admin/subscriptions/${id}/renew`, { method: 'POST' }),
     cancelSubscription: async (id) =>
       request(`/admin/subscriptions/${id}/cancel`, { method: 'POST' }),
+    traceActivity: async (params = {}) => {
+      const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
+      return request(`/admin/trace/activity${qs ? '?' + qs : ''}`);
+    },
+    traceConsents: async (params = {}) => {
+      const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
+      return request(`/admin/trace/consents${qs ? '?' + qs : ''}`);
+    },
+    traceDevices: async (params = {}) => {
+      const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
+      return request(`/admin/trace/devices${qs ? '?' + qs : ''}`);
+    },
+    traceStats: async () => request('/admin/trace/stats'),
   },
   ranking: {
     list: async ({ ward, school, limit = 50 } = {}) => {

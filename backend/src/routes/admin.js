@@ -340,4 +340,169 @@ router.post('/subscriptions/:id/cancel', async (req, res, next) => {
   }
 });
 
+// GET /admin/trace/activity — access_log toàn bộ user (truy vết IP)
+router.get('/trace/activity', async (req, res, next) => {
+  try {
+    const { email, ip, event, from, to, page = 1, limit = 50 } = req.query;
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(200, Math.max(1, parseInt(limit) || 50));
+    const offset = (pageNum - 1) * limitNum;
+
+    let query = supabaseAdmin
+      .from('access_log')
+      .select('id, event, description, context, origin, ip, user_agent, created_at, user_id, profiles(id, full_name, email)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limitNum - 1);
+
+    if (ip) query = query.ilike('ip', `%${ip}%`);
+    if (event) query = query.eq('event', event);
+    if (from) query = query.gte('created_at', new Date(from).toISOString());
+    if (to) query = query.lte('created_at', new Date(to).toISOString());
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    res.json({
+      data: (data || []).map(a => ({
+        ...a,
+        email: a.profiles?.email || a.user_id || '(đã ẩn danh)',
+        full_name: a.profiles?.full_name || '-',
+      })),
+      total: count || 0,
+      page: pageNum,
+      limit: limitNum,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /admin/trace/consents — consent_log theo user
+router.get('/trace/consents', async (req, res, next) => {
+  try {
+    const { email, page = 1, limit = 50 } = req.query;
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(200, Math.max(1, parseInt(limit) || 50));
+    const offset = (pageNum - 1) * limitNum;
+
+    let query = supabaseAdmin
+      .from('consent_log')
+      .select('user_id, policy_key, accepted, version, ip, created_at, profiles(id, full_name, email)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limitNum - 1);
+
+    if (email) query = query.or(`profiles.email.ilike.%${email}%,profiles.full_name.ilike.%${email}%`);
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    res.json({
+      data: (data || []).map(c => ({
+        ...c,
+        email: c.profiles?.email || '(đã ẩn danh)',
+        full_name: c.profiles?.full_name || '-',
+      })),
+      total: count || 0,
+      page: pageNum,
+      limit: limitNum,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /admin/trace/devices — login_sessions mọi user (thiết bị + IP)
+router.get('/trace/devices', async (req, res, next) => {
+  try {
+    const { email, page = 1, limit = 50 } = req.query;
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(200, Math.max(1, parseInt(limit) || 50));
+    const offset = (pageNum - 1) * limitNum;
+
+    let query = supabaseAdmin
+      .from('login_sessions')
+      .select('id, device_name, ip, user_agent, logged_in_at, last_active_at, user_id, profiles(id, full_name, email)', { count: 'exact' })
+      .order('logged_in_at', { ascending: false })
+      .range(offset, offset + limitNum - 1);
+
+    if (email) query = query.or(`profiles.email.ilike.%${email}%,profiles.full_name.ilike.%${email}%`);
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    res.json({
+      data: (data || []).map(d => ({
+        ...d,
+        email: d.profiles?.email || '(đã ẩn danh)',
+        full_name: d.profiles?.full_name || '-',
+      })),
+      total: count || 0,
+      page: pageNum,
+      limit: limitNum,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /admin/trace/stats — thống kê analytics
+router.get('/trace/stats', async (_req, res, next) => {
+  try {
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [{ count: totalUsers }, { count: logins7d }, { count: uniqueIps7d }] = await Promise.all([
+      supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }),
+      supabaseAdmin.from('access_log').select('id', { count: 'exact', head: true }).eq('event', 'login').gte('created_at', weekAgo),
+      supabaseAdmin.from('access_log').select('ip', { count: 'exact', head: true }).gte('created_at', weekAgo).not('ip', 'is', null),
+    ]);
+
+    const { data: events } = await supabaseAdmin
+      .from('access_log')
+      .select('event')
+      .gte('created_at', weekAgo);
+
+    const eventCount = {};
+    (events || []).forEach(e => { eventCount[e.event] = (eventCount[e.event] || 0) + 1; });
+
+    const { data: topIps } = await supabaseAdmin
+      .from('access_log')
+      .select('ip')
+      .gte('created_at', weekAgo)
+      .not('ip', 'is', null)
+      .limit(1000);
+
+    const ipCount = {};
+    (topIps || []).forEach(r => { if (r.ip) ipCount[r.ip] = (ipCount[r.ip] || 0) + 1; });
+    const topIpList = Object.entries(ipCount).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([ip, n]) => ({ ip, count: n }));
+
+    const { data: topUsers } = await supabaseAdmin
+      .from('access_log')
+      .select('user_id, profiles(full_name, email)')
+      .gte('created_at', weekAgo)
+      .not('user_id', 'is', null)
+      .limit(1000);
+
+    const userCount = {};
+    (topUsers || []).forEach(r => {
+      const key = r.user_id;
+      if (!userCount[key]) userCount[key] = { count: 0, name: r.profiles?.full_name || '-', email: r.profiles?.email || key };
+      userCount[key].count += 1;
+    });
+    const topUserList = Object.values(userCount).sort((a, b) => b.count - a.count).slice(0, 10);
+
+    res.json({
+      data: {
+        total_users: totalUsers || 0,
+        logins_7d: logins7d || 0,
+        unique_ips_7d: uniqueIps7d || 0,
+        events_7d: eventCount,
+        top_ips: topIpList,
+        top_users: topUserList,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

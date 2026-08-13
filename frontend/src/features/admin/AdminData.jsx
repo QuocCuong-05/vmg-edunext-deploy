@@ -91,6 +91,7 @@ const TABS = [
   { key: 'orders', label: 'Đơn hàng', icon: Icon.CartAlt },
   { key: 'plus', label: 'Tài khoản Plus', icon: Icon.Gem },
   { key: 'courses', label: 'Khóa Premium', icon: Icon.Courses },
+  { key: 'trace', label: 'Truy vết', icon: Icon.Globe },
   { key: 'settings', label: 'Cấu hình', icon: Icon.Cog },
 ];
 
@@ -125,6 +126,13 @@ export default function AdminData() {
   const [courseForm, setCourseForm] = useState({});
   const [settings, setSettings] = useState({});
   const [activateForm, setActivateForm] = useState({ userId: '', period: '1' });
+
+  const [traceSub, setTraceSub] = useState('activity');
+  const [traceFilters, setTraceFilters] = useState({ email: '', ip: '', event: '', from: '', to: '' });
+  const [tracePage, setTracePage] = useState(1);
+  const [traceData, setTraceData] = useState(null);
+  const [traceStats, setTraceStats] = useState(null);
+  const [traceLoading, setTraceLoading] = useState(false);
 
   function handleFileChange(e) {
     const file = e.target.files[0];
@@ -215,7 +223,49 @@ export default function AdminData() {
     if (tab === 'plus') loadSubscriptions();
     if (tab === 'courses') loadCourses();
     if (tab === 'settings') loadSettings();
+    if (tab === 'trace') loadTrace();
   }, [tab]);
+
+  useEffect(() => {
+    if (tab === 'trace') loadTrace();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [traceSub, tracePage]);
+
+  async function loadTrace() {
+    setTraceLoading(true);
+    setError('');
+    try {
+      if (traceSub === 'stats') {
+        setTraceStats(await api.admin.traceStats());
+      } else if (traceSub === 'activity') {
+        setTraceData(await api.admin.traceActivity({ ...traceFilters, page: tracePage, limit: 50 }));
+      } else if (traceSub === 'consents') {
+        setTraceData(await api.admin.traceConsents({ email: traceFilters.email, page: tracePage, limit: 50 }));
+      } else if (traceSub === 'devices') {
+        setTraceData(await api.admin.traceDevices({ email: traceFilters.email, page: tracePage, limit: 50 }));
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setTraceLoading(false);
+    }
+  }
+
+  function exportCsv(rows, columns) {
+    const header = columns.map(c => c.label).join(',');
+    const lines = rows.map(r => columns.map(c => {
+      const v = c.get(r);
+      const s = v == null ? '' : String(v);
+      return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
+    }).join(','));
+    const blob = new Blob([header + '\n' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'trace-' + traceSub + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   async function handleApproveOrder(id) {
     try {
@@ -708,6 +758,212 @@ export default function AdminData() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {tab === 'trace' && (
+        <div className="admin-panel">
+          <h3>Truy vết & phân tích</h3>
+          <p className="admin-note" style={{ marginBottom: 16 }}>
+            Lịch sử hoạt động, lựa chọn dữ liệu và thiết bị + IP của toàn bộ user.
+          </p>
+
+          <div className="admin-tabs" style={{ marginBottom: 14 }}>
+            {[
+              { key: 'activity', label: 'Hoạt động' },
+              { key: 'consents', label: 'Consent' },
+              { key: 'devices', label: 'Thiết bị' },
+              { key: 'stats', label: 'Thống kê' },
+            ].map(t => (
+              <button
+                key={t.key}
+                className={`admin-tab${traceSub === t.key ? ' active' : ''}`}
+                onClick={() => { setTraceSub(t.key); setTracePage(1); }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {traceSub !== 'stats' && (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+              <input
+                className="admin-input"
+                style={{ width: 160 }}
+                placeholder="Email / tên"
+                value={traceFilters.email}
+                onChange={e => setTraceFilters({ ...traceFilters, email: e.target.value })}
+              />
+              {traceSub === 'activity' && (
+                <>
+                  <input
+                    className="admin-input"
+                    style={{ width: 140 }}
+                    placeholder="IP"
+                    value={traceFilters.ip}
+                    onChange={e => setTraceFilters({ ...traceFilters, ip: e.target.value })}
+                  />
+                  <input
+                    className="admin-input"
+                    style={{ width: 140 }}
+                    placeholder="Sự kiện (login...)"
+                    value={traceFilters.event}
+                    onChange={e => setTraceFilters({ ...traceFilters, event: e.target.value })}
+                  />
+                  <input
+                    className="admin-input"
+                    style={{ width: 140 }}
+                    type="date"
+                    value={traceFilters.from}
+                    onChange={e => setTraceFilters({ ...traceFilters, from: e.target.value })}
+                  />
+                  <input
+                    className="admin-input"
+                    style={{ width: 140 }}
+                    type="date"
+                    value={traceFilters.to}
+                    onChange={e => setTraceFilters({ ...traceFilters, to: e.target.value })}
+                  />
+                </>
+              )}
+              <button className="admin-btn" onClick={() => { setTracePage(1); loadTrace(); }}>Lọc</button>
+              <button
+                className="admin-btn"
+                onClick={() => exportCsv(traceData?.data || [], traceSub === 'activity'
+                  ? [
+                      { label: 'Thời gian', get: r => r.created_at },
+                      { label: 'Email', get: r => r.email },
+                      { label: 'Tên', get: r => r.full_name },
+                      { label: 'Sự kiện', get: r => r.event },
+                      { label: 'Bối cảnh', get: r => r.context },
+                      { label: 'Mô tả', get: r => r.description },
+                      { label: 'IP', get: r => r.ip },
+                    ]
+                  : traceSub === 'consents'
+                    ? [
+                        { label: 'Thời gian', get: r => r.created_at },
+                        { label: 'Email', get: r => r.email },
+                        { label: 'Chính sách', get: r => r.policy_key },
+                        { label: 'Đồng ý', get: r => r.accepted },
+                        { label: 'Version', get: r => r.version },
+                        { label: 'IP', get: r => r.ip },
+                      ]
+                    : [
+                        { label: 'Đăng nhập lúc', get: r => r.logged_in_at },
+                        { label: 'Email', get: r => r.email },
+                        { label: 'Thiết bị', get: r => r.device_name },
+                        { label: 'IP', get: r => r.ip },
+                        { label: 'Hoạt động cuối', get: r => r.last_active_at },
+                      ])}
+              >
+                Xuất CSV
+              </button>
+            </div>
+          )}
+
+          {traceLoading ? (
+            <p className="admin-note">Đang tải...</p>
+          ) : traceSub === 'stats' ? (
+            traceStats ? (
+              <div>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+                  {[
+                    { label: 'Tổng user', value: traceStats.total_users },
+                    { label: 'Đăng nhập 7 ngày', value: traceStats.logins_7d },
+                    { label: 'IP duy nhất 7 ngày', value: traceStats.unique_ips_7d },
+                  ].map(k => (
+                    <div key={k.label} style={{ flex: 1, minWidth: 140, background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, padding: '14px 18px' }}>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--red)' }}>{k.value}</div>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{k.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <h4 style={{ fontSize: 14, marginBottom: 8 }}>Sự kiện 7 ngày</h4>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+                  {Object.entries(traceStats.events_7d || {}).map(([ev, n]) => (
+                    <span key={ev} className="pill" style={{ background: 'var(--red-bg)', color: 'var(--red)' }}>{ev}: {n}</span>
+                  ))}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <h4 style={{ fontSize: 14, marginBottom: 8 }}>Top IP (7 ngày)</h4>
+                    {(traceStats.top_ips || []).map((x, i) => (
+                      <div key={x.ip} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--line)', fontSize: 13 }}>
+                        <span>{i + 1}. {x.ip}</span>
+                        <b>{x.count}</b>
+                      </div>
+                    ))}
+                    {(traceStats.top_ips || []).length === 0 && <p className="admin-note">Chưa có dữ liệu</p>}
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: 14, marginBottom: 8 }}>User hoạt động nhất (7 ngày)</h4>
+                    {(traceStats.top_users || []).map((x, i) => (
+                      <div key={x.email} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--line)', fontSize: 13 }}>
+                        <span>{i + 1}. {x.name} ({x.email})</span>
+                        <b>{x.count}</b>
+                      </div>
+                    ))}
+                    {(traceStats.top_users || []).length === 0 && <p className="admin-note">Chưa có dữ liệu</p>}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="admin-note">Đang tải...</p>
+            )
+          ) : traceData && traceData.data ? (
+            <div>
+              <div className="admin-table-wrap">
+                <table className="admin-table" style={{ minWidth: 860 }}>
+                  <thead>
+                    <tr>
+                      <th>Thời gian</th>
+                      <th>Email</th>
+                      <th>Tên</th>
+                      {traceSub === 'activity' && (<><th>Sự kiện</th><th>Bối cảnh</th><th>Mô tả</th></>)}
+                      {traceSub === 'consents' && (<><th>Chính sách</th><th>Đồng ý</th><th>Version</th></>)}
+                      {traceSub === 'devices' && (<><th>Thiết bị</th><th>Hoạt động cuối</th></>)}
+                      <th>IP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {traceData.data.map((r, i) => (
+                      <tr key={i}>
+                        <td style={{ whiteSpace: 'nowrap' }}>{new Date(r.created_at || r.logged_in_at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</td>
+                        <td>{r.email}</td>
+                        <td>{r.full_name}</td>
+                        {traceSub === 'activity' && (<>
+                          <td style={{ fontWeight: 700 }}>{r.event}</td>
+                          <td>{r.context || '-'}</td>
+                          <td style={{ maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.description || '-'}</td>
+                        </>)}
+                        {traceSub === 'consents' && (<>
+                          <td>{r.policy_key}</td>
+                          <td>{r.accepted ? '✅' : '❌'}</td>
+                          <td>v{r.version}</td>
+                        </>)}
+                        {traceSub === 'devices' && (<>
+                          <td>{r.device_name || '-'}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>{r.last_active_at ? new Date(r.last_active_at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '-'}</td>
+                        </>)}
+                        <td style={{ whiteSpace: 'nowrap' }}>{r.ip || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {traceData.total > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12, fontSize: 13 }}>
+                  <button className="admin-btn" disabled={tracePage <= 1} onClick={() => setTracePage(p => p - 1)}>← Trước</button>
+                  <span style={{ color: 'var(--muted)' }}>Trang {traceData.page} / {Math.max(1, Math.ceil(traceData.total / traceData.limit))} ({traceData.total} dòng)</span>
+                  <button className="admin-btn" disabled={tracePage * traceData.limit >= traceData.total} onClick={() => setTracePage(p => p + 1)}>Sau →</button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="admin-note">Chưa có dữ liệu</p>
+          )}
         </div>
       )}
 
