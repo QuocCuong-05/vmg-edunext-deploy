@@ -249,7 +249,7 @@ router.post('/anonymize', async (req, res) => {
   }
 });
 
-// GET /auth/session-check — session còn sống không (đá thiết bị bị revoke ngay khi chuyển trang)
+// GET /auth/session-check — session còn hợp lệ không (chỉ dựa revoked_sessions tự quản)
 router.get('/session-check', async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -264,14 +264,8 @@ router.get('/session-check', async (req, res) => {
       .eq('session_id', sid)
       .maybeSingle();
     if (revokedError) throw revokedError;
-    if (revoked) return res.json({ data: { ok: false } });
 
-    const { data: alive, error: rpcError } = await supabaseAdmin.rpc('session_alive', {
-      p_session_id: sid,
-    });
-    if (rpcError) throw rpcError;
-
-    res.json({ data: { ok: !!alive } });
+    res.json({ data: { ok: !revoked } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
