@@ -4,6 +4,7 @@ import QRCode from 'qrcode';
 import { api } from '../../lib/api';
 import { trackEvent } from '../../lib/ga';
 import { useAuth } from '../auth/AuthContext';
+import { useMediaQuery } from '../../lib/useMediaQuery';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import { Icon } from '../../lib/icons';
@@ -45,6 +46,7 @@ function formatVnd(n) {
 export default function PlusPage() {
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
+  const isNarrow = useMediaQuery('(max-width: 860px)');
   const isPlusActive = !!user?.plus?.active;
   const plusPeriod = user?.plus?.period;
   const plusEndAt = user?.plus?.endAt ? new Date(user.plus.endAt).toLocaleDateString('vi-VN') : '';
@@ -219,7 +221,7 @@ export default function PlusPage() {
   const active = PLANS.find(p => p.period === period) || PLANS[3];
 
   return (
-    <div style={{ maxWidth: 560, margin: '24px auto', padding: '0 16px' }}>
+    <div style={{ maxWidth: 900, margin: '24px auto', padding: '0 16px' }}>
       <div className="back-btn" onClick={() => navigate(-1)}><Icon.ArrowLeft size={14} /> Quay lại</div>
 
       {error && (
@@ -279,7 +281,8 @@ export default function PlusPage() {
             </Card>
           )}
 
-          <Card style={{ padding: 'min(28px, 6vw)', marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 1fr', gap: 16, alignItems: 'start' }}>
+          <Card style={{ padding: 'min(28px, 6vw)', marginBottom: isNarrow ? 16 : 0, position: isNarrow ? undefined : 'sticky', top: 16 }}>
             <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Icon.Gem size={16} style={{ color: '#8b5cf6' }} /> Quyền lợi gói Plus
             </h3>
@@ -293,7 +296,8 @@ export default function PlusPage() {
             </div>
           </Card>
 
-          <Card style={{ padding: 'min(28px, 6vw)', marginBottom: 16 }} ref={payRef}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Card style={{ padding: 'min(28px, 6vw)' }} ref={payRef}>
             <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>
               {isPlusActive ? 'Gia hạn hoặc nâng cấp gói' : 'Chọn gói Plus'}
             </h3>
@@ -504,6 +508,8 @@ export default function PlusPage() {
               )}
             </Card>
           )}
+          </div>
+          </div>
         </>
       )}
     </div>
