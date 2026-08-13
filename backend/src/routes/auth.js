@@ -4,15 +4,7 @@ import { getPlusStatus, getAiRemaining } from '../lib/plus.js';
 import { getClientIp } from '../lib/ip.js';
 import { parseDeviceName } from '../lib/device.js';
 import { logActivity, EVENT_COMPONENT } from '../lib/activity.js';
-
-function getSessionId(accessToken) {
-  try {
-    const payload = JSON.parse(Buffer.from(accessToken.split('.')[1], 'base64url').toString());
-    return payload.session_id || null;
-  } catch {
-    return null;
-  }
-}
+import { getSessionId } from '../lib/jwt.js';
 
 const router = Router();
 
@@ -266,6 +258,14 @@ router.get('/session-check', async (req, res) => {
     const sid = getSessionId(token);
     if (!sid) return res.json({ data: { ok: true } });
 
+    const { data: revoked, error: revokedError } = await supabaseAdmin
+      .from('revoked_sessions')
+      .select('session_id')
+      .eq('session_id', sid)
+      .maybeSingle();
+    if (revokedError) throw revokedError;
+    if (revoked) return res.json({ data: { ok: false } });
+
     const { data: alive, error: rpcError } = await supabaseAdmin.rpc('session_alive', {
       p_session_id: sid,
     });
@@ -347,6 +347,11 @@ router.post('/devices/:id/signout', async (req, res) => {
     if (!session) return res.status(404).json({ error: 'Không tìm thấy thiết bị' });
 
     if (session.session_id) {
+      await supabaseAdmin
+        .from('revoked_sessions')
+        .upsert({ session_id: session.session_id, user_id: user.id }, { onConflict: 'session_id' })
+        .then(() => {})
+        .catch(() => {});
       const { error: revokeError } = await supabaseAdmin.rpc('revoke_session', {
         p_session_id: session.session_id,
       });

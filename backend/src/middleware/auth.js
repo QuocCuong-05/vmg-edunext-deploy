@@ -1,4 +1,5 @@
 import { supabase, supabaseAdmin } from '../config/database.js';
+import { getSessionId } from '../lib/jwt.js';
 
 export async function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -11,6 +12,18 @@ export async function authenticate(req, res, next) {
 
   if (error || !user) {
     return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  const sid = getSessionId(token);
+  if (sid) {
+    const { data: revoked } = await supabaseAdmin
+      .from('revoked_sessions')
+      .select('session_id')
+      .eq('session_id', sid)
+      .maybeSingle();
+    if (revoked) {
+      return res.status(401).json({ error: 'Phiên đã bị thu hồi. Vui lòng đăng nhập lại.' });
+    }
   }
 
   req.user = user;
