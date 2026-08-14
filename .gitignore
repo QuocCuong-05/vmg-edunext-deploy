@@ -3,6 +3,7 @@ dist/
 .env
 backend/.env
 frontend/.env
+*.env.bak
 *.local
 backend/.env.staging
 backend/.env.production
