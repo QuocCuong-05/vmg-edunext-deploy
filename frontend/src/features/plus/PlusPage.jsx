@@ -282,19 +282,6 @@ export default function PlusPage() {
           )}
 
           <div style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 1fr', gap: 16 }}>
-          <Card style={{ padding: 'min(28px, 6vw)', marginBottom: isNarrow ? 16 : 0, height: '100%' }}>
-            <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Icon.Gem size={16} style={{ color: '#8b5cf6' }} /> Quyền lợi gói Plus
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {BENEFITS.map((b, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13 }}>
-                  <span style={{ color: '#8b5cf6', marginTop: 2, flexShrink: 0 }}><Icon.Check size={14} /></span>
-                  <span>{b}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Card style={{ padding: 'min(28px, 6vw)' }} ref={payRef}>
@@ -509,6 +496,20 @@ export default function PlusPage() {
             </Card>
           )}
           </div>
+
+          <Card style={{ padding: 'min(28px, 6vw)', marginBottom: isNarrow ? 16 : 0, height: '100%' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icon.Gem size={16} style={{ color: '#8b5cf6' }} /> Quyền lợi gói Plus
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {BENEFITS.map((b, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13 }}>
+                  <span style={{ color: '#8b5cf6', marginTop: 2, flexShrink: 0 }}><Icon.Check size={14} /></span>
+                  <span>{b}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
           </div>
         </>
       )}
