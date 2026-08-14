@@ -1,0 +1,45 @@
+============================================================
+VMG EduNext — Template email tiếng Việt cho Supabase Auth
+Dán vào: Supabase → Authentication → Emails → Email Templates
+(Sau khi bật Custom SMTP — SMTP Resend)
+============================================================
+
+------------------------------------------------------------
+1) TEMPLATE: Confirm signup (Xác nhận email đăng ký)
+------------------------------------------------------------
+Subject:
+Xác nhận email đăng ký VMG EduNext
+
+Body (HTML):
+<h2>Chào mừng bạn đến với VMG EduNext</h2>
+<p>Bạn vừa đăng ký tài khoản với email {{ .Email }}.</p>
+<p>Vui lòng bấm nút bên dưới để xác nhận địa chỉ email và kích hoạt tài khoản:</p>
+<p><a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#e11d48;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Xác nhận email</a></p>
+<p style="color:#888;font-size:13px;">Nếu nút không hoạt động, hãy mở liên kết này trong trình duyệt: <a href="{{ .ConfirmationURL }}">{{ .ConfirmationURL }}</a></p>
+<p style="color:#888;font-size:13px;">Nếu bạn không đăng ký, vui lòng bỏ qua email này.</p>
+<p style="color:#aaa;font-size:12px;">VMG EduNext — Đồng hành cùng giáo viên nâng cao năng lực ngoại ngữ.</p>
+
+------------------------------------------------------------
+2) TEMPLATE: Reset password (Đặt lại mật khẩu)
+------------------------------------------------------------
+Subject:
+Đặt lại mật khẩu VMG EduNext
+
+Body (HTML):
+<h2>Yêu cầu đặt lại mật khẩu</h2>
+<p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản {{ .Email }}.</p>
+<p>Bấm nút bên dưới để tạo mật khẩu mới (liên kết có hiệu lực trong thời gian ngắn):</p>
+<p><a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#e11d48;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Đặt lại mật khẩu</a></p>
+<p style="color:#888;font-size:13px;">Nếu nút không hoạt động, hãy mở liên kết này: <a href="{{ .ConfirmationURL }}">{{ .ConfirmationURL }}</a></p>
+<p style="color:#888;font-size:13px;">Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
+<p style="color:#aaa;font-size:12px;">VMG EduNext — Đồng hành cùng giáo viên nâng cao năng lực ngoại ngữ.</p>
+
+------------------------------------------------------------
+GHI CHÚ:
+- {{ .ConfirmationURL }}: link xác nhận do GoTrue sinh ra
+- {{ .Email }}: email người nhận
+- Cấu hình "Redirect URL" trong Supabase Auth → URL Configuration
+  nên đặt đúng trang frontend (VD https://staging.vmg.edu.vn)
+- Email gửi qua Resend sẽ hiện sender như tên project trong
+  Custom SMTP (VD noreply@notify.vmg.edu.vn sau khi verify domain)
+============================================================

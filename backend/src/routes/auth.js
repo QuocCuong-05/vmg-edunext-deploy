@@ -5,16 +5,34 @@ import { getClientIp } from '../lib/ip.js';
 import { parseDeviceName } from '../lib/device.js';
 import { logActivity, EVENT_COMPONENT } from '../lib/activity.js';
 import { getSessionId } from '../lib/jwt.js';
+import { signupLimiter, loginLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 
 const PASSWORD_RULE = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/;
+const EMAIL_RULE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const DISPOSABLE_DOMAINS = new Set([
+  'mailinator.com', 'yopmail.com', '10minutemail.com', '10minutemail.net',
+  'temp-mail.org', 'temp-mail.io', 'guerrillamail.com', 'guerrillamail.org',
+  'sharklasers.com', 'maildrop.cc', 'mailnesia.com', 'dispostable.com',
+  'throwawaymail.com', 'mytemp.email', 'tempmail.com', 'tempmail.net',
+  'emailondeck.com', 'getnada.com', 'trashmail.com', 'fakeinbox.com',
+  'maileater.com', 'mintemail.com', 'spamgourmet.com', 'burnermail.io',
+]);
 
-router.post('/signup', async (req, res) => {
+router.post('/signup', signupLimiter, async (req, res) => {
   try {
     const { email, password, full_name, school, ward } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
+    }
+    const emailNorm = String(email).trim().toLowerCase();
+    if (!EMAIL_RULE.test(emailNorm)) {
+      return res.status(400).json({ error: 'Địa chỉ email không hợp lệ' });
+    }
+    const emailDomain = emailNorm.split('@')[1];
+    if (DISPOSABLE_DOMAINS.has(emailDomain)) {
+      return res.status(400).json({ error: 'Không hỗ trợ email dùng một lần (disposable). Vui lòng dùng email thật.' });
     }
     if (!PASSWORD_RULE.test(password)) {
       return res.status(400).json({
@@ -26,7 +44,7 @@ router.post('/signup', async (req, res) => {
     }
 
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: emailNorm,
       password,
       options: { data: { full_name: full_name || '' } }
     });
@@ -46,7 +64,7 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
