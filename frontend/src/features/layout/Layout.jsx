@@ -372,7 +372,7 @@ export default function Layout() {
             </div>
             <div>
               <b>VMG English</b>
-              <p>Đồng hành cùng giáo viên trên hành trình nâng cao năng lực ngoại ngữ và hội nhập giáo dục.</p>
+              <p>Đồng hành cùng giáo viên trên hành trình nâng cao năng lực ngoại ngữ và hội nhập <span style={{ whiteSpace: 'nowrap' }}>giáo dục</span>.</p>
               <small>&copy; 2026 VMG English. All rights reserved.</small>
             </div>
           </footer>
