@@ -49,7 +49,13 @@ router.post('/signup', signupLimiter, async (req, res) => {
       options: { data: { full_name: full_name || '' } }
     });
 
-    if (error) return res.status(400).json({ error: error.message });
+    if (error) {
+      const msg = error.message
+        || error.msg
+        || error.error_description
+        || 'Đăng ký thất bại, vui lòng thử lại';
+      return res.status(400).json({ error: msg });
+    }
 
     if (data.user && (school || ward)) {
       await supabaseAdmin
