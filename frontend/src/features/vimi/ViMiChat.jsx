@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Icon } from '../../lib/icons';
 import { useSpeechRecognition } from '../../lib/useSpeechRecognition';
 import { useStreamChat } from '../../lib/useStreamChat';
 import { dispatchAction } from '../../lib/quest-engine';
 import { API_BASE } from '../../lib/api';
+import { useAuth } from '../auth/AuthContext';
 
 function renderInline(text) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -20,6 +22,7 @@ export default function ViMiChat() {
   const [input, setInput] = useState('');
   const bodyRef = useRef(null);
   const { isRecording, transcript, startRecording, stopRecording, clearTranscript } = useSpeechRecognition();
+  const { user, isPlus } = useAuth();
 
   const { messages, append, isLoading, error } = useStreamChat({
     api: `${API_BASE}/vimi-ai/chat`,
@@ -28,6 +31,9 @@ export default function ViMiChat() {
       content: 'Xin chào! Tôi là **ViMi** - trợ lý AI của VMG EduNext. Hãy hỏi tôi về Classroom English, CLIL, đánh giá, từ vựng, hoặc gợi ý hoạt động dạy học!',
     }],
   });
+
+  const remainingCount = !isPlus ? (user?.aiUsage?.chatLeft ?? null) : null;
+  const outOfQuota = !isPlus && remainingCount !== null && remainingCount <= 0;
 
   useEffect(() => {
     if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
@@ -39,7 +45,7 @@ export default function ViMiChat() {
 
   const handleSend = () => {
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isLoading || outOfQuota) return;
     setInput('');
     clearTranscript();
     append({ role: 'user', content: text });
@@ -71,6 +77,11 @@ export default function ViMiChat() {
               <h3>ViMi AI Tutor</h3>
               <p>Trợ lý giảng dạy thông minh</p>
             </div>
+            {remainingCount !== null && (
+              <span className="pill" style={{ background: 'rgba(255,255,255,.14)', color: '#fff', fontSize: 10, fontWeight: 800, marginLeft: 8 }}>
+                Còn {remainingCount}/5 lượt
+              </span>
+            )}
             <button onClick={() => setOpen(false)} style={{ marginLeft: 'auto', color: '#fff', opacity: .7 }}><Icon.Close size={18} /></button>
           </div>
           <div className="vimi-body" ref={bodyRef}>
@@ -94,17 +105,24 @@ export default function ViMiChat() {
               Lỗi: {error}
             </div>
           )}
+          {outOfQuota && (
+            <div style={{ padding: '10px 16px', fontSize: 12, background: 'var(--gold-bg)', color: 'var(--gold)', borderTop: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: 700 }}>Bạn đã dùng hết lượt chat hôm nay.</span>
+              <Link to="/plus" style={{ fontSize: 12, fontWeight: 800, color: 'var(--red)', whiteSpace: 'nowrap' }}>Nâng cấp Plus →</Link>
+            </div>
+          )}
           <div className="vimi-input">
-            <button onClick={handleMic} title={isRecording ? 'Dừng thu âm' : 'Thu âm'} style={{ background: 'none', border: 'none', cursor: 'pointer', color: isRecording ? 'var(--red)' : 'var(--muted)', padding: 4 }}>
+            <button onClick={handleMic} disabled={outOfQuota} title={isRecording ? 'Dừng thu âm' : 'Thu âm'} style={{ background: 'none', border: 'none', cursor: outOfQuota ? 'not-allowed' : 'pointer', color: isRecording ? 'var(--red)' : outOfQuota ? 'rgba(0,0,0,.15)' : 'var(--muted)', padding: 4 }}>
               {isRecording ? <Icon.MicOff size={18} /> : <Icon.Mic size={18} />}
             </button>
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isRecording ? 'Đang nghe...' : 'Nhập câu hỏi của bạn...'}
+              disabled={outOfQuota}
+              placeholder={outOfQuota ? 'Hết lượt hôm nay — nâng cấp Plus để chat không giới hạn' : (isRecording ? 'Đang nghe...' : 'Nhập câu hỏi của bạn...')}
             />
-            <button onClick={handleSend} disabled={!input.trim() || isLoading} style={{ opacity: input.trim() && !isLoading ? 1 : .4 }}><Icon.Send size={18} /></button>
+            <button onClick={handleSend} disabled={!input.trim() || isLoading || outOfQuota} style={{ opacity: input.trim() && !isLoading && !outOfQuota ? 1 : .4 }}><Icon.Send size={18} /></button>
           </div>
         </div>
       )}
