@@ -137,6 +137,7 @@ export const api = {
   },
   vocabulary: {
     list: async () => fromDb(await supabase.from('vocabulary_entries').select('*').eq('is_published', true)),
+    mineCount: async () => (await request('/vocabulary/mine-count')).count || 0,
     canAdd: async (userId) => {
       const { data, error } = await supabase.rpc('check_wordbook_limit', { p_user_id: userId });
       if (error) throw error;
@@ -159,6 +160,7 @@ export const api = {
   },
   quiz: {
     list: async () => fromDb(await supabase.from('quiz_sets').select('*').eq('is_published', true)),
+    attemptsCount: async () => (await request('/quiz/attempts-count')).count || 0,
     get: async (slug) => {
       try {
         const quizSet = fromDb(await supabase.from('quiz_sets').select('*').eq('slug', slug).single());

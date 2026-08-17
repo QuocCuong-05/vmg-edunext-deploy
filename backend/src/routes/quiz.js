@@ -106,4 +106,18 @@ router.get('/attempts', authenticate, async (req, res, next) => {
   }
 });
 
+// GET /api/quiz/attempts-count — số bài quiz đã nộp (mọi tài khoản)
+router.get('/attempts-count', authenticate, async (req, res, next) => {
+  try {
+    const { count, error } = await supabaseAdmin
+      .from('quiz_attempts')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', req.user.id);
+    if (error) throw error;
+    res.json({ count: count || 0 });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

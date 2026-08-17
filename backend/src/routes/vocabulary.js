@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { supabase } from '../config/database.js';
+import { supabase, supabaseAdmin } from '../config/database.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -32,6 +33,20 @@ router.get('/topics', async (_req, res) => {
     res.json({ data: topics });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/vocabulary/mine-count — số từ đã lưu vào sổ từ
+router.get('/mine-count', authenticate, async (req, res, next) => {
+  try {
+    const { count, error } = await supabaseAdmin
+      .from('user_vocabulary')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', req.user.id);
+    if (error) throw error;
+    res.json({ count: count || 0 });
+  } catch (err) {
+    next(err);
   }
 });
 

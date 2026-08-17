@@ -26,10 +26,32 @@ function shuffleQuote(exclude) {
 
 const STAT_META = [
   { key: 'courses', label: 'Khóa học', icon: Icon.Courses, accent: 'accent-red' },
-  { key: 'vocab', label: 'Từ vựng', icon: Icon.Book, accent: 'accent-blue' },
-  { key: 'quiz', label: 'Bài tập', icon: Icon.Quiz, accent: 'accent-gold' },
-  { key: 'tips', label: 'Tips', icon: Icon.Lightbulb, accent: 'accent-green' },
+  { key: 'vocab', label: 'Từ đã lưu', icon: Icon.Book, accent: 'accent-blue' },
+  { key: 'quiz', label: 'Quiz đã làm', icon: Icon.Quiz, accent: 'accent-gold' },
 ];
+
+const CORE_FEATURES = [
+  { to: '/courses', title: 'Khóa học của tôi', desc: 'Tiếp tục hành trình học tập', icon: Icon.Courses, cls: 'core-red' },
+  { to: '/level', title: 'Thử thách lên cấp', desc: 'Chinh phục cấp độ mới', icon: Icon.Target, cls: 'core-blue' },
+  { to: '/wordbook', title: 'Sổ từ của tôi', desc: 'Ôn luyện từ vựng hằng ngày', icon: Icon.Vocab, cls: 'core-purple' },
+];
+
+function AnimatedNumber({ value, duration = 700 }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    let raf;
+    const start = performance.now();
+    const tick = (now) => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(Math.round(value * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+  return <>{display}</>;
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -44,7 +66,8 @@ export default function Dashboard() {
   const [tips, setTips] = useState([]);
   const [vocab, setVocab] = useState([]);
   const [courses, setCourses] = useState([]);
-  const [quizSets, setQuizSets] = useState([]);
+  const [myVocabCount, setMyVocabCount] = useState(0);
+  const [myQuizCount, setMyQuizCount] = useState(0);
 
   useEffect(() => {
     dispatchAction('dashboard_view');
@@ -52,12 +75,14 @@ export default function Dashboard() {
       api.tips.list(),
       api.vocabulary.list(),
       api.courses.list(),
-      api.quiz.list(),
-    ]).then(([t, v, c, q]) => {
+      api.vocabulary.mineCount(),
+      api.quiz.attemptsCount(),
+    ]).then(([t, v, c, vocabCount, quizCount]) => {
       setTips(t || []);
       setVocab(v || []);
       setCourses(c || []);
-      setQuizSets(q || []);
+      setMyVocabCount(vocabCount);
+      setMyQuizCount(quizCount);
     }).catch(() => {});
     const handler = () => {
       setQuestState(getQuestState());
@@ -77,9 +102,6 @@ export default function Dashboard() {
       return e ? JSON.parse(e).enrolled : false;
     } catch { return false; }
   }).length;
-  const vocabCount = vocab.length;
-  const quizCount = quizSets.length;
-  const tipsCount = tips.length;
   const inProgress = courses.filter(c => {
     try {
       const e = localStorage.getItem('vmg_enroll_' + c.slug);
@@ -91,41 +113,114 @@ export default function Dashboard() {
 
   const STATS = {
     courses: enrolledCount,
-    vocab: vocabCount,
-    quiz: quizCount,
-    tips: tipsCount,
+    vocab: myVocabCount,
+    quiz: myQuizCount,
   };
 
   return (
     <div className="page-enter">
-      <div className="dash-top">
-        <div className="dash-greeting-wrap">
-          <h1 className="dash-greeting">Xin chào, {user?.full_name?.split(' ')[0] || 'Teacher'}</h1>
-          <p className="dash-sub">Chào mừng bạn đến với VMG EduNext. Hôm nay bạn muốn học gì?</p>
-        </div>
-        <div className="dash-header-right">
-          {streak > 0 && (
-            <div className="streak-badge">
-              <Icon.Flame size={18} />
-              {streak} ngày
-            </div>
-          )}
-          <div className="dash-xp-badge">
-            <Icon.Stats size={15} />
-            {xp} XP
+      <div className="dash-hero">
+        <div className="dash-hero-blob blob-a" />
+        <div className="dash-hero-blob blob-b" />
+        <div className="dash-hero-content">
+          <div className="dash-hero-avatar">
+            {user?.full_name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'VM'}
           </div>
+          <div className="dash-hero-text">
+            <h1 className="dash-greeting">Xin chào, {user?.full_name?.split(' ')[0] || 'Teacher'}</h1>
+            <p className="dash-sub">Chào mừng bạn đến với VMG EduNext. Hôm nay bạn muốn học gì?</p>
+          </div>
+          <div className="dash-hero-meta">
+            {streak > 0 && (
+              <div className="streak-badge">
+                <Icon.Flame size={16} />
+                {streak} ngày
+              </div>
+            )}
+            <div className="dash-xp-badge">
+              <Icon.Sparkles size={15} />
+              {xp} XP
+            </div>
+          </div>
+        </div>
+        <div className="hero-wave">
+          <svg viewBox="0 0 1440 500" preserveAspectRatio="none">
+            <path className="wave-1" fill="rgba(255,255,255,.13)" d="M0,192L48,176C96,160,192,128,288,106.7C384,85,480,133,576,154.7C672,176,768,171,864,138.7C960,107,1056,48,1152,53.3C1248,59,1344,128,1392,165.3L1440,202.7L1440,500L1392,500C1344,500,1248,500,1152,500C1056,500,960,500,864,500C768,500,672,500,576,500C480,500,384,500,288,500C192,500,96,500,48,500L0,500Z"/>
+            <path className="wave-2" fill="rgba(255,255,255,.09)" d="M0,256L48,240C96,224,192,192,288,176C384,160,480,192,576,213.3C672,235,768,229,864,202.7C960,176,1056,117,1152,106.7C1248,96,1344,149,1392,176L1440,202.7L1440,500L1392,500C1344,500,1248,500,1152,500C1056,500,960,500,864,500C768,500,672,500,576,500C480,500,384,500,288,500C192,500,96,500,48,500L0,500Z"/>
+            <path className="wave-3" fill="rgba(255,255,255,.06)" d="M0,300L48,288C96,276,192,252,288,240C384,228,480,252,576,264C672,276,768,252,864,228C960,204,1056,180,1152,186.7C1248,192,1344,228,1392,240L1440,252L1440,500L1392,500C1344,500,1248,500,1152,500C1056,500,960,500,864,500C768,500,672,500,576,500C480,500,384,500,288,500C192,500,96,500,48,500L0,500Z"/>
+          </svg>
         </div>
       </div>
 
-      <div className="grid-4" style={{ marginBottom: 24 }}>
-        {STAT_META.map(s => {
+      <Card className="dash-courses-hero" style={{ border: 'none', borderLeft: '4px solid var(--red)' }}>
+        <div className="dash-courses-hero-head">
+          <h3><Icon.Courses size={17} /> Khóa học đang học</h3>
+          {inProgress.length > 0 && (
+            <button className="dash-courses-hero-all" onClick={() => navigate('/courses')}>
+              Xem tất cả <Icon.ArrowRight size={12} />
+            </button>
+          )}
+        </div>
+        {inProgress.length === 0 ? (
+          <div className="dash-empty">
+            <div className="dash-empty-icon"><Icon.Courses size={26} /></div>
+            <p className="dash-empty-text">Bạn chưa đăng ký khóa học nào.</p>
+            <Button variant="primary" size="sm" onClick={() => navigate('/courses')} label="Khám phá khóa học" />
+          </div>
+        ) : (
+          <div className="dash-courses-hero-list">
+            {inProgress.slice(0, 2).map(course => {
+              const enroll = (() => {
+                try {
+                  const e = localStorage.getItem('vmg_enroll_' + course.slug);
+                  return e ? JSON.parse(e) : null;
+                } catch { return null; }
+              })();
+              const coverColor = course.category === 'classroom_english' ? 'var(--red)' : course.category === 'clil_stem' ? 'var(--blue)' : course.category === 'assessment' ? 'var(--gold)' : course.category === 'vocabulary' ? 'var(--green)' : 'var(--purple)';
+              return (
+                <div key={course.id} className="course-hero-row" onClick={() => navigate(`/courses/${course.slug}`)}>
+                  <div className="course-hero-cover" style={{ background: coverColor }}>{course.level}</div>
+                  <div className="course-hero-body">
+                    <div className="course-hero-title">{course.title}</div>
+                    <div className="course-hero-meta">{enroll.progress_pct}% hoàn thành · {course.lesson_count} bài học</div>
+                    <div className="progress-bar" style={{ height: 6 }}>
+                      <div className="progress-fill" style={{ width: `${enroll.progress_pct}%`, background: coverColor }} />
+                    </div>
+                  </div>
+                  <button className="course-hero-btn">
+                    Tiếp tục <Icon.ArrowRight size={14} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      <div className="core-grid">
+        {CORE_FEATURES.map((c, i) => {
+          const IconCmp = c.icon;
+          return (
+            <div key={c.to} className={`core-card ${c.cls}`} style={{ animationDelay: `${i * 80}ms` }} onClick={() => navigate(c.to)}>
+              <div className="core-icon"><IconCmp size={24} /></div>
+              <div className="core-body">
+                <b>{c.title}</b>
+                <span>{c.desc}</span>
+              </div>
+              <Icon.ArrowRight size={18} className="core-arrow" />
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="grid-3" style={{ marginBottom: 24 }}>
+        {STAT_META.map((s, i) => {
           const IconCmp = s.icon;
           return (
-            <Card key={s.key} className={`stat-card ${s.accent}`}>
-              <div className="accent-bar" />
+            <Card key={s.key} className={`stat-card-new ${s.accent}`} style={{ animationDelay: `${i * 70}ms` }}>
               <div className="stat-header">
                 <div className="stat-icon-box"><IconCmp size={20} /></div>
-                <span className="stat-value">{STATS[s.key]}</span>
+                <span className="stat-value"><AnimatedNumber value={STATS[s.key]} /></span>
               </div>
               <span className="stat-label">{s.label}</span>
             </Card>
@@ -133,75 +228,8 @@ export default function Dashboard() {
         })}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 24, padding: '18px 22px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', boxShadow: '0 2px 8px rgba(25,37,60,.04)' }}>
-        <span style={{ fontSize: 32, lineHeight: 1, color: 'var(--red)', fontFamily: 'Georgia, serif', flexShrink: 0 }}>“</span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontStyle: 'italic', lineHeight: 1.6, color: 'var(--ink)', marginBottom: 4 }}>{quote.text}</div>
-          <div style={{ fontSize: 11, color: 'var(--muted)' }}>— {quote.author}</div>
-        </div>
-        <button onClick={() => setQuote(shuffleQuote(quote))} style={{ flexShrink: 0, border: '1px solid var(--line)', background: 'var(--card)', borderRadius: 8, padding: '7px 14px', fontSize: 11, fontWeight: 600, color: 'var(--muted)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-          Câu khác
-        </button>
-      </div>
-
       <div className="dash-main-grid">
         <div>
-          <div className="dash-wotd-row" onClick={() => navigate('/vocabulary')}>
-            <div className="dash-wotd-icon">
-              <Icon.Book size={22} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="dash-wotd-word">{todaysWord.word}</div>
-              <div className="dash-wotd-detail">{todaysWord.level} · {(todaysWord.part_of_speech || '').replace('_', ' ')}</div>
-              <div className="dash-wotd-meaning">{todaysWord.meaning_vi}</div>
-            </div>
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div className="dash-wotd-example">"{todaysWord.example_en}"</div>
-              <div style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 600, marginTop: 4, whiteSpace: 'nowrap' }}>Xem thêm →</div>
-            </div>
-          </div>
-
-          <Card style={{ padding: 20, marginBottom: 20 }}>
-            <h3 className="section-sub-title" style={{ marginBottom: 14, fontSize: 14 }}>
-              <Icon.Courses size={16} /> Khóa học đang học
-            </h3>
-            {inProgress.length === 0 ? (
-              <div style={{ padding: '12px 0', textAlign: 'center' }}>
-                <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12 }}>Bạn chưa đăng ký khóa học nào.</p>
-                <Button variant="primary" size="sm" onClick={() => navigate('/courses')} label="Khám phá khóa học" />
-              </div>
-            ) : (
-              inProgress.slice(0, 3).map(course => {
-                const enroll = (() => {
-                  try {
-                    const e = localStorage.getItem('vmg_enroll_' + course.slug);
-                    return e ? JSON.parse(e) : null;
-                  } catch { return null; }
-                })();
-                const coverColor = course.category === 'classroom_english' ? 'var(--red)' : course.category === 'clil_stem' ? 'var(--blue)' : course.category === 'assessment' ? 'var(--gold)' : course.category === 'vocabulary' ? 'var(--green)' : 'var(--purple)';
-                return (
-                  <div key={course.id} className="course-row" onClick={() => navigate(`/courses/${course.slug}`)}>
-                    <div className="course-row-info">
-                      <div className="course-row-level" style={{ background: coverColor }}>{course.level}</div>
-                      <div>
-                        <div className="course-row-title">{course.title}</div>
-                        <div className="course-row-meta">{enroll.progress_pct}% hoàn thành · {course.lesson_count} bài học</div>
-                      </div>
-                    </div>
-                    <div className="progress-bar" style={{ height: 6, flex: 1, minWidth: 80 }}>
-                      <div className="progress-fill" style={{ width: `${enroll.progress_pct}%`, background: coverColor }} />
-                    </div>
-                  </div>
-                );
-              })
-            )}
-            {inProgress.length > 0 && (
-              <Button variant="ghost" size="sm" style={{ width: '100%', justifyContent: 'center', marginTop: 4 }} onClick={() => navigate('/courses')}>
-                Xem tất cả khóa học <Icon.ArrowRight size={12} />
-              </Button>
-            )}
-          </Card>
-
           {activities.length > 0 && (
             <Card style={{ padding: 20, marginBottom: 20 }}>
               <h3 className="section-sub-title" style={{ marginBottom: 14, fontSize: 14 }}>
@@ -237,6 +265,32 @@ export default function Dashboard() {
               </div>
             </Card>
           )}
+
+          <div className="dash-quote" style={{ marginTop: 16 }}>
+            <span className="dash-quote-mark">“</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="dash-quote-text">{quote.text}</div>
+              <div className="dash-quote-author">— {quote.author}</div>
+            </div>
+            <button onClick={() => setQuote(shuffleQuote(quote))} className="dash-quote-btn">
+              <Icon.Sparkles size={13} /> Câu khác
+            </button>
+          </div>
+
+          <div className="dash-wotd-row" style={{ marginTop: 16 }} onClick={() => navigate('/vocabulary')}>
+            <div className="dash-wotd-icon">
+              <Icon.Book size={22} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="dash-wotd-word">{todaysWord.word}</div>
+              <div className="dash-wotd-detail">{todaysWord.level} · {(todaysWord.part_of_speech || '').replace('_', ' ')}</div>
+              <div className="dash-wotd-meaning">{todaysWord.meaning_vi}</div>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div className="dash-wotd-example">"{todaysWord.example_en}"</div>
+              <div style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 600, marginTop: 4, whiteSpace: 'nowrap' }}>Xem thêm →</div>
+            </div>
+          </div>
 
         </div>
 
