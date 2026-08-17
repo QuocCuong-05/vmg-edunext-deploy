@@ -26,8 +26,8 @@ function shuffleQuote(exclude) {
 
 const STAT_META = [
   { key: 'courses', label: 'Khóa học', icon: Icon.Courses, accent: 'accent-red' },
-  { key: 'vocab', label: 'Từ đã lưu', icon: Icon.Book, accent: 'accent-blue' },
-  { key: 'quiz', label: 'Quiz đã làm', icon: Icon.Quiz, accent: 'accent-gold' },
+  { key: 'vocab', label: 'Từ đã lưu', icon: Icon.Book, accent: 'accent-gold' },
+  { key: 'quiz', label: 'Quiz đã làm', icon: Icon.Quiz, accent: 'accent-blue' },
 ];
 
 const CORE_FEATURES = [
