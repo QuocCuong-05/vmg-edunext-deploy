@@ -52,24 +52,44 @@ router.post('/submit', authenticate, async (req, res, next) => {
       return res.status(400).json({ error: 'quiz_set_id và answers (mảng) là bắt buộc' });
     }
 
-    const { data: questions, error } = await supabaseAdmin
+    // Lấy câu hỏi + options bằng 2 query tách có order (embed không order không ổn định
+    // -> correctMap có lúc thiếu -> chấm 0% dù trả lời đúng)
+    const { data: questions, error: qErr } = await supabaseAdmin
       .from('quiz_questions')
-      .select('id, quiz_options(is_correct)')
-      .eq('quiz_set_id', quizSetId);
-    if (error) throw error;
+      .select('id')
+      .eq('quiz_set_id', quizSetId)
+      .order('sort_order');
+    if (qErr) throw qErr;
 
+    const qids = (questions || []).map(q => q.id);
     const correctMap = {};
-    (questions || []).forEach(q => {
-      const correct = (q.quiz_options || []).find(o => o.is_correct);
-      if (correct) correctMap[q.id] = correct.id;
-    });
+    if (qids.length) {
+      const { data: options, error: oErr } = await supabaseAdmin
+        .from('quiz_options')
+        .select('id, question_id, is_correct')
+        .in('question_id', qids)
+        .order('question_id')
+        .order('sort_order');
+      if (oErr) throw oErr;
+      (options || []).forEach(o => {
+        if (o.is_correct && o.question_id && !correctMap[o.question_id]) {
+          correctMap[o.question_id] = o.id;
+        }
+      });
+    }
 
     let correct = 0;
-    const total = questions?.length || 0;
+    const total = qids.length;
     answers.forEach(a => {
       if (correctMap[a.question_id] && correctMap[a.question_id] === a.option_id) correct += 1;
     });
     const score = total ? Math.round((correct / total) * 1000) / 10 : 0;
+
+    if (correct === 0 && answers.length > 0) {
+      console.warn(`[Quiz] submit 0/${total} — answers=${answers.length} correctMap=${Object.keys(correctMap).length} sampleQ=${(answers[0]?.question_id || '').slice(0, 8)}`);
+    } else {
+      console.log(`[Quiz] submit ${correct}/${total} (${score}%) — answers=${answers.length}`);
+    }
 
     await supabaseAdmin.from('quiz_attempts').insert({
       user_id: req.user.id,
