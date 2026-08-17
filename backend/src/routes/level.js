@@ -88,7 +88,16 @@ router.post('/challenges/:id/complete', async (req, res, next) => {
       .update({ xp: newXp })
       .eq('id', user.id);
 
-    const level = Math.floor(newXp / 3000) + 1;
+    // Thang level động (QL-2) — GIỮ ĐỒNG BỘ với frontend/src/features/level/LevelPage.jsx
+    const LEVEL_THRESHOLDS = [
+      800, 1800, 3000, 4500, 6500, 9000, 12000, 15500, 19500, 24000,
+      29000, 34500, 40500, 47000, 54000, 61500, 69500, 78000, 87000,
+    ];
+    let level = 1;
+    for (const t of LEVEL_THRESHOLDS) {
+      if (newXp >= t) level++;
+      else break;
+    }
 
     res.json({ data: { xp: newXp, level, xp_earned: challenge.xp_reward } });
   } catch (err) {

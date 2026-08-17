@@ -7,7 +7,28 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { useToast } from '../../components/ui/Toast';
 
-const XP_PER_LEVEL = 3000;
+// Thang level động (QL-2): delta tăng dần — GIỮ ĐỒNG BỘ với backend/src/routes/level.js
+const LEVEL_THRESHOLDS = [
+  800, 1800, 3000, 4500, 6500, 9000, 12000, 15500, 19500, 24000,
+  29000, 34500, 40500, 47000, 54000, 61500, 69500, 78000, 87000,
+];
+
+function levelFromXp(xp) {
+  let lvl = 1;
+  for (const t of LEVEL_THRESHOLDS) {
+    if (xp >= t) lvl++;
+    else break;
+  }
+  return lvl;
+}
+
+function levelBounds(xp) {
+  const lvl = levelFromXp(xp);
+  const prev = lvl > 1 ? LEVEL_THRESHOLDS[lvl - 2] : 0;
+  const next = LEVEL_THRESHOLDS[lvl - 1] ?? prev + 5000;
+  return { lvl, prev, next, current: xp - prev, required: next - prev };
+}
+
 const CHALLENGES_KEY = 'vmg_challenges_completed';
 
 function loadCompleted() {
@@ -55,9 +76,8 @@ export default function LevelPage() {
   }, [challenges]);
 
   const totalXp = xp;
-  const level = Math.floor(totalXp / XP_PER_LEVEL) + 1;
-  const currentLevelXp = totalXp % XP_PER_LEVEL;
-  const xpProgress = (currentLevelXp / XP_PER_LEVEL) * 100;
+  const { lvl: level, current: currentLevelXp, required: xpRequired } = levelBounds(totalXp);
+  const xpProgress = Math.min(100, (currentLevelXp / xpRequired) * 100);
 
   const handleNonQuizChallenge = (c) => {
     if (completed[c.id]) return;
@@ -99,7 +119,7 @@ export default function LevelPage() {
           <div style={{ flex: 1, minWidth: 200 }}>
             <div style={{ fontSize: 18, fontWeight: 700 }}>Level {level}</div>
             <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 10 }}>
-              {currentLevelXp} / {XP_PER_LEVEL} XP to next level
+              {currentLevelXp} / {xpRequired} XP to next level
             </div>
             <div className="progress-bar" style={{ maxWidth: 400 }}>
               <div className="progress-fill" style={{ width: `${xpProgress}%` }} />
