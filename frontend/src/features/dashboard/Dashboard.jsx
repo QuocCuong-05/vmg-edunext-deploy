@@ -276,17 +276,6 @@ export default function Dashboard() {
             </Card>
           )}
 
-          <div className="dash-quote" style={{ marginTop: 16 }}>
-            <span className="dash-quote-mark">“</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="dash-quote-text">{quote.text}</div>
-              <div className="dash-quote-author">— {quote.author}</div>
-            </div>
-            <button onClick={() => setQuote(shuffleQuote(quote))} className="dash-quote-btn">
-              <Icon.Sparkles size={13} /> Câu khác
-            </button>
-          </div>
-
           <div className="dash-wotd-row" style={{ marginTop: 16 }} onClick={() => navigate('/vocabulary')}>
             <div className="dash-wotd-icon">
               <Icon.Book size={22} />
@@ -300,6 +289,17 @@ export default function Dashboard() {
               <div className="dash-wotd-example">"{todaysWord.example_en}"</div>
               <div style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 600, marginTop: 4, whiteSpace: 'nowrap' }}>Xem thêm →</div>
             </div>
+          </div>
+
+          <div className="dash-quote" style={{ marginTop: 16 }}>
+            <span className="dash-quote-mark">“</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="dash-quote-text">{quote.text}</div>
+              <div className="dash-quote-author">— {quote.author}</div>
+            </div>
+            <button onClick={() => setQuote(shuffleQuote(quote))} className="dash-quote-btn">
+              <Icon.Sparkles size={13} /> Câu khác
+            </button>
           </div>
 
         </div>
