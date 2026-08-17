@@ -7,7 +7,7 @@ import { getQuestState, dispatchAction } from '../../lib/quest-engine';
 import { getXp } from '../../lib/xp';
 import { getStreak } from '../../lib/streak';
 import { getActivities } from '../../lib/activity';
-import { levelFromXp } from '../../lib/level';
+import { levelFromXp, levelBounds } from '../../lib/level';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -138,9 +138,27 @@ export default function Dashboard() {
                 {streak} ngày
               </div>
             )}
+            <div className="dash-level-ring" onClick={() => navigate('/level')} title={`Thử thách lên cấp — còn ${Math.max(0, levelBounds(xp).required - levelBounds(xp).current)} XP nữa`}>
+              <svg width="44" height="44" viewBox="0 0 44 44">
+                <circle cx="22" cy="22" r="17" fill="none" stroke="rgba(255,255,255,.22)" strokeWidth="4" />
+                <circle
+                  cx="22" cy="22" r="17" fill="none" stroke="url(#lvlGrad)" strokeWidth="4" strokeLinecap="round"
+                  strokeDasharray={`${(Math.min(100, Math.max(0, (levelBounds(xp).current / levelBounds(xp).required) * 100)) / 100) * (2 * Math.PI * 17)} ${2 * Math.PI * 17}`}
+                  transform="rotate(-90 22 22)"
+                  style={{ transition: 'stroke-dasharray .6s ease' }}
+                />
+                <defs>
+                  <linearGradient id="lvlGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#d4a84b" />
+                    <stop offset="100%" stopColor="#b99447" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <span className="dash-level-ring-text">Lv {levelFromXp(xp)}</span>
+            </div>
             <div className="dash-xp-badge" onClick={() => navigate('/level')} title="Thử thách lên cấp" style={{ cursor: 'pointer' }}>
-              <Icon.Target size={15} />
-              Lv {levelFromXp(xp)} · {xp} XP
+              <Icon.Sparkles size={15} />
+              {xp} XP
             </div>
           </div>
         </div>
