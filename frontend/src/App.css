@@ -328,7 +328,27 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 }
 .course-hero-body { flex: 1; min-width: 0; }
 .course-hero-title { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
-.course-hero-meta { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+.course-hero-meta { font-size: 11px; color: var(--muted); margin-bottom: 9px; }
+.course-hero-progress { display: flex; align-items: center; gap: 10px; }
+.course-hero-bar {
+  flex: 1; height: 9px; border-radius: 999px;
+  background: var(--surface-hover);
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(25,37,60,.08);
+}
+.course-hero-fill {
+  height: 100%; border-radius: 999px;
+  box-shadow: 0 2px 8px -2px currentColor;
+  animation: progressGrow .85s cubic-bezier(.22,1,.36,1) both;
+}
+.course-hero-fill.done { box-shadow: 0 2px 8px -2px var(--green); }
+@keyframes progressGrow {
+  from { width: 0; }
+}
+.course-hero-pct {
+  flex-shrink: 0; min-width: 36px; text-align: right;
+  font-size: 12px; font-weight: 800; letter-spacing: -.3px;
+}
 .course-hero-btn {
   flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;
   background: var(--red); color: #fff; border: none;

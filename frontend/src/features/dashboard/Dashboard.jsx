@@ -169,7 +169,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="dash-courses-hero-list">
-            {inProgress.slice(0, 2).map(course => {
+            {inProgress.slice(0, 2).map((course, idx) => {
               const enroll = (() => {
                 try {
                   const e = localStorage.getItem('vmg_enroll_' + course.slug);
@@ -177,18 +177,26 @@ export default function Dashboard() {
                 } catch { return null; }
               })();
               const coverColor = course.category === 'classroom_english' ? 'var(--red)' : course.category === 'clil_stem' ? 'var(--blue)' : course.category === 'assessment' ? 'var(--gold)' : course.category === 'vocabulary' ? 'var(--green)' : 'var(--purple)';
+              const pct = Math.max(0, Math.min(100, enroll.progress_pct || 0));
+              const doneLessons = Math.round((pct / 100) * (course.lesson_count || 0));
               return (
                 <div key={course.id} className="course-hero-row" onClick={() => navigate(`/courses/${course.slug}`)}>
                   <div className="course-hero-cover" style={{ background: coverColor }}>{course.level}</div>
                   <div className="course-hero-body">
                     <div className="course-hero-title">{course.title}</div>
-                    <div className="course-hero-meta">{enroll.progress_pct}% hoàn thành · {course.lesson_count} bài học</div>
-                    <div className="progress-bar" style={{ height: 6 }}>
-                      <div className="progress-fill" style={{ width: `${enroll.progress_pct}%`, background: coverColor }} />
+                    <div className="course-hero-meta">Đã hoàn thành {pct}% · {doneLessons}/{course.lesson_count} bài học</div>
+                    <div className="course-hero-progress">
+                      <div className="course-hero-bar">
+                        <div
+                          className={`course-hero-fill ${pct === 100 ? 'done' : ''}`}
+                          style={{ width: `${pct}%`, background: pct === 100 ? 'var(--green)' : coverColor, animationDelay: `${idx * 180}ms` }}
+                        />
+                      </div>
+                      <span className="course-hero-pct" style={{ color: pct === 100 ? 'var(--green)' : coverColor }}>{pct}%</span>
                     </div>
                   </div>
                   <button className="course-hero-btn">
-                    Tiếp tục <Icon.ArrowRight size={14} />
+                    {pct === 100 ? 'Ôn lại' : 'Tiếp tục'} <Icon.ArrowRight size={14} />
                   </button>
                 </div>
               );
