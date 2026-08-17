@@ -32,8 +32,8 @@ const STAT_META = [
 
 const CORE_FEATURES = [
   { to: '/courses', title: 'Khóa học của tôi', desc: 'Tiếp tục hành trình học tập', icon: Icon.Courses, cls: 'core-red' },
-  { to: '/level', title: 'Thử thách lên cấp', desc: 'Chinh phục cấp độ mới', icon: Icon.Target, cls: 'core-blue' },
   { to: '/wordbook', title: 'Sổ từ của tôi', desc: 'Ôn luyện từ vựng hằng ngày', icon: Icon.Vocab, cls: 'core-gold' },
+  { to: '/level', title: 'Thử thách lên cấp', desc: 'Chinh phục cấp độ mới', icon: Icon.Target, cls: 'core-blue' },
 ];
 
 function AnimatedNumber({ value, duration = 700 }) {
