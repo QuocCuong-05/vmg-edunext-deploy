@@ -7,6 +7,7 @@ import { getQuestState, dispatchAction } from '../../lib/quest-engine';
 import { getXp } from '../../lib/xp';
 import { getStreak } from '../../lib/streak';
 import { getActivities } from '../../lib/activity';
+import { levelFromXp } from '../../lib/level';
 import { Icon } from '../../lib/icons';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -137,9 +138,9 @@ export default function Dashboard() {
                 {streak} ngày
               </div>
             )}
-            <div className="dash-xp-badge">
-              <Icon.Sparkles size={15} />
-              {xp} XP
+            <div className="dash-xp-badge" onClick={() => navigate('/level')} title="Thử thách lên cấp" style={{ cursor: 'pointer' }}>
+              <Icon.Target size={15} />
+              Lv {levelFromXp(xp)} · {xp} XP
             </div>
           </div>
         </div>
