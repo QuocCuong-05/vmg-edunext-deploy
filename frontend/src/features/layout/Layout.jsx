@@ -9,21 +9,19 @@ import { Icon } from '../../lib/icons';
 import { ToastProvider } from '../../components/ui/Toast';
 import { useMediaQuery } from '../../lib/useMediaQuery';
 
+const CORE_NAV = [
+  { to: '/courses', label: 'Khóa học của tôi', icon: Icon.Courses, color: 'var(--red)', bg: 'var(--red-bg)' },
+  { to: '/wordbook', label: 'Sổ từ của tôi', icon: Icon.Vocab, color: 'var(--gold)', bg: 'var(--gold-bg)' },
+  { to: '/level', label: 'Thử thách lên cấp', icon: Icon.Target, color: 'var(--blue)', bg: 'var(--blue-bg)' },
+  { to: '/admin/data', label: 'Quản lý dữ liệu', icon: Icon.Cog, color: 'var(--cyan)', bg: 'rgba(32,165,201,.12)', adminOnly: true },
+];
+
 const GROUPS = [
   {
-    label: 'Học tập',
-    items: [
-      { to: '/courses', label: 'Khóa học của tôi', icon: Icon.Courses },
-      { to: '/level', label: 'Thử thách lên cấp', icon: Icon.Target },
-      { to: '/wordbook', label: 'Sổ từ của tôi', icon: Icon.Vocab },
-    ],
-  },
-  {
-    label: 'Ngôn ngữ & Luyện tập',
+    label: 'Luyện tập',
     items: [
       { to: '/quiz', label: 'Luyện tập', icon: Icon.Quiz },
       { to: '/classroom', label: 'Classroom Phrases', icon: Icon.Mic },
-
     ],
   },
   {
@@ -34,7 +32,7 @@ const GROUPS = [
     ],
   },
   {
-    label: 'Tiến bộ & Cộng đồng',
+    label: 'Cộng đồng',
     items: [
       { to: '/ranking', label: 'Bảng xếp hạng', icon: Icon.Stats },
       { to: '/community', label: 'Cộng đồng', icon: Icon.BookOpen },
@@ -43,7 +41,7 @@ const GROUPS = [
     ],
   },
   {
-    label: 'Khám phá & Hỗ trợ',
+    label: 'Khám phá',
     items: [
       { to: '/blog', label: 'Kiến thức giáo dục', icon: Icon.Sparkles },
       { to: '/booking', label: 'Đặt lịch chuyên gia', icon: Icon.Calendar },
@@ -172,7 +170,43 @@ export default function Layout() {
               {!showRail && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Tổng quan</span>}
             </div>
 
-            {GROUPS.map((group, gi) => (
+            {CORE_NAV.filter(item => !item.adminOnly || user?.role === 'admin').map(item => (
+              <div
+                key={item.to}
+                onClick={() => { navigate(item.to); closeDrawer(); }}
+                title={showRail ? item.label : undefined}
+                onMouseEnter={e => { if (!isActive(item.to)) e.target.style.background = 'var(--surface)'; }}
+                onMouseLeave={e => { if (!isActive(item.to)) e.target.style.background = 'none'; }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  justifyContent: showRail ? 'center' : 'flex-start',
+                  padding: showRail ? '9px 0' : '7px 10px',
+                  borderRadius: 8, cursor: 'pointer', marginBottom: 1,
+                  fontSize: 13, fontWeight: isActive(item.to) ? 700 : 600,
+                  background: isActive(item.to) ? item.bg : 'none',
+                  color: isActive(item.to) ? item.color : 'var(--ink)',
+                  borderLeft: isActive(item.to) ? `3px solid ${item.color}` : '3px solid transparent',
+                  transition: 'all .12s', overflow: 'hidden',
+                }}
+              >
+                <span style={{
+                  width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                  background: item.bg, color: item.color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <item.icon size={16} />
+                </span>
+                {!showRail && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>}
+              </div>
+            ))}
+
+            {!showRail && <div style={{ height: 1, margin: '10px 12px', background: 'var(--line)' }} />}
+            {showRail && <div style={{ height: 1, margin: '8px 10px', background: 'var(--line)' }} />}
+
+            {GROUPS.map((group, gi) => {
+              const groupHasActive = group.items.some(it => isActive(it.to));
+              const groupOpen = !collapsed[group.label] || groupHasActive;
+              return (
               <div key={gi}>
                 {showRail ? (
                   <div style={{ height: 1, margin: '8px 10px', background: 'var(--line)' }} />
@@ -196,7 +230,7 @@ export default function Layout() {
                     {group.label}
                   </div>
                 )}
-                {!collapsed[group.label] && group.items.map(item => (
+                {groupOpen && group.items.map(item => (
                   <div
                     key={item.to}
                     onClick={() => { navigate(item.to); closeDrawer(); }}
@@ -219,57 +253,8 @@ export default function Layout() {
                   </div>
                 ))}
               </div>
-            ))}
-
-            {user?.role === 'admin' && (
-              <div>
-                {showRail ? (
-                  <div style={{ height: 1, margin: '8px 10px', background: 'var(--line)' }} />
-                ) : (
-                  <div
-                    onClick={() => toggleGroup('Quản trị')}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-                      letterSpacing: .6, color: 'var(--muted)',
-                      padding: '12px 12px 6px', cursor: 'pointer',
-                      userSelect: 'none',
-                    }}
-                  >
-                    <span style={{
-                      fontSize: 8, transition: 'transform .15s',
-                      transform: collapsed['Quản trị'] ? 'rotate(-90deg)' : 'rotate(0deg)',
-                    }}>
-                      ▾
-                    </span>
-                    Quản trị
-                  </div>
-                )}
-                {!collapsed['Quản trị'] && (
-                  <div
-                    onClick={() => { navigate('/admin/data'); closeDrawer(); }}
-                    title={showRail ? 'Quản lý dữ liệu' : undefined}
-                    onMouseEnter={e => { if (!isActive('/admin/data')) e.target.style.background = 'var(--surface)'; }}
-                    onMouseLeave={e => { if (!isActive('/admin/data')) e.target.style.background = 'none'; }}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      justifyContent: showRail ? 'center' : 'flex-start',
-                      padding: showRail ? '10px 0' : '7px 12px',
-                      borderRadius: 8, cursor: 'pointer', marginBottom: 1,
-                      fontSize: 13, fontWeight: isActive('/admin/data') ? 700 : 500,
-                      background: isActive('/admin/data') ? 'var(--red-bg)' : 'none',
-                      color: isActive('/admin/data') ? 'var(--red)' : 'var(--ink)',
-                      transition: 'all .12s', overflow: 'hidden',
-                    }}
-                  >
-                    <Icon.Cog size={18} style={{ flexShrink: 0 }} />
-                    {!showRail && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      Quản lý dữ liệu
-                    </span>}
-                  </div>
-                )}
-              </div>
-            )}
+              );
+            })}
           </nav>
 
           {/* Sidebar footer with user info — fixed at bottom */}
