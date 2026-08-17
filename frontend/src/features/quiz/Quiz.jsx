@@ -74,6 +74,41 @@ export default function Quiz() {
   const [finished, setFinished] = useState(false);
   const [started, setStarted] = useState(!!slug);
 
+  const progressKey = slug ? `vmg_quiz_progress_${slug}` : null;
+  const saveProgress = (extra) => {
+    if (!progressKey) return;
+    try {
+      localStorage.setItem(progressKey, JSON.stringify({ ...extra, savedAt: Date.now() }));
+    } catch {}
+  };
+  const clearProgress = () => {
+    if (!progressKey) return;
+    try { localStorage.removeItem(progressKey); } catch {}
+  };
+
+  // Khôi phục tiến độ/kết quả khi load lại trang
+  useEffect(() => {
+    if (!slug || loading || !quizQuestions.length) return;
+    try {
+      const raw = localStorage.getItem(`vmg_quiz_progress_${slug}`);
+      if (!raw) return;
+      const p = JSON.parse(raw);
+      if (p.finished) {
+        setResults(p.results || []);
+        setServerScore(p.serverScore ?? null);
+        setFinished(true);
+        setStarted(true);
+      } else if (p.results?.length > 0 || p.started) {
+        setCurrentQ(Math.min(p.currentQ ?? 0, Math.max(quizQuestions.length - 1, 0)));
+        setSelected(p.selected ?? null);
+        setAnswered(p.answered ?? false);
+        setResults(p.results || []);
+        setStarted(true);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, loading, quizQuestions.length]);
+
   const question = allQuestions[currentQ];
   const isLast = currentQ === allQuestions.length - 1;
 
@@ -108,7 +143,7 @@ export default function Quiz() {
     if (answered) return;
     setSelected(idx);
     setAnswered(true);
-    setResults(prev => [...prev, {
+    const entry = {
       question_id: question.id,
       option_id: question.options[idx].id,
       question: question.prompt,
@@ -116,23 +151,35 @@ export default function Quiz() {
       correct: question.options[idx].is_correct,
       correctAnswer: question.correct_answer,
       explanation: question.explanation_vi,
-    }]);
+    };
+    const nextResults = [...results, entry];
+    setResults(nextResults);
+    saveProgress({ currentQ, selected: idx, answered: true, results: nextResults, finished: false, started: true });
   };
 
   const handleNext = () => {
     if (isLast) {
       setFinished(true);
+      saveProgress({ currentQ, selected, answered, results, finished: true, started: true });
       api.quiz.submit(quizSet.id, results.map(r => ({ question_id: r.question_id, option_id: r.option_id })))
-        .then(res => { setServerScore(res?.score ?? null); trackEvent('Quiz', 'submit', `${quizSet.slug || ''} (${res?.score ?? 0}%)`); })
+        .then(res => {
+          const sc = res?.score ?? null;
+          setServerScore(sc);
+          saveProgress({ currentQ, selected, answered, results, finished: true, serverScore: sc, started: true });
+          trackEvent('Quiz', 'submit', `${quizSet.slug || ''} (${sc ?? 0}%)`);
+        })
         .catch(() => {});
     } else {
-      setCurrentQ(prev => prev + 1);
+      const nq = currentQ + 1;
+      setCurrentQ(nq);
       setSelected(null);
       setAnswered(false);
+      saveProgress({ currentQ: nq, selected: null, answered: false, results, started: true });
     }
   };
 
   const handleRestart = () => {
+    clearProgress();
     setCurrentQ(0);
     setSelected(null);
     setAnswered(false);
