@@ -33,7 +33,7 @@ const STAT_META = [
 const CORE_FEATURES = [
   { to: '/courses', title: 'Khóa học của tôi', desc: 'Tiếp tục hành trình học tập', icon: Icon.Courses, cls: 'core-red' },
   { to: '/level', title: 'Thử thách lên cấp', desc: 'Chinh phục cấp độ mới', icon: Icon.Target, cls: 'core-blue' },
-  { to: '/wordbook', title: 'Sổ từ của tôi', desc: 'Ôn luyện từ vựng hằng ngày', icon: Icon.Vocab, cls: 'core-purple' },
+  { to: '/wordbook', title: 'Sổ từ của tôi', desc: 'Ôn luyện từ vựng hằng ngày', icon: Icon.Vocab, cls: 'core-gold' },
 ];
 
 function AnimatedNumber({ value, duration = 700 }) {
@@ -176,7 +176,7 @@ export default function Dashboard() {
                   return e ? JSON.parse(e) : null;
                 } catch { return null; }
               })();
-              const coverColor = course.category === 'classroom_english' ? 'var(--red)' : course.category === 'clil_stem' ? 'var(--blue)' : course.category === 'assessment' ? 'var(--gold)' : course.category === 'vocabulary' ? 'var(--green)' : 'var(--purple)';
+              const coverColor = course.category === 'classroom_english' ? 'var(--red)' : course.category === 'clil_stem' ? 'var(--blue)' : course.category === 'assessment' ? 'var(--gold)' : course.category === 'vocabulary' ? 'var(--blue)' : 'var(--red)';
               const pct = Math.max(0, Math.min(100, enroll.progress_pct || 0));
               const doneLessons = Math.round((pct / 100) * (course.lesson_count || 0));
               return (
@@ -248,7 +248,7 @@ export default function Dashboard() {
               <div className="activity-list">
                 {activities.map(a => {
                   const icons = { lesson: Icon.Book, quiz: Icon.Quiz, quest: Icon.Target };
-                  const colors = { lesson: 'var(--blue)', quiz: 'var(--gold)', quest: 'var(--green)' };
+                  const colors = { lesson: 'var(--blue)', quiz: 'var(--gold)', quest: 'var(--gold)' };
                   const IconCmp = icons[a.type] || Icon.Clock;
                   const color = colors[a.type] || 'var(--muted)';
                   const ts = new Date(a.time);

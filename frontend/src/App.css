@@ -333,7 +333,7 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
   display: inline-flex; align-items: center; justify-content: center;
   padding: 3px 9px; border-radius: 8px;
   background: rgba(255,255,255,.94);
-  color: #3a2a5e;
+  color: var(--ink);
   border: none;
   box-shadow: 0 2px 6px rgba(0,0,0,.18);
   font-size: 11px; font-weight: 800; letter-spacing: .3px;
@@ -390,7 +390,7 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 .core-card:active { transform: translateY(-1px); }
 .core-red    { background: linear-gradient(145deg, #bd1730, #ef6577); }
 .core-blue   { background: linear-gradient(145deg, #225bc1, #69a9ef); }
-.core-purple { background: linear-gradient(145deg, #6a43aa, #a98ad9); }
+.core-gold { background: linear-gradient(145deg, #89682d, #d9b961); }
 .core-icon {
   width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
   background: rgba(255,255,255,.16); color: #fff;
