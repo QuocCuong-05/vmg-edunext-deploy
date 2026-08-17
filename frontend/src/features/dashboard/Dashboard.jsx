@@ -181,15 +181,17 @@ export default function Dashboard() {
               const doneLessons = Math.round((pct / 100) * (course.lesson_count || 0));
               return (
                 <div key={course.id} className="course-hero-row" onClick={() => navigate(`/courses/${course.slug}`)}>
-                  <div className="course-hero-cover" style={{ background: coverColor }}>{course.level}</div>
+                  <div className="course-hero-cover" style={{ background: coverColor }}>
+                    <span className="course-hero-level">{course.level}</span>
+                  </div>
                   <div className="course-hero-body">
                     <div className="course-hero-title">{course.title}</div>
-                    <div className="course-hero-meta">Đã hoàn thành {pct}% · {doneLessons}/{course.lesson_count} bài học</div>
+                    <div className="course-hero-meta">Đã hoàn thành {doneLessons}/{course.lesson_count} bài học</div>
                     <div className="course-hero-progress">
                       <div className="course-hero-bar">
                         <div
                           className={`course-hero-fill ${pct === 100 ? 'done' : ''}`}
-                          style={{ width: `${pct}%`, background: pct === 100 ? 'var(--green)' : coverColor, animationDelay: `${idx * 180}ms` }}
+                          style={{ width: `${pct}%`, background: coverColor, color: coverColor, animationDelay: `${idx * 180}ms` }}
                         />
                       </div>
                       <span className="course-hero-pct" style={{ color: pct === 100 ? 'var(--green)' : coverColor }}>{pct}%</span>
