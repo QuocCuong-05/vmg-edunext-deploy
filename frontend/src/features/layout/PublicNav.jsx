@@ -15,7 +15,6 @@ export default function PublicNav() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 13, fontWeight: 600 }}>
           <button onClick={() => navigate('/blog')} style={{ background: 'none', border: 'none', color: 'var(--ink)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Bài blog</button>
           <button onClick={() => navigate('/help')} style={{ background: 'none', border: 'none', color: 'var(--ink)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Trợ giúp</button>
-          <button onClick={() => navigate('/plus')} style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>Gói Plus</button>
         </div>
         <div className="landing-nav-actions">
           {user ? (

@@ -60,6 +60,14 @@ const FEATURES = [
   },
 ];
 
+const CAT_GRADIENT = {
+  'CLIL & Song ngữ': 'linear-gradient(135deg, #bd1730, #ef6577)',
+  'Quản lý lớp': 'linear-gradient(135deg, #225bc1, #69a9ef)',
+  'AI trong giáo dục': 'linear-gradient(135deg, #89682d, #d9b961)',
+  'Đánh giá': 'linear-gradient(135deg, #225bc1, #69a9ef)',
+  'Phát triển giáo viên': 'linear-gradient(135deg, #bd1730, #ef6577)',
+};
+
 const STEPS = [
   { n: '1', title: 'Đăng ký miễn phí', desc: 'Tạo tài khoản bằng email – bắt đầu ngay, không\u00a0cần thẻ tín dụng.' },
   { n: '2', title: 'Đánh giá năng lực', desc: 'Xác định trình độ hiện tại và nhận lộ trình học được cá nhân hóa theo nhu cầu.' },
@@ -145,33 +153,36 @@ export default function Landing() {
 
       {/* Blog */}
       {blogs.length > 0 && (
-        <section className="landing-section landing-section-alt">
+        <section className="landing-section landing-section-alt landing-section-compact">
           <div className="landing-section-inner">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: 'linear-gradient(135deg, #991b2f, #cf1838)', borderRadius: 16, padding: '20px 24px', marginBottom: 24, boxShadow: '0 6px 20px -8px rgba(153,27,47,.5)' }}>
               <div>
-                <h2 className="landing-section-title" style={{ marginBottom: 4 }}>Bài blog</h2>
-                <p className="landing-section-sub">Kiến thức và nghiên cứu ứng dụng mới nhất cho giáo viên</p>
+                <h2 className="landing-section-title" style={{ marginBottom: 4, color: '#fff', fontSize: 22 }}>Bài blog</h2>
+                <p className="landing-section-sub" style={{ color: 'rgba(255,255,255,.8)', margin: 0 }}>Kiến thức và nghiên cứu ứng dụng mới nhất cho giáo viên</p>
               </div>
-              <button onClick={() => navigate('/blog')} style={{ background: 'none', border: 'none', color: 'var(--red)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <button onClick={() => navigate('/blog')} style={{ background: 'rgba(255,255,255,.16)', border: '1.5px solid rgba(255,255,255,.5)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 999 }}>
                 Xem tất cả →
               </button>
             </div>
             <div className="blog-grid" style={{ marginTop: 24 }}>
               {blogs.map(b => (
-                <div key={b.id} className="blog-card" style={{ cursor: 'pointer', borderRadius: 'var(--radius)', overflow: 'hidden', background: 'var(--card)', border: '1px solid var(--line)', boxShadow: '0 2px 8px rgba(25,37,60,.04)' }} onClick={() => navigate(`/blog/${b.slug}`)}>
+                <div key={b.id} className="landing-blog-card" onClick={() => navigate(`/blog/${b.slug}`)}>
                   <div
+                    className="landing-blog-cover"
                     style={{
-                      height: 120,
-                      background: b.cover_url ? `url(${b.cover_url}) center/cover no-repeat` : 'linear-gradient(135deg, #1a2639, #2c4063)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,.7)',
+                      background: b.cover_url
+                        ? `url(${b.cover_url}) center/cover no-repeat`
+                        : CAT_GRADIENT[b.category] || 'linear-gradient(135deg, #1a2639, #2c4063)',
                     }}
                   >
-                    {!b.cover_url && <span style={{ fontSize: 12, fontWeight: 700 }}>{b.category || 'VMG EduNext'}</span>}
+                    {!b.cover_url && <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: .5, textTransform: 'uppercase' }}>{b.category || 'VMG EduNext'}</span>}
+                    <span className="landing-blog-date">{b.published_at ? new Date(b.published_at).toLocaleDateString('vi-VN') : ''}</span>
                   </div>
-                  <div style={{ padding: 18 }}>
+                  <div className="landing-blog-body">
                     <span className="pill" style={{ fontSize: 10, marginBottom: 10, display: 'inline-block' }}>{b.category || 'Kiến thức'}</span>
-                    <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, lineHeight: 1.4 }}>{b.title}</h3>
-                    <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>{b.excerpt}</p>
+                    <h3 className="landing-blog-title">{b.title}</h3>
+                    <p className="landing-blog-excerpt">{b.excerpt}</p>
+                    <span className="landing-blog-more">Đọc tiếp →</span>
                   </div>
                 </div>
               ))}
@@ -182,10 +193,10 @@ export default function Landing() {
 
       {/* FAQ */}
       {faq && (
-        <section className="landing-section">
+        <section className="landing-section landing-section-compact">
           <div className="landing-section-inner">
             <h2 className="landing-section-title">Câu hỏi thường gặp</h2>
-            <div className="article-content" style={{ maxWidth: 720, margin: '24px auto 0' }} dangerouslySetInnerHTML={{ __html: faq.body || '' }} />
+            <div className="help-faq" style={{ maxWidth: 720, margin: '24px auto 0' }} dangerouslySetInnerHTML={{ __html: faq.body || '' }} />
             <div style={{ textAlign: 'center', marginTop: 20 }}>
               <button onClick={() => navigate('/help')} style={{ background: 'none', border: 'none', color: 'var(--red)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 Xem trung tâm trợ giúp →
@@ -220,14 +231,13 @@ export default function Landing() {
                 Nền tảng phát triển năng lực ngoại ngữ và phương pháp giảng dạy cho giáo viên.
               </p>
               <p style={{ fontSize: 13, lineHeight: 1.6, color: 'rgba(255,255,255,.75)' }}>
-                <b style={{ color: '#fff' }}>Tập đoàn Giáo dục Việt Mỹ (VMG)</b> — 20 năm kinh nghiệm giáo dục. Phương châm: "Dạy thật – Học thật – Chất lượng thật".
+                <b style={{ color: '#fff' }}>Tập đoàn Giáo dục Việt Mỹ (VMG)</b> – <span style={{ whiteSpace: 'nowrap' }}>20 năm kinh nghiệm giáo dục.</span> Phương châm: "Dạy thật – Học thật – Chất lượng thật".
               </p>
             </div>
             <div>
               <b style={{ fontSize: 14, color: '#fff', display: 'block', marginBottom: 12 }}>Khám phá</b>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
                 <button onClick={() => navigate('/blog')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.75)', cursor: 'pointer', textAlign: 'left', padding: 0 }}>Bài blog</button>
-                <button onClick={() => navigate('/plus')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.75)', cursor: 'pointer', textAlign: 'left', padding: 0 }}>Gói Plus</button>
               </div>
             </div>
             <div>
