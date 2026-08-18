@@ -19,18 +19,24 @@ function ResizableImageView({ node, updateAttributes, selected }) {
 
   return (
     <NodeViewWrapper style={{ display: 'flex', justifyContent: 'center', margin: '14px 0' }}>
-      <img
+      <div
         ref={ref}
-        src={node.attrs.src}
-        alt={node.attrs.alt || ''}
         style={{
-          maxWidth: '100%', resize: 'both', overflow: 'hidden', borderRadius: 12,
-          outline: selected ? '2px solid var(--red)' : '2px solid transparent',
-          outlineOffset: 2,
+          resize: 'both', overflow: 'hidden', display: 'inline-block', lineHeight: 0,
+          borderRadius: 12,
+          border: selected ? '2px solid var(--red)' : '2px solid transparent',
           width: node.attrs.width || undefined,
           height: node.attrs.height || undefined,
+          maxWidth: '100%',
         }}
-      />
+      >
+        <img
+          src={node.attrs.src}
+          alt={node.attrs.alt || ''}
+          draggable={false}
+          style={{ display: 'block', width: '100%', height: 'auto', borderRadius: 10, pointerEvents: 'none' }}
+        />
+      </div>
     </NodeViewWrapper>
   );
 }
