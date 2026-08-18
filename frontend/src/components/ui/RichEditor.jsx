@@ -19,6 +19,34 @@ const TOOL = (label, onClick, active = false) => (
   </button>
 );
 
+const AlignIcon = ({ align }) => {
+  const lines =
+    align === 'left'   ? [{ x1: 2, x2: 16 }, { x1: 2, x2: 12 }, { x1: 2, x2: 14 }]
+    : align === 'right' ? [{ x1: 2, x2: 16 }, { x1: 6, x2: 16 }, { x1: 4, x2: 16 }]
+    :                      [{ x1: 2, x2: 16 }, { x1: 4, x2: 14 }, { x1: 5, x2: 13 }];
+  return (
+    <svg width="14" height="14" viewBox="0 0 18 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      {lines.map((l, i) => <line key={i} x1={l.x1} y1={2 + i * 6} x2={l.x2} y2={2 + i * 6} />)}
+    </svg>
+  );
+};
+
+const AlignBtn = ({ align, editor }) => (
+  <button
+    key={'align-' + align}
+    type="button"
+    title={`Căn ${align === 'center' ? 'giữa' : align === 'left' ? 'trái' : 'phải'}`}
+    onMouseDown={e => { e.preventDefault(); editor.chain().focus().setTextAlign(align).run(); }}
+    style={{
+      border: 'none', background: editor.isActive({ textAlign: align }) ? 'var(--red-bg)' : 'none',
+      color: editor.isActive({ textAlign: align }) ? 'var(--red)' : 'var(--ink)',
+      borderRadius: 6, padding: '5px 7px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center',
+    }}
+  >
+    <AlignIcon align={align} />
+  </button>
+);
+
 export default function RichEditor({ value, onChange, placeholder = 'Soạn nội dung...' }) {
   const fileRef = useRef(null);
 
@@ -69,9 +97,9 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
         {TOOL('• List', () => editor.chain().focus().toggleBulletList().run(), editor.isActive('bulletList'))}
         {TOOL('1. List', () => editor.chain().focus().toggleOrderedList().run(), editor.isActive('orderedList'))}
         <span style={{ width: 1, background: 'var(--line)', margin: '4px 6px' }} />
-        {TOOL('Al Trái', () => editor.chain().focus().setTextAlign('left').run(), editor.isActive({ textAlign: 'left' }))}
-        {TOOL('Al Giữa', () => editor.chain().focus().setTextAlign('center').run(), editor.isActive({ textAlign: 'center' }))}
-        {TOOL('Al Phải', () => editor.chain().focus().setTextAlign('right').run(), editor.isActive({ textAlign: 'right' }))}
+        <AlignBtn align="left" editor={editor} />
+        <AlignBtn align="center" editor={editor} />
+        <AlignBtn align="right" editor={editor} />
         <span style={{ width: 1, background: 'var(--line)', margin: '4px 6px' }} />
         {TOOL('Link', setLink)}
         {TOOL('❝ Quote', () => editor.chain().focus().toggleBlockquote().run(), editor.isActive('blockquote'))}

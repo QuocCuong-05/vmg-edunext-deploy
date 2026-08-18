@@ -76,7 +76,7 @@ function ItemForm({ type, initial, onDone, onCancel }) {
         <textarea className="admin-input" rows={2} value={form.excerpt} onChange={e => setForm({ ...form, excerpt: e.target.value })} />
       </div>
       <div style={{ marginBottom: 10 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Nội dung (soạn như Word)</label>
+        <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Nội dung</label>
         <RichEditor value={form.body} onChange={body => setForm(f => ({ ...f, body }))} />
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
