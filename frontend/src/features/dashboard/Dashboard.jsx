@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import usePersistedState from '../../lib/usePersistedState';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { api } from '../../lib/api';
@@ -60,7 +61,7 @@ export default function Dashboard() {
   const streak = useState(getStreak())[0];
   const [quote, setQuote] = useState(() => shuffleQuote());
 
-  const [tab, setTab] = useState('daily');
+  const [tab, setTab] = usePersistedState('vmg_dash_tab', 'daily');
   const [questState, setQuestState] = useState(getQuestState());
   const [xp, setXp] = useState(getXp());
   const [activities, setActivities] = useState(getActivities(5));

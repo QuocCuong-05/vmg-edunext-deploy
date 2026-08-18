@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import usePersistedState from '../../lib/usePersistedState';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Dialog from '../../components/ui/Dialog';
@@ -33,7 +34,7 @@ const ICON_MAP = {
 
 export default function RewardsPage() {
   const { isPlus } = useAuth();
-  const [tab, setTab] = useState('shop');
+  const [tab, setTab] = usePersistedState('vmg_rewards_tab', 'shop');
   const [xp, setXpState] = useState(getXp);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);

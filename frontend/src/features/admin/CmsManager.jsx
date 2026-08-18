@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import usePersistedState from '../../lib/usePersistedState';
 import { api } from '../../lib/api';
 import RichEditor from '../../components/ui/RichEditor';
 import Button from '../../components/ui/Button';
@@ -95,7 +96,7 @@ function ItemForm({ type, initial, onDone, onCancel }) {
 }
 
 export default function CmsManager() {
-  const [tab, setTab] = useState('blog');
+  const [tab, setTab] = usePersistedState('vmg_cms_tab', 'blog');
   const [list, setList] = useState([]);
   const [editing, setEditing] = useState(null);
   const [policyVersions, setPolicyVersions] = useState([]);

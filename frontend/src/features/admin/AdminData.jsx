@@ -4,6 +4,7 @@ import { api } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { Icon } from '../../lib/icons';
 import CmsManager from './CmsManager';
+import usePersistedState from '../../lib/usePersistedState';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -109,7 +110,7 @@ const badge = (status) => {
 
 export default function AdminData() {
   const { user } = useAuth();
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = usePersistedState('vmg_admin_tab', 'overview');
 
   const [dashboard, setDashboard] = useState(null);
 
@@ -123,7 +124,7 @@ export default function AdminData() {
   const fileRef = useRef(null);
 
   const [orders, setOrders] = useState([]);
-  const [orderFilter, setOrderFilter] = useState('all');
+  const [orderFilter, setOrderFilter] = usePersistedState('vmg_admin_order_filter', 'all');
   const [ordersPage, setOrdersPage] = useState(1);
   const [ordersMeta, setOrdersMeta] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
@@ -133,7 +134,7 @@ export default function AdminData() {
   const [settings, setSettings] = useState({});
   const [activateForm, setActivateForm] = useState({ userId: '', period: '1' });
 
-  const [traceSub, setTraceSub] = useState('activity');
+  const [traceSub, setTraceSub] = usePersistedState('vmg_admin_trace_sub', 'activity');
   const [traceFilters, setTraceFilters] = useState({ email: '', ip: '', event: '', from: '', to: '' });
   const [tracePage, setTracePage] = useState(1);
   const [traceData, setTraceData] = useState(null);
