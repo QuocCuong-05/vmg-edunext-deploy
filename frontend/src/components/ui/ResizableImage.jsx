@@ -10,8 +10,7 @@ function ResizableImageView({ node, updateAttributes, selected }) {
     if (!el) return;
     const observer = new MutationObserver(() => {
       const w = el.style.width;
-      const h = el.style.height;
-      if (w || h) updateAttributes({ width: w, height: h });
+      if (w) updateAttributes({ width: w });
     });
     observer.observe(el, { attributes: true, attributeFilter: ['style'] });
     return () => observer.disconnect();
@@ -22,11 +21,10 @@ function ResizableImageView({ node, updateAttributes, selected }) {
       <div
         ref={ref}
         style={{
-          resize: 'both', overflow: 'hidden', display: 'inline-block', lineHeight: 0,
+          resize: 'horizontal', overflow: 'hidden', display: 'inline-block', lineHeight: 0,
           borderRadius: 12,
           border: selected ? '2px solid var(--red)' : '2px solid transparent',
           width: node.attrs.width || undefined,
-          height: node.attrs.height || undefined,
           maxWidth: '100%',
         }}
       >
