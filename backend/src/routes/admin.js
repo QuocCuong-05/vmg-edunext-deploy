@@ -538,4 +538,198 @@ router.get('/trace/stats', async (_req, res, next) => {
   }
 });
 
+// ============================================================
+// CMS — quản lý nội dung (blog/help/policy + version)
+// ============================================================
+
+// GET /api/admin/cms/:type — danh sách (cả draft)
+router.get('/cms/:type', async (req, res, next) => {
+  try {
+    const type = req.params.type;
+    if (!['blog', 'help', 'policy'].includes(type)) {
+      return res.status(400).json({ error: 'type không hợp lệ' });
+    }
+    const { data, error } = await supabaseAdmin
+      .from('content_items')
+      .select('id, type, slug, title, excerpt, category, cover_url, author, status, version, is_active, updated_at, published_at')
+      .eq('type', type)
+      .order('updated_at', { ascending: false });
+    if (error) throw error;
+    res.json({ data: data || [] });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/admin/cms/:type/:slug — chi tiết (policy: tất cả version)
+router.get('/cms/:type/:slug', async (req, res, next) => {
+  try {
+    const { type, slug } = req.params;
+    let query = supabaseAdmin
+      .from('content_items')
+      .select('*')
+      .eq('type', type)
+      .eq('slug', slug)
+      .order('version', { ascending: false });
+    if (type !== 'policy') query = query.limit(1);
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json({ data: data || [] });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/admin/cms/:type — tạo mới (blog/help: version 1; policy: bản đầu)
+router.post('/cms/:type', async (req, res, next) => {
+  try {
+    const type = req.params.type;
+    if (!['blog', 'help', 'policy'].includes(type)) {
+      return res.status(400).json({ error: 'type không hợp lệ' });
+    }
+    const { slug, title, excerpt, body, category, cover_url, author, status } = req.body;
+    if (!slug || !title) return res.status(400).json({ error: 'slug và title là bắt buộc' });
+
+    const row = {
+      type,
+      slug,
+      title,
+      excerpt: excerpt || '',
+      body: body || '',
+      category: category || '',
+      cover_url: cover_url || null,
+      author: author || null,
+      status: status === 'published' ? 'published' : 'draft',
+      version: 1,
+      is_active: true,
+      published_at: status === 'published' ? new Date().toISOString() : null,
+      created_by: req.user.id,
+    };
+    const { data, error } = await supabaseAdmin.from('content_items').insert(row).select('*').single();
+    if (error) throw error;
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/admin/cms/:type/:slug — cập nhật blog/help (overwrite bản 1)
+router.put('/cms/:type/:slug', async (req, res, next) => {
+  try {
+    const { type, slug } = req.params;
+    const { title, excerpt, body, category, cover_url, author, status } = req.body;
+    const patch = {};
+    if (title !== undefined) patch.title = title;
+    if (excerpt !== undefined) patch.excerpt = excerpt;
+    if (body !== undefined) patch.body = body;
+    if (category !== undefined) patch.category = category;
+    if (cover_url !== undefined) patch.cover_url = cover_url;
+    if (author !== undefined) patch.author = author;
+    if (status !== undefined) patch.status = status === 'published' ? 'published' : 'draft';
+    if (status === 'published' && patch.status === 'published') {
+      patch.published_at = new Date().toISOString();
+    }
+    patch.updated_at = new Date().toISOString();
+
+    const { data, error } = await supabaseAdmin
+      .from('content_items')
+      .update(patch)
+      .eq('type', type)
+      .eq('slug', slug)
+      .eq('version', 1)
+      .select('*')
+      .single();
+    if (error) throw error;
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/admin/cms/:type/:slug — xóa blog/help (policy: xóa tất cả version)
+router.delete('/cms/:type/:slug', async (req, res, next) => {
+  try {
+    const { type, slug } = req.params;
+    let query = supabaseAdmin.from('content_items').delete().eq('type', type).eq('slug', slug);
+    if (type !== 'policy') query = query.eq('version', 1);
+    const { data, error } = await query.select('id');
+    if (error) throw error;
+    res.json({ ok: true, deleted: data?.length || 0 });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/admin/cms/policy/:slug/version — tạo bản cập nhật chính sách mới (bump)
+router.post('/cms/policy/:slug/version', async (req, res, next) => {
+  try {
+    const slug = req.params.slug;
+    const { title, excerpt, body } = req.body;
+    if (!body) return res.status(400).json({ error: 'body là bắt buộc' });
+
+    const { data: current } = await supabaseAdmin
+      .from('content_items')
+      .select('*')
+      .eq('type', 'policy')
+      .eq('slug', slug)
+      .eq('is_active', true)
+      .order('version', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const base = current || {};
+    const nextVersion = (base.version || 0) + 1;
+
+    const { data, error } = await supabaseAdmin.from('content_items').insert({
+      type: 'policy',
+      slug,
+      title: title || base.title || 'Chính sách',
+      excerpt: excerpt ?? base.excerpt,
+      body,
+      category: 'policy',
+      author: base.author || null,
+      status: 'published',
+      version: nextVersion,
+      is_active: true,
+      published_at: new Date().toISOString(),
+      created_by: req.user.id,
+    }).select('*').single();
+    if (error) throw error;
+
+    // Deactivate bản cũ
+    await supabaseAdmin
+      .from('content_items')
+      .update({ is_active: false })
+      .eq('type', 'policy')
+      .eq('slug', slug)
+      .neq('id', data.id);
+
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/admin/cms-upload — upload ảnh (cover + trong bài) → storage cms-images
+router.post('/cms-upload', async (req, res, next) => {
+  try {
+    const { file_b64, filename, content_type } = req.body;
+    if (!file_b64 || !filename) return res.status(400).json({ error: 'file_b64 và filename là bắt buộc' });
+    const buffer = Buffer.from(file_b64, 'base64');
+    if (buffer.length > 8 * 1024 * 1024) return res.status(400).json({ error: 'Ảnh tối đa 8MB' });
+
+    const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `${Date.now()}-${safeName}`;
+    const { error } = await supabaseAdmin.storage
+      .from('cms-images')
+      .upload(path, buffer, { contentType: content_type || 'image/png', upsert: false });
+    if (error) throw error;
+
+    const { data: pubUrl } = supabaseAdmin.storage.from('cms-images').getPublicUrl(path);
+    res.json({ data: { url: pubUrl.publicUrl } });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

@@ -353,7 +353,7 @@ export default function Layout() {
               <b>Hỗ trợ</b>
               <a onClick={() => navigate('/booking')}>Đặt lịch chuyên gia</a>
               <a onClick={() => navigate('/vimi')}>Hỏi ViMi</a>
-              <a style={{ cursor: 'pointer' }} onClick={() => alert('Trung tâm trợ giúp')}>Trung tâm trợ giúp</a>
+              <a style={{ cursor: 'pointer' }} onClick={() => navigate('/help')}>Trung tâm trợ giúp</a>
             </div>
             <div>
               <b>VMG English</b>

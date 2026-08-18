@@ -1,8 +1,20 @@
-import { useEffect } from 'react';
-import { PolicyContent, POLICIES } from './PolicyPage';
+import { useEffect, useState } from 'react';
+import { PolicyContent } from './PolicyPage';
+import { api } from '../../lib/api';
 
 export default function PolicyModal({ slug, onClose }) {
-  const policy = POLICIES[slug];
+  const [policy, setPolicy] = useState(null);
+
+  useEffect(() => {
+    api.cms.policyActive(slug).then(p => {
+      if (p) {
+        setPolicy({
+          ...p,
+          updated: p.updated_at ? new Date(p.updated_at).toLocaleDateString('vi-VN', { month: '2-digit', year: 'numeric' }) : '',
+        });
+      }
+    }).catch(() => {});
+  }, [slug]);
 
   useEffect(() => {
     const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };

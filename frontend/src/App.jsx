@@ -25,6 +25,8 @@ import RankingPage from './features/ranking/RankingPage';
 import CommunityPage from './features/community/CommunityPage';
 import UserProfilePage from './features/community/UserProfilePage';
 import BlogPage from './features/blog/BlogPage';
+import BlogPostPage from './features/blog/BlogPostPage';
+import HelpPage from './features/help/HelpPage';
 import BookingPage from './features/booking/BookingPage';
 import RewardsPage from './features/rewards/RewardsPage';
 import PlusPage from './features/plus/PlusPage';
@@ -61,6 +63,9 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/order-approve/:orderId" element={<OrderApprovePage />} />
       <Route path="/policy/:slug" element={<PolicyPage />} />
+      <Route path="/blog" element={<BlogPage />} />
+      <Route path="/blog/:slug" element={<BlogPostPage />} />
+      <Route path="/help" element={<HelpPage />} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/courses" element={<Courses />} />
@@ -80,7 +85,6 @@ export default function App() {
         <Route path="/ranking" element={<RankingPage />} />
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/profile/:userId" element={<UserProfilePage />} />
-        <Route path="/blog" element={<BlogPage />} />
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/rewards" element={<RewardsPage />} />
         <Route path="/plus" element={<PlusPage />} />

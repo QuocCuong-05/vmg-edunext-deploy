@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../auth/AuthContext';
+import { api } from '../../lib/api';
+import PublicNav from '../layout/PublicNav';
 
 const FEATURES = [
   {
@@ -66,35 +68,21 @@ const STEPS = [
 
 export default function Landing() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const [blogs, setBlogs] = useState([]);
+  const [faq, setFaq] = useState(null);
+
+  useEffect(() => {
+    api.cms.list('blog').then(list => setBlogs((list || []).slice(0, 3))).catch(() => {});
+    api.cms.list('help').then(list => {
+      const f = (list || []).find(a => a.slug === 'faq');
+      if (f) setFaq(f);
+    }).catch(() => {});
+  }, []);
 
   return (
     <div className="landing">
       {/* Nav */}
-      <nav className="landing-nav">
-        <div className="landing-nav-inner">
-          <div className="landing-logo">
-            <img src="/vmg.png" alt="VMG" style={{ height: 22 }} />
-            <span className="landing-logo-text"><span style={{ whiteSpace: 'nowrap' }}>VMG EduNext</span></span>
-          </div>
-          <div className="landing-nav-actions">
-            {user ? (
-              <button className="btn btn-primary btn-sm" onClick={() => navigate('/dashboard')}>
-                Vào Dashboard
-              </button>
-            ) : (
-              <>
-                <button className="btn btn-outline btn-sm" onClick={() => navigate('/login')}>
-                  Đăng nhập
-                </button>
-                <button className="btn btn-primary btn-sm" onClick={() => navigate('/login?signup=1')}>
-                  Đăng ký miễn phí
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </nav>
+      <PublicNav />
 
       {/* Hero */}
       <section className="landing-hero">
@@ -155,6 +143,58 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Blog */}
+      {blogs.length > 0 && (
+        <section className="landing-section landing-section-alt">
+          <div className="landing-section-inner">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <div>
+                <h2 className="landing-section-title" style={{ marginBottom: 4 }}>Bài blog</h2>
+                <p className="landing-section-sub">Kiến thức và nghiên cứu ứng dụng mới nhất cho giáo viên</p>
+              </div>
+              <button onClick={() => navigate('/blog')} style={{ background: 'none', border: 'none', color: 'var(--red)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                Xem tất cả →
+              </button>
+            </div>
+            <div className="blog-grid" style={{ marginTop: 24 }}>
+              {blogs.map(b => (
+                <div key={b.id} className="blog-card" style={{ cursor: 'pointer', borderRadius: 'var(--radius)', overflow: 'hidden', background: 'var(--card)', border: '1px solid var(--line)', boxShadow: '0 2px 8px rgba(25,37,60,.04)' }} onClick={() => navigate(`/blog/${b.slug}`)}>
+                  <div
+                    style={{
+                      height: 120,
+                      background: b.cover_url ? `url(${b.cover_url}) center/cover no-repeat` : 'linear-gradient(135deg, #1a2639, #2c4063)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,.7)',
+                    }}
+                  >
+                    {!b.cover_url && <span style={{ fontSize: 12, fontWeight: 700 }}>{b.category || 'VMG EduNext'}</span>}
+                  </div>
+                  <div style={{ padding: 18 }}>
+                    <span className="pill" style={{ fontSize: 10, marginBottom: 10, display: 'inline-block' }}>{b.category || 'Kiến thức'}</span>
+                    <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, lineHeight: 1.4 }}>{b.title}</h3>
+                    <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>{b.excerpt}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* FAQ */}
+      {faq && (
+        <section className="landing-section">
+          <div className="landing-section-inner">
+            <h2 className="landing-section-title">Câu hỏi thường gặp</h2>
+            <div className="article-content" style={{ maxWidth: 720, margin: '24px auto 0' }} dangerouslySetInnerHTML={{ __html: faq.body || '' }} />
+            <div style={{ textAlign: 'center', marginTop: 20 }}>
+              <button onClick={() => navigate('/help')} style={{ background: 'none', border: 'none', color: 'var(--red)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                Xem trung tâm trợ giúp →
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* CTA */}
       <section className="landing-cta">
         <div className="landing-cta-inner">
@@ -168,8 +208,49 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="landing-footer">
-        <p>© 2026 VMG EduNext – Nền tảng phát triển năng lực song ngữ & STEM cho giáo viên.</p>
+      <footer style={{ background: '#12233d', color: 'rgba(255,255,255,.85)', padding: '48px 0 24px', marginTop: 0 }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1.4fr', gap: 32, marginBottom: 32 }} className="landing-footer-grid">
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <img src="/vmg.png" alt="VMG" style={{ height: 26 }} />
+                <b style={{ fontSize: 16, color: '#fff' }}>VMG EduNext</b>
+              </div>
+              <p style={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(255,255,255,.75)', marginBottom: 10 }}>
+                Nền tảng phát triển năng lực ngoại ngữ và phương pháp giảng dạy cho giáo viên.
+              </p>
+              <p style={{ fontSize: 13, lineHeight: 1.6, color: 'rgba(255,255,255,.75)' }}>
+                <b style={{ color: '#fff' }}>Tập đoàn Giáo dục Việt Mỹ (VMG)</b> — 20 năm kinh nghiệm giáo dục. Phương châm: "Dạy thật – Học thật – Chất lượng thật".
+              </p>
+            </div>
+            <div>
+              <b style={{ fontSize: 14, color: '#fff', display: 'block', marginBottom: 12 }}>Khám phá</b>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
+                <button onClick={() => navigate('/blog')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.75)', cursor: 'pointer', textAlign: 'left', padding: 0 }}>Bài blog</button>
+                <button onClick={() => navigate('/plus')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.75)', cursor: 'pointer', textAlign: 'left', padding: 0 }}>Gói Plus</button>
+              </div>
+            </div>
+            <div>
+              <b style={{ fontSize: 14, color: '#fff', display: 'block', marginBottom: 12 }}>Hỗ trợ</b>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
+                <button onClick={() => navigate('/help')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.75)', cursor: 'pointer', textAlign: 'left', padding: 0 }}>Trung tâm trợ giúp</button>
+                <button onClick={() => navigate('/policy/chinh-sach-bao-mat')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.75)', cursor: 'pointer', textAlign: 'left', padding: 0 }}>Chính sách bảo mật</button>
+              </div>
+            </div>
+            <div>
+              <b style={{ fontSize: 14, color: '#fff', display: 'block', marginBottom: 12 }}>Liên hệ</b>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5, color: 'rgba(255,255,255,.75)', lineHeight: 1.6 }}>
+                <div><b style={{ color: '#fff' }}>Trụ sở chính</b><br />Phòng L17-11, Tầng 17, Tòa nhà Vincom Center<br />72 Lê Thánh Tôn, P. Bến Nghé, Q.1, TP.HCM</div>
+                <div><b style={{ color: '#fff' }}>Văn phòng đại diện</b><br />E99 Đường Võ Thị Sáu, Khu phố 7<br />Phường Trấn Biên, TP. Biên Hòa, Đồng Nai</div>
+                <div><b style={{ color: '#fff' }}>Điện thoại</b> · 090 697 88 98</div>
+                <div><b style={{ color: '#fff' }}>Email</b> · hotro@vmg.edu.vn</div>
+              </div>
+            </div>
+          </div>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,.15)', paddingTop: 16, fontSize: 12, color: 'rgba(255,255,255,.5)' }}>
+            © 2026 VMG EduNext – Nền tảng phát triển năng lực song ngữ & STEM cho giáo viên.
+          </div>
+        </div>
       </footer>
     </div>
   );

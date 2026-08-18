@@ -4,6 +4,8 @@ import { syncXp, setPlusFlag } from '../../lib/xp';
 import { validatePassword } from '../../lib/password';
 import { api } from '../../lib/api';
 import { trackEvent } from '../../lib/ga';
+import { CONSENT_ITEMS } from '../../lib/consent';
+import ConsentReconsentModal from './ConsentReconsentModal';
 
 const AuthContext = createContext(null);
 
@@ -12,6 +14,33 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [reconsentPolicy, setReconsentPolicy] = useState(null);
+
+  async function checkReconsent(token) {
+    try {
+      const [activePolicy, consentsData] = await Promise.all([
+        api.cms.policyActive('chinh-sach-bao-mat').catch(() => null),
+        api.auth.consents().catch(() => null),
+      ]);
+      if (!activePolicy) return;
+      const list = consentsData?.data || [];
+      const serviceConsent = list.find(c => c.policy_key === 'service');
+      if (!serviceConsent || Number(serviceConsent.version) < Number(activePolicy.version)) {
+        setReconsentPolicy(activePolicy);
+      }
+    } catch {}
+  }
+
+  async function saveReconsent(consents) {
+    if (!reconsentPolicy) return;
+    await api.auth.consent(CONSENT_ITEMS.map(c => ({ key: c.key, version: reconsentPolicy.version, accepted: consents[c.key] })));
+    setReconsentPolicy(null);
+  }
+
+  async function declineReconsent() {
+    setReconsentPolicy(null);
+    await logout();
+  }
 
   function applyUser(data) {
     setPlusFlag(data?.user?.plus?.active);
@@ -58,6 +87,7 @@ export function AuthProvider({ children }) {
         const data = await res.json();
         applyUser(data);
         localStorage.setItem('vmg_token', session.access_token);
+        checkReconsent(session.access_token);
         syncXp();
         await sendPendingConsent();
         api.auth.sessionTouch().catch(() => {});
@@ -108,6 +138,7 @@ export function AuthProvider({ children }) {
 
     const meData = await meRes.json();
     applyUser(meData);
+    checkReconsent(data.session.access_token);
     syncXp();
     await sendPendingConsent();
     api.auth.sessionTouch().catch(() => {});
@@ -115,7 +146,7 @@ export function AuthProvider({ children }) {
     return meData.user;
   }, []);
 
-  const signup = useCallback(async (email, password, full_name, school, ward) => {
+  const signup = useCallback(async (email, password, full_name, school, ward, consents = null) => {
     const v = validatePassword(password);
     if (!v.ok) {
       throw new Error('Mật khẩu yếu — cần: ' + v.failed.join(', '));
@@ -127,7 +158,7 @@ export function AuthProvider({ children }) {
     const res = await fetch(`${API_BASE}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, full_name, school, ward }),
+      body: JSON.stringify({ email, password, full_name, school, ward, consents }),
     });
 
     if (!res.ok) {
@@ -158,6 +189,7 @@ export function AuthProvider({ children }) {
 
     const meData = await meRes.json();
     applyUser(meData);
+    checkReconsent(data.session.access_token);
     syncXp();
     trackEvent('Auth', 'signup', email);
     return meData.user;
@@ -201,6 +233,9 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{ user, loading, login, signup, logout, refreshUser, consumeAiUsage, isPlus }}>
       {children}
+      {reconsentPolicy && (
+        <ConsentReconsentModal policy={reconsentPolicy} onSave={saveReconsent} onDecline={declineReconsent} />
+      )}
     </AuthContext.Provider>
   );
 }

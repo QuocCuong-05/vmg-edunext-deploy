@@ -9,7 +9,7 @@ import {
   BiUser, BiMoon, BiSun, BiGlobe, BiCog, BiLogOut, BiHeart,
   BiDotsVerticalRounded, BiFlag, BiTrash, BiSolidFlame,
   BiBookmark, BiSolidBookmark, BiMenu,
-  BiDiamond,
+  BiDiamond, BiSearch,
 } from 'react-icons/bi';
 
 export const Icon = {
@@ -64,4 +64,5 @@ export const Icon = {
   Circle: ({ size }) => <BiCircle size={size || 20} />,
   Menu: ({ size }) => <BiMenu size={size || 20} />,
   Gem: ({ size }) => <BiDiamond size={size || 20} />,
+  Search: ({ size }) => <BiSearch size={size || 20} />,
 };

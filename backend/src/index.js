@@ -18,6 +18,7 @@ import rewardsRoutes from './routes/rewards.js';
 import levelRoutes from './routes/level.js';
 import adminRoutes from './routes/admin.js';
 import orderRoutes from './routes/orders.js';
+import cmsRoutes from './routes/cms.js';
 import videoRoutes from './routes/videos.js';
 import { authenticate, requireAdmin } from './middleware/auth.js';
 
@@ -46,6 +47,7 @@ app.use('/api/rewards', rewardsRoutes);
 app.use('/api/level', levelRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/videos', videoRoutes);
+app.use('/api/cms', cmsRoutes);
 app.use('/api/admin', authenticate, requireAdmin, adminRoutes);
 
 app.use((err, _req, res, _next) => {

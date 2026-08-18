@@ -89,7 +89,13 @@ export default function Login() {
     }
     setBusy(true);
     try {
-      await signup(email, password, fullName, school, ward);
+      const requiredMissing = CONSENT_ITEMS.filter(c => c.required && !consents[c.key]);
+      if (requiredMissing.length) {
+        setError('Vui lòng đồng ý các mục bắt buộc để tạo tài khoản: ' + requiredMissing.map(c => c.title).join(', '));
+        setBusy(false);
+        return;
+      }
+      await signup(email, password, fullName, school, ward, consents);
       try {
         await api.auth.consent(CONSENT_ITEMS.map(c => ({ key: c.key, version: 1, accepted: consents[c.key] })));
         trackEvent('Consent', 'signup_consent', String(CONSENT_ITEMS.filter(c => consents[c.key]).length));
@@ -246,7 +252,34 @@ export default function Login() {
 
             {!isLogin && !isForgot && step === 2 && (
               <div style={{ marginBottom: 16 }}>
-                {CONSENT_ITEMS.map(item => (
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--red)', textTransform: 'uppercase', letterSpacing: .5, marginBottom: 8 }}>
+                  Bắt buộc — cần thiết để vận hành dịch vụ
+                </div>
+                {CONSENT_ITEMS.filter(c => c.required).map(item => (
+                  <label
+                    key={item.key}
+                    style={{
+                      display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer',
+                      padding: '12px 14px', borderRadius: 12, marginBottom: 8,
+                      border: `1px solid ${consents[item.key] ? 'var(--red)' : 'var(--line)'}`, background: consents[item.key] ? 'var(--red-bg)' : 'var(--surface-hover)',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!consents[item.key]}
+                      onChange={e => setConsents({ ...consents, [item.key]: e.target.checked })}
+                      style={{ marginTop: 3, flexShrink: 0, width: 16, height: 16 }}
+                    />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <b style={{ fontSize: 13 }}>{item.title}</b>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginTop: 3 }}>{item.desc}</div>
+                    </span>
+                  </label>
+                ))}
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: .5, margin: '14px 0 8px' }}>
+                  Tùy chọn
+                </div>
+                {CONSENT_ITEMS.filter(c => !c.required).map(item => (
                   <label
                     key={item.key}
                     style={{

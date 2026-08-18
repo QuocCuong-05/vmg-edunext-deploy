@@ -22,9 +22,18 @@ const DISPOSABLE_DOMAINS = new Set([
 
 router.post('/signup', signupLimiter, async (req, res) => {
   try {
-    const { email, password, full_name, school, ward } = req.body;
+    const { email, password, full_name, school, ward, consents } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
+    }
+    const REQUIRED_CONSENTS = ['service', 'support', 'security'];
+    const ticked = Array.isArray(consents) ? consents : [];
+    const missingRequired = REQUIRED_CONSENTS.filter(k => !ticked.includes(k));
+    if (missingRequired.length) {
+      return res.status(400).json({
+        error: 'Vui lòng đồng ý các mục bắt buộc (Cung cấp dịch vụ, Hỗ trợ, An ninh & tuân thủ pháp luật) để tạo tài khoản',
+        missing_required: missingRequired,
+      });
     }
     const emailNorm = String(email).trim().toLowerCase();
     if (!EMAIL_RULE.test(emailNorm)) {

@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthContext';
 import { api } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { Icon } from '../../lib/icons';
+import CmsManager from './CmsManager';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -92,6 +93,7 @@ const TABS = [
   { key: 'plus', label: 'Tài khoản Plus', icon: Icon.Gem },
   { key: 'courses', label: 'Khóa Premium', icon: Icon.Courses },
   { key: 'trace', label: 'Truy vết', icon: Icon.Globe },
+  { key: 'content', label: 'Nội dung', icon: Icon.Pen },
   { key: 'settings', label: 'Cấu hình', icon: Icon.Cog },
 ];
 
@@ -1003,6 +1005,8 @@ export default function AdminData() {
           )}
         </div>
       )}
+
+      {tab === 'content' && <CmsManager />}
 
       {tab === 'settings' && (
         <div className="admin-panel" style={{ maxWidth: 520 }}>

@@ -443,6 +443,35 @@ export const api = {
   videos: {
     token: async (lessonId) => request(`/videos/token/${lessonId}`),
   },
+  cms: {
+    list: async (type, category) => {
+      const q = category ? `?category=${encodeURIComponent(category)}` : '';
+      return (await request(`/cms/${type}${q}`)) || [];
+    },
+    get: async (type, slug) => (await request(`/cms/${type}/${slug}`)) || null,
+    policyActive: async (slug) => (await request(`/cms/policy/${slug}/active`)) || null,
+    adminList: async (type) => (await request(`/admin/cms/${type}`)) || [],
+    adminGet: async (type, slug) => (await request(`/admin/cms/${type}/${slug}`)) || [],
+    adminCreate: async (type, payload) =>
+      await request(`/admin/cms/${type}`, { method: 'POST', body: JSON.stringify(payload) }),
+    adminUpdate: async (type, slug, payload) =>
+      await request(`/admin/cms/${type}/${slug}`, { method: 'PUT', body: JSON.stringify(payload) }),
+    adminDelete: async (type, slug) => request(`/admin/cms/${type}/${slug}`, { method: 'DELETE' }),
+    adminNewVersion: async (slug, payload) =>
+      await request(`/admin/cms/policy/${slug}/version`, { method: 'POST', body: JSON.stringify(payload) }),
+    upload: async (file) => {
+      const b64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      return (await request('/admin/cms-upload', {
+        method: 'POST',
+        body: JSON.stringify({ file_b64: b64, filename: file.name, content_type: file.type || 'image/png' }),
+      })).url;
+    },
+  },
   unlock: {
     courseIds: async (userId) => {
       const { data, error } = await supabase.from('enrollments').select('course_id').eq('user_id', userId);

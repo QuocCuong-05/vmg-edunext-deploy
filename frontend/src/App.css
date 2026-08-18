@@ -204,6 +204,9 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 /* Main content */
 .main { padding: 28px 32px 48px; min-width: 0; }
 
+/* Trang public ngoài Layout (blog/help/policy) — đồng bộ padding với .main */
+.main-public { padding: 28px 24px 48px; min-width: 0; overflow: hidden; }
+
 /* Page title */
 .page-title { margin-bottom: 28px; }
 .page-title h1 { font-size: 26px; font-weight: 800; letter-spacing: -.4px; }
