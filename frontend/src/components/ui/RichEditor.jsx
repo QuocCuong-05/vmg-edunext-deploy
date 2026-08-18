@@ -1,7 +1,5 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import { useRef } from 'react';
 import { api } from '../../lib/api';
@@ -25,17 +23,15 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Underline,
-      Link.configure({ openOnClick: false, autolink: true }),
+      StarterKit.configure({ link: { openOnClick: false, autolink: true } }),
       Image.configure({ inline: false, allowBase64: false }),
     ],
     content: value || '',
     onUpdate: ({ editor }) => onChange?.(editor.getHTML()),
     editorProps: {
       attributes: {
-        class: 'rich-editor-area',
-        style: 'min-height: 260px; outline: none; font-size: 14px; line-height: 1.7;',
+        class: 'rich-editor-area article-content',
+        style: 'min-height: 260px; outline: none; font-size: 15px; line-height: 1.85; max-width: 780px; margin: 0 auto;',
       },
     },
   });

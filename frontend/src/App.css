@@ -907,6 +907,19 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 }
 .help-faq a { color: var(--red); }
 
+/* Editor TipTap — hiển thị như bài đăng thật */
+.rich-editor-area p { margin: 0 0 14px; }
+.rich-editor-area h2 { font-size: 20px; font-weight: 800; margin: 24px 0 10px; letter-spacing: -.3px; }
+.rich-editor-area h3 { font-size: 17px; font-weight: 700; margin: 20px 0 8px; }
+.rich-editor-area ul, .rich-editor-area ol { padding-left: 22px; margin: 0 0 14px; }
+.rich-editor-area li { margin-bottom: 6px; }
+.rich-editor-area img { max-width: 100%; border-radius: 12px; margin: 14px 0; }
+.rich-editor-area blockquote {
+  border-left: 3px solid var(--red); margin: 14px 0; padding: 8px 16px;
+  color: var(--muted); font-style: italic; background: var(--surface-hover); border-radius: 0 10px 10px 0;
+}
+.rich-editor-area a { color: var(--red); }
+
 /* Skeleton loading */
 .skeleton { background: linear-gradient(90deg, var(--surface) 25%, var(--line) 50%, var(--surface) 75%); background-size: 200% 100%; animation: shimmer 1.4s ease infinite; border-radius: var(--radius-sm); }
 .skeleton-text { height: 14px; margin-bottom: 8px; width: 100%; }

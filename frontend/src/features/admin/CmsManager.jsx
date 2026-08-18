@@ -123,6 +123,18 @@ export default function CmsManager() {
     }
   };
 
+  const openEdit = async (item) => {
+    setError('');
+    setEditing(null);
+    try {
+      const rows = await api.cms.adminGet(tab, item.slug);
+      const full = (rows || [])[0] || item;
+      setEditing(full);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const publishToggle = async (item) => {
     try {
       await api.cms.adminUpdate(tab, item.slug, { status: item.status === 'published' ? 'draft' : 'published' });
@@ -232,6 +244,7 @@ export default function CmsManager() {
 
           {editing && (
             <ItemForm
+              key={editing?.slug || 'new'}
               type={tab}
               initial={editing.id ? editing : null}
               onDone={() => { setEditing(null); load(); }}
@@ -266,7 +279,7 @@ export default function CmsManager() {
                     <td style={{ fontSize: 12, color: 'var(--muted)' }}>{item.updated_at ? new Date(item.updated_at).toLocaleDateString('vi-VN') : ''}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <button className="admin-btn" onClick={() => setEditing(item)}>Sửa</button>
+                        <button className="admin-btn" onClick={() => openEdit(item)}>Sửa</button>
                         <button className="admin-btn-ghost" onClick={() => publishToggle(item)}>
                           {item.status === 'published' ? 'Gỡ' : 'Đăng'}
                         </button>
