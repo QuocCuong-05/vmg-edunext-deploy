@@ -250,7 +250,7 @@ export default function Landing() {
             <div>
               <b style={{ fontSize: 14, color: '#fff', display: 'block', marginBottom: 12 }}>Liên hệ</b>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5, color: 'rgba(255,255,255,.75)', lineHeight: 1.6 }}>
-                <div><b style={{ color: '#fff' }}>Trụ sở chính</b><br />Phòng L17-11, Tầng 17, Tòa nhà Vincom Center<br />72 Lê Thánh Tôn, P. Bến Nghé, Q.1, TP.HCM</div>
+                <div><b style={{ color: '#fff' }}>Trụ sở chính</b><br />Phòng L17-11, Tầng 17, Tòa nhà <span style={{ whiteSpace: 'nowrap' }}>Vincom Center</span><br />72 Lê Thánh Tôn, P. Bến Nghé, Q.1, TP.HCM</div>
                 <div><b style={{ color: '#fff' }}>Văn phòng đại diện</b><br />E99 Đường Võ Thị Sáu, Khu phố 7<br />Phường Trấn Biên, TP. Biên Hòa, Đồng Nai</div>
                 <div><b style={{ color: '#fff' }}>Điện thoại</b> · 090 697 88 98</div>
                 <div><b style={{ color: '#fff' }}>Email</b> · hotro@vmg.edu.vn</div>
