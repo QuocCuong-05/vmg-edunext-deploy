@@ -1,5 +1,6 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import TextAlign from '@tiptap/extension-text-align';
 import ResizableImage from './ResizableImage.jsx';
 import { useRef } from 'react';
 import { api } from '../../lib/api';
@@ -24,6 +25,7 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ link: { openOnClick: false, autolink: true } }),
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
       ResizableImage,
     ],
     content: value || '',
@@ -66,6 +68,10 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
         {TOOL('H3', () => editor.chain().focus().toggleHeading({ level: 3 }).run(), editor.isActive('heading', { level: 3 }))}
         {TOOL('• List', () => editor.chain().focus().toggleBulletList().run(), editor.isActive('bulletList'))}
         {TOOL('1. List', () => editor.chain().focus().toggleOrderedList().run(), editor.isActive('orderedList'))}
+        <span style={{ width: 1, background: 'var(--line)', margin: '4px 6px' }} />
+        {TOOL('Al Trái', () => editor.chain().focus().setTextAlign('left').run(), editor.isActive({ textAlign: 'left' }))}
+        {TOOL('Al Giữa', () => editor.chain().focus().setTextAlign('center').run(), editor.isActive({ textAlign: 'center' }))}
+        {TOOL('Al Phải', () => editor.chain().focus().setTextAlign('right').run(), editor.isActive({ textAlign: 'right' }))}
         <span style={{ width: 1, background: 'var(--line)', margin: '4px 6px' }} />
         {TOOL('Link', setLink)}
         {TOOL('❝ Quote', () => editor.chain().focus().toggleBlockquote().run(), editor.isActive('blockquote'))}
