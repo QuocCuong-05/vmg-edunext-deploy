@@ -25,7 +25,9 @@ export function AuthProvider({ children }) {
       if (!activePolicy) return;
       const list = consentsData?.data || [];
       const serviceConsent = list.find(c => c.policy_key === 'service');
-      if (!serviceConsent || Number(serviceConsent.version) < Number(activePolicy.version)) {
+      // Chỉ hỏi lại khi chính sách CẬP NHẬT version mới hơn bản user đã đồng ý
+      // (user chưa có consent = coi như đã đồng ý v1 — không làm phiền mỗi lần login)
+      if (serviceConsent && Number(serviceConsent.version) < Number(activePolicy.version)) {
         setReconsentPolicy(activePolicy);
       }
     } catch {}
