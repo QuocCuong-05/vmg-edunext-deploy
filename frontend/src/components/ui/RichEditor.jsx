@@ -1,6 +1,6 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
+import ResizableImage from './ResizableImage.jsx';
 import { useRef } from 'react';
 import { api } from '../../lib/api';
 
@@ -24,7 +24,7 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ link: { openOnClick: false, autolink: true } }),
-      Image.configure({ inline: false, allowBase64: false }),
+      ResizableImage,
     ],
     content: value || '',
     onUpdate: ({ editor }) => onChange?.(editor.getHTML()),
@@ -46,7 +46,7 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
     if (!editor || !file) return;
     try {
       const url = await api.cms.upload(file);
-      editor.chain().focus().setImage({ src: url }).run();
+      editor.chain().focus().setResizableImage({ src: url }).run();
     } catch (err) {
       alert('Upload ảnh thất bại: ' + err.message);
     }
