@@ -102,16 +102,16 @@ export default function AboutPage() {
       </div>
 
       <Card style={{ background: 'linear-gradient(145deg, #182233, #263b59)', color: '#fff', border: 'none', padding: 28 }}>
-        <div style={{ maxWidth: 600 }}>
-          <span className="pill" style={{ background: 'rgba(255,255,255,.12)', color: '#fff', marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            ViMi – AI Agent được phát triển bởi VMG
-          </span>
-          <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 10 }}>Một người bạn đồng hành, không phải một chiếc máy chấm điểm.</h3>
-          <p style={{ fontSize: 12, lineHeight: 1.7, color: '#c9d3e1', marginBottom: 16 }}>
-            ViMi được thiết kế để trò chuyện thân thiện, đưa ra nhiều phương án, giải thích vì sao, khuyến khích giáo viên phản tư và luôn nhắc rằng quyết định cuối cùng thuộc về người thầy.
-          </p>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          <div style={{ maxWidth: 600 }}>
+            <span className="pill" style={{ background: 'rgba(255,255,255,.12)', color: '#fff', marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              ViMi – AI Agent được phát triển bởi VMG
+            </span>
+            <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 10 }}>Một người bạn đồng hành, không phải một chiếc máy chấm điểm.</h3>
+            <p style={{ fontSize: 12, lineHeight: 1.7, color: '#c9d3e1', marginBottom: 16 }}>
+              ViMi được thiết kế để trò chuyện thân thiện, đưa ra nhiều phương án, giải thích vì sao, khuyến khích giáo viên phản tư và luôn nhắc rằng quyết định cuối cùng thuộc về người thầy.
+            </p>
+          </div>
           <Button variant="primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <Icon.ViMi size={18} /> Trò chuyện với ViMi
           </Button>
