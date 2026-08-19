@@ -4,6 +4,7 @@ dist/
 backend/.env
 frontend/.env
 *.env.bak
+.env.*.bak
 *.local
 backend/.env.staging
 backend/.env.production

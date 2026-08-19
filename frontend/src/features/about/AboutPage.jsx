@@ -17,13 +17,33 @@ export default function AboutPage() {
         <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: -.5, marginBottom: 12, maxWidth: 600 }}>
           Nâng năng lực người thầy,<br />mở rộng cơ hội cho người học.
         </h2>
-        <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.7, maxWidth: 700, marginBottom: 14 }}>
-          VMG EduNext được xây dựng từ niềm tin rằng mọi chuyển đổi giáo dục bền vững đều bắt đầu từ người thầy. Công nghệ không thay thế giáo viên; công nghệ cần giúp giáo viên có thêm thời gian để lắng nghe, thấu hiểu, thiết kế trải nghiệm học tập tốt hơn và phát triển nghề nghiệp suốt đời.
-        </p>
         <div style={{ fontStyle: 'italic', fontSize: 14, color: 'var(--red)', fontWeight: 600, borderLeft: '3px solid var(--red)', paddingLeft: 14 }}>
           "Mỗi giáo viên được trao thêm năng lực là hàng trăm học sinh được mở thêm một cánh cửa."
         </div>
       </Card>
+
+      <div style={{ marginBottom: 24 }}>
+        <span className="pill" style={{ background: 'var(--red-bg)', color: 'var(--red)', marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <Icon.Play size={12} /> 3 cách học cùng EduNext
+        </span>
+        <div className="grid-3">
+          <Card style={{ padding: 20 }}>
+            <Icon.Play size={22} style={{ color: 'var(--red)', marginBottom: 10, flexShrink: 0 }} />
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>Học qua video</h3>
+            <p style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.65, overflowWrap: 'break-word', wordBreak: 'break-word' }}>Phát âm chuẩn IPA, tình huống lớp học thật, học mọi lúc mọi nơi.</p>
+          </Card>
+          <Card style={{ padding: 20 }}>
+            <Icon.Mic size={22} style={{ color: 'var(--blue)', marginBottom: 10, flexShrink: 0 }} />
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>Học cùng giáo viên bản ngữ</h3>
+            <p style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.65, overflowWrap: 'break-word', wordBreak: 'break-word' }}>Luyện nói trực tiếp 25 phút mỗi buổi, phản hồi và đánh giá cá nhân hóa.</p>
+          </Card>
+          <Card style={{ padding: 20 }}>
+            <Icon.ViMi size={22} style={{ color: 'var(--green)', marginBottom: 10, flexShrink: 0 }} />
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>Học cùng AI ViMi</h3>
+            <p style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.65, overflowWrap: 'break-word', wordBreak: 'break-word' }}>Luyện nói không ngại sai, phản hồi tức thì, đồng hành 24/7.</p>
+          </Card>
+        </div>
+      </div>
 
       <div className="grid-2" style={{ marginBottom: 24 }}>
         <Card style={{ padding: 24 }}>
@@ -63,9 +83,7 @@ export default function AboutPage() {
             Mỗi bài học ngắn đều hướng đến một hành vi có thể áp dụng: đưa chỉ dẫn rõ hơn, giải thích khái niệm dễ hiểu hơn, tổ chức hoạt động tốt hơn.
           </p>
           <ul style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 2, paddingLeft: 18 }}>
-            <li>Học ngắn nhưng có mục tiêu rõ.</li>
             <li>Thực hành trong ngữ cảnh lớp học thật.</li>
-            <li>Nhận phản hồi ngay và có cơ hội thử lại.</li>
             <li>Ghi nhận tiến bộ bằng minh chứng, không chỉ bằng điểm số.</li>
           </ul>
         </Card>
