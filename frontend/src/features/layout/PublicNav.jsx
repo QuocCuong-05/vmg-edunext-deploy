@@ -5,6 +5,8 @@ export default function PublicNav() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  if (user) return null;
+
   return (
     <nav className="landing-nav">
       <div className="landing-nav-inner">

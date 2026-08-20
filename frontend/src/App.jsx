@@ -63,9 +63,19 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/order-approve/:orderId" element={<OrderApprovePage />} />
       <Route path="/policy/:slug" element={<PolicyPage />} />
-      <Route path="/blog" element={<BlogPage />} />
-      <Route path="/blog/:slug" element={<BlogPostPage />} />
-      <Route path="/help" element={<HelpPage />} />
+      {user ? (
+        <Route element={<Layout />}>
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:slug" element={<BlogPostPage />} />
+          <Route path="/help" element={<HelpPage />} />
+        </Route>
+      ) : (
+        <>
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:slug" element={<BlogPostPage />} />
+          <Route path="/help" element={<HelpPage />} />
+        </>
+      )}
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/courses" element={<Courses />} />
