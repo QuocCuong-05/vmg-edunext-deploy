@@ -267,7 +267,14 @@ export default function AdminData() {
     }
   }
 
-  function exportCsv(rows, columns) {
+async function exportCsv(columns) {
+    const params = { ...traceFilters, all: 1 };
+    const res = traceSub === 'activity'
+      ? await api.admin.traceActivity(params)
+      : traceSub === 'consents'
+        ? await api.admin.traceConsents(params)
+        : await api.admin.traceDevices(params);
+    const rows = (res && res.data) || [];
     const header = columns.map(c => c.label).join(',');
     const lines = rows.map(r => columns.map(c => {
       const v = c.get(r);
@@ -280,7 +287,6 @@ export default function AdminData() {
     a.href = url;
     a.download = 'trace-' + traceSub + '.csv';
     a.click();
-    URL.revokeObjectURL(url);
   }
 
   async function handleApproveOrder(id) {
@@ -869,7 +875,7 @@ export default function AdminData() {
               <button className="admin-btn" onClick={() => { setTracePage(1); loadTrace(); }}>Lọc</button>
               <button
                 className="admin-btn"
-                onClick={() => exportCsv(traceData?.data || [], traceSub === 'activity'
+                onClick={() => exportCsv(traceSub === 'activity'
                   ? [
                       { label: 'Thời gian', get: r => r.created_at },
                       { label: 'Email', get: r => r.email },
