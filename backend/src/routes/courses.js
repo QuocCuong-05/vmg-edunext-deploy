@@ -44,6 +44,62 @@ router.get('/', async (_req, res) => {
   }
 });
 
+// GET /api/courses/my-progress — tất cả khóa đã enroll + % tiến độ (cho Dashboard + trang Courses)
+router.get('/my-progress', authenticate, async (req, res) => {
+  try {
+    const { data: enrolls, error: enrollErr } = await supabase
+      .from('enrollments')
+      .select('course_id')
+      .eq('user_id', req.user.id);
+    if (enrollErr) throw enrollErr;
+
+    const courseIds = (enrolls || []).map(e => e.course_id);
+    if (!courseIds.length) return res.json({ data: [] });
+
+    const [{ data: courses }, { data: lessons }, { data: progress }] = await Promise.all([
+      supabase.from('courses').select('id, title, slug, level, category, lesson_count').in('id', courseIds),
+      supabase.from('lessons').select('id, course_id').in('course_id', courseIds),
+      supabaseAdmin.from('lesson_progress').select('lesson_id, completed').eq('user_id', req.user.id),
+    ]);
+
+    const byCourse = {};
+    const lessonCourse = {};
+    (lessons || []).forEach(l => {
+      if (!byCourse[l.course_id]) byCourse[l.course_id] = { total: 0, done: 0, completed: [] };
+      byCourse[l.course_id].total++;
+      lessonCourse[l.id] = l.course_id;
+    });
+    (progress || []).forEach(p => {
+      const cid = lessonCourse[p.lesson_id];
+      if (cid && byCourse[cid] && p.completed) {
+        byCourse[cid].done++;
+        byCourse[cid].completed.push(p.lesson_id);
+      }
+    });
+
+    const result = (courses || []).map(c => {
+      const info = byCourse[c.id] || { total: c.lesson_count || 0, done: 0, completed: [] };
+      const total = c.lesson_count || info.total || 0;
+      const pct = total ? Math.round((info.done / total) * 100) : 0;
+      return {
+        course_id: c.id,
+        title: c.title,
+        slug: c.slug,
+        level: c.level,
+        category: c.category,
+        lesson_count: total,
+        progress_pct: pct,
+        enrolled: true,
+        completed_lessons: info.completed,
+      };
+    });
+
+    res.json({ data: result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/courses/:slug — single course with lessons (sanitized theo quyền)
 router.get('/:slug', authenticate, async (req, res) => {
   try {
@@ -102,7 +158,7 @@ router.get('/:slug', authenticate, async (req, res) => {
 // POST /api/courses/:courseId/enroll — enroll user
 router.post('/:courseId/enroll', authenticate, async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('enrollments')
       .insert({ user_id: req.user.id, course_id: req.params.courseId })
       .select()
@@ -115,29 +171,44 @@ router.post('/:courseId/enroll', authenticate, async (req, res) => {
   }
 });
 
-// GET /api/courses/:courseId/progress — user progress in course
+// GET /api/courses/:courseId/progress — user progress in course (tính % động từ lesson_progress)
 router.get('/:courseId/progress', authenticate, async (req, res) => {
   try {
-    const { data: progress } = await supabaseAdmin
+    const { data: course } = await supabase
+      .from('courses')
+      .select('id, lesson_count')
+      .eq('id', req.params.courseId)
+      .maybeSingle();
+
+    const { data: lessons } = await supabase
+      .from('lessons')
+      .select('id')
+      .eq('course_id', req.params.courseId);
+
+    const lessonIds = (lessons || []).map(l => l.id);
+
+    const { data: progress, error: progErr } = await supabaseAdmin
       .from('lesson_progress')
       .select('lesson_id, completed, watched_seconds, score')
-      .eq('user_id', req.user.id);
+      .eq('user_id', req.user.id)
+      .in('lesson_id', lessonIds);
+    if (progErr) throw progErr;
 
     const completedLessons = (progress || []).filter(p => p.completed).map(p => p.lesson_id);
+    const total = course?.lesson_count || lessonIds.length || 0;
+    const progress_pct = total ? Math.round((completedLessons.length / total) * 100) : 0;
 
-    const { data: enrollment, error: enrollError } = await supabase
+    const { data: enrollment } = await supabase
       .from('enrollments')
       .select('*')
       .eq('user_id', req.user.id)
       .eq('course_id', req.params.courseId)
       .maybeSingle();
 
-    if (enrollError) throw enrollError;
-
     res.json({
       data: {
         enrolled: !!enrollment,
-        progress_pct: enrollment?.progress_pct || 0,
+        progress_pct,
         status: enrollment?.status || null,
         completed_lessons: completedLessons,
         details: progress || [],

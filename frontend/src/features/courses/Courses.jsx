@@ -19,14 +19,18 @@ export default function Courses() {
   const [level, setLevel] = useState('All');
   const [category, setCategory] = useState('All');
   const [courses, setCourses] = useState([]);
+  const [progMap, setProgMap] = useState({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.courses.list().then(data => {
-      setCourses(data || []);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    Promise.all([api.courses.list(), api.courses.myProgress()])
+      .then(([data, prog]) => {
+        setCourses(data || []);
+        setProgMap(Object.fromEntries((prog || []).map(p => [p.slug, p])));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
 
   const filtered = courses.filter(c => {
@@ -64,12 +68,7 @@ export default function Courses() {
           {filtered.map(course => {
             const cover = COVER_MAP[course.category] || { color: 'red', icon: Icon.Courses };
             const C = cover.icon;
-            const enroll = (() => {
-              try {
-                const e = localStorage.getItem('vmg_enroll_' + course.slug);
-                return e ? JSON.parse(e) : null;
-              } catch { return null; }
-            })();
+            const enroll = progMap[course.slug] || null;
             return (
               <Card key={course.id} className="course-card" onClick={() => navigate(`/courses/${course.slug}`)}>
                 <div className={`course-cover ${cover.color}`}>

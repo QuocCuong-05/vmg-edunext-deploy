@@ -6,16 +6,6 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import { useAuth } from '../auth/AuthContext';
 
-function loadEnroll(slug) {
-  try {
-    const e = localStorage.getItem('vmg_enroll_' + slug);
-    return e ? JSON.parse(e) : null;
-  } catch { return null; }
-}
-function saveEnroll(slug, data) {
-  localStorage.setItem('vmg_enroll_' + slug, JSON.stringify(data));
-}
-
 const COVER_MAP = {
   classroom_english: { color: 'red', icon: Icon.Courses },
   clil_stem: { color: 'blue', icon: Icon.Brain },
@@ -32,6 +22,7 @@ export default function CourseDetail() {
   const [loading, setLoading] = useState(true);
   const [enrolled, setEnrolled] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
+  const [progress, setProgress] = useState({ progress_pct: 0, completed_lessons: [] });
 
   const isPremium = course?.access_type === 'premium' || course?.access_type === 'paid';
   const canAccess = isPremium ? (isPlus || unlocked) : enrolled;
@@ -40,8 +31,11 @@ export default function CourseDetail() {
     if (!slug) return;
     api.courses.get(slug).then(async data => {
       setCourse(data);
-      const e = loadEnroll(slug);
-      setEnrolled(e?.enrolled || false);
+      try {
+        const p = await api.courses.progress(data.id);
+        setProgress(p || { progress_pct: 0, completed_lessons: [] });
+        setEnrolled(p?.enrolled || false);
+      } catch {}
       if ((data.access_type === 'premium' || data.access_type === 'paid') && user?.id) {
         try {
           const ids = await api.unlock.courseIds(user.id);
@@ -76,12 +70,18 @@ export default function CourseDetail() {
     );
   }
 
-  const enroll = loadEnroll(slug) || { progress_pct: 0, completed_lessons: [] };
-  const completedIds = enroll.completed_lessons || [];
+  const enroll = progress;
+  const completedIds = progress.completed_lessons || [];
 
-  const handleEnroll = () => {
-    saveEnroll(slug, { enrolled: true, progress_pct: 0, status: 'active', completed_lessons: [] });
-    setEnrolled(true);
+  const handleEnroll = async () => {
+    try {
+      await api.courses.enroll(course.id);
+      const p = await api.courses.progress(course.id);
+      setProgress(p || { progress_pct: 0, completed_lessons: [] });
+      setEnrolled(true);
+    } catch (err) {
+      setEnrolled(true);
+    }
   };
 
   const cover = COVER_MAP[course.category] || { color: 'red', icon: Icon.Courses };

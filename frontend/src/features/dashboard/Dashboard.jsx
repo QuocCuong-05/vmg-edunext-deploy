@@ -68,6 +68,7 @@ export default function Dashboard() {
   const [tips, setTips] = useState([]);
   const [vocab, setVocab] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [myProg, setMyProg] = useState([]);
   const [myVocabCount, setMyVocabCount] = useState(0);
   const [myQuizCount, setMyQuizCount] = useState(0);
 
@@ -77,12 +78,14 @@ export default function Dashboard() {
       api.tips.list(),
       api.vocabulary.list(),
       api.courses.list(),
+      api.courses.myProgress(),
       api.vocabulary.mineCount(),
       api.quiz.attemptsCount(),
-    ]).then(([t, v, c, vocabCount, quizCount]) => {
+    ]).then(([t, v, c, prog, vocabCount, quizCount]) => {
       setTips(t || []);
       setVocab(v || []);
       setCourses(c || []);
+      setMyProg(prog || []);
       setMyVocabCount(vocabCount);
       setMyQuizCount(quizCount);
     }).catch(() => {});
@@ -98,18 +101,15 @@ export default function Dashboard() {
   const doneCount = activeQuests.filter(q => q.done).length;
   const pct = Math.round((doneCount / activeQuests.length) * 100);
 
-  const enrolledCount = courses.filter(c => {
-    try {
-      const e = localStorage.getItem('vmg_enroll_' + c.slug);
-      return e ? JSON.parse(e).enrolled : false;
-    } catch { return false; }
-  }).length;
-  const inProgress = courses.filter(c => {
-    try {
-      const e = localStorage.getItem('vmg_enroll_' + c.slug);
-      return e ? JSON.parse(e).enrolled : false;
-    } catch { return false; }
-  });
+  const coursesBySlug = Object.fromEntries(courses.map(c => [c.slug, c]));
+  const inProgress = myProg
+    .map(p => {
+      const course = coursesBySlug[p.slug];
+      if (!course) return null;
+      return { ...course, progress_pct: p.progress_pct, completed_lessons: p.completed_lessons };
+    })
+    .filter(Boolean);
+  const enrolledCount = inProgress.length;
 
   const todaysWord = vocab[new Date().getDate() % Math.max(vocab.length, 1)] || {};
 
@@ -190,14 +190,8 @@ export default function Dashboard() {
         ) : (
           <div className="dash-courses-hero-list">
             {inProgress.slice(0, 2).map((course, idx) => {
-              const enroll = (() => {
-                try {
-                  const e = localStorage.getItem('vmg_enroll_' + course.slug);
-                  return e ? JSON.parse(e) : null;
-                } catch { return null; }
-              })();
               const coverColor = course.category === 'classroom_english' ? 'var(--red)' : course.category === 'clil_stem' ? 'var(--blue)' : course.category === 'assessment' ? 'var(--gold)' : course.category === 'vocabulary' ? 'var(--blue)' : 'var(--red)';
-              const pct = Math.max(0, Math.min(100, enroll.progress_pct || 0));
+              const pct = Math.max(0, Math.min(100, course.progress_pct || 0));
               const doneLessons = Math.round((pct / 100) * (course.lesson_count || 0));
               return (
                 <div key={course.id} className="course-hero-row" onClick={() => navigate(`/courses/${course.slug}`)}>

@@ -12,16 +12,6 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import { useAuth } from '../auth/AuthContext';
 
-function loadEnroll(slug) {
-  try {
-    const e = localStorage.getItem('vmg_enroll_' + slug);
-    return e ? JSON.parse(e) : null;
-  } catch { return null; }
-}
-function saveEnroll(slug, data) {
-  localStorage.setItem('vmg_enroll_' + slug, JSON.stringify(data));
-}
-
 export default function LessonView() {
   const { slug, lessonId } = useParams();
   const navigate = useNavigate();
@@ -31,6 +21,8 @@ export default function LessonView() {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
+  const [completedIds, setCompletedIds] = useState([]);
+  const [isEnrolled, setIsEnrolled] = useState(false);
   const [previewSeconds, setPreviewSeconds] = useState(120);
   const [videoInfo, setVideoInfo] = useState(null);
   const [videoError, setVideoError] = useState('');
@@ -136,6 +128,8 @@ export default function LessonView() {
           }
         }
         if (row?.completed) setCompleted(true);
+        setCompletedIds(data?.completed_lessons || []);
+        setIsEnrolled(data?.enrolled || false);
       })
       .catch(err => console.error('[progress restore]', err.message));
     return () => { cancelled = true; };
@@ -159,14 +153,12 @@ export default function LessonView() {
   const prevLesson = currentIdx > 0 ? courseLessons[currentIdx - 1] : null;
   const nextLesson = currentIdx < courseLessons.length - 1 ? courseLessons[currentIdx + 1] : null;
 
-  const enroll = loadEnroll(slug);
   const isFree = lesson.is_free;
-  const isEnrolled = enroll?.enrolled;
   const isPremium = course.access_type === 'premium' || course.access_type === 'paid';
   const canAccessFull = isFree || isPlus || unlocked;
   const isPreviewLesson = !canAccessFull && !!lesson.preview_text;
   const isLocked = !isFree && !canAccessFull && !isPreviewLesson;
-  const isLessonCompleted = enroll?.completed_lessons?.includes(lessonId) || false;
+  const isLessonCompleted = completedIds.includes(lessonId);
 
   const teaserLimit = videoInfo?.previewSeconds ?? previewSeconds;
 
@@ -252,15 +244,10 @@ export default function LessonView() {
     showToast('+60 XP', 'success');
     logActivity('lesson', 'Đã học bài: ' + lesson.title, course.title);
     dispatchAction('lesson_complete');
-    const e = loadEnroll(slug) || { enrolled: true, progress_pct: 0, completed_lessons: [] };
-    const arr = e.completed_lessons || [];
-    if (!arr.includes(lessonId)) {
-      arr.push(lessonId);
+    setIsEnrolled(true);
+    if (!completedIds.includes(lessonId)) {
+      setCompletedIds(prev => [...prev, lessonId]);
     }
-    const total = courseLessons.length;
-    e.progress_pct = Math.round((arr.length / total) * 100);
-    e.enrolled = true;
-    saveEnroll(slug, e);
   };
 
   return (

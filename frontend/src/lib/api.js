@@ -103,6 +103,8 @@ export const api = {
     list: async () => request('/courses'),
     get: async (slug) => request(`/courses/${slug}`),
     progress: async (courseId) => request(`/courses/${courseId}/progress`),
+    myProgress: async () => request('/courses/my-progress'),
+    enroll: async (courseId) => request(`/courses/${courseId}/enroll`, { method: 'POST' }),
   },
   lessons: {
     progress: async (lessonId, data) =>
