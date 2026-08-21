@@ -498,6 +498,8 @@ export const api = {
       request('/admin/courses/free', { method: 'POST', body: JSON.stringify({ course_id: courseId }) }),
     setPreview: async (lessonId, previewText) =>
       request('/admin/courses/preview', { method: 'POST', body: JSON.stringify({ lesson_id: lessonId, preview_text: previewText }) }),
+    setLessonFree: async (lessonId, isFree) =>
+      request('/admin/lessons/free', { method: 'POST', body: JSON.stringify({ lesson_id: lessonId, is_free: isFree }) }),
     settings: async () => request('/admin/settings'),
     saveSetting: async (key, value) =>
       request('/admin/settings', { method: 'POST', body: JSON.stringify({ key, value }) }),

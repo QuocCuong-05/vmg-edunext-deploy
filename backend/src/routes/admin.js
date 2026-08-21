@@ -173,6 +173,22 @@ router.post('/courses/preview', async (req, res, next) => {
   }
 });
 
+router.post('/lessons/free', async (req, res, next) => {
+  try {
+    const { lesson_id: lessonId, is_free: isFree } = req.body;
+    if (!lessonId) return res.status(400).json({ error: 'lesson_id là bắt buộc' });
+    const { data, error } = await supabaseAdmin
+      .from('lessons')
+      .update({ is_free: !!isFree })
+      .eq('id', lessonId)
+      .select('id, title, is_free');
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/settings', async (_req, res, next) => {
   try {
     const { data, error } = await supabaseAdmin.from('app_settings').select('*');

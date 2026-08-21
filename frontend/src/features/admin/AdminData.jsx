@@ -342,6 +342,14 @@ async function exportCsv(columns) {
     } catch (err) { setError(err.message); }
   }
 
+  async function handleSaveFree(courseId) {
+    const f = courseForm[courseId] || {};
+    if (!f.preview_lesson_id) { setError('Chọn bài học để đặt miễn phí'); return; }
+    try {
+      await api.admin.setLessonFree(f.preview_lesson_id, !!f.is_free);
+    } catch (err) { setError(err.message); }
+  }
+
   async function handleSaveSettings() {
     try {
       await api.admin.saveSetting('preview_seconds', Number(settings.preview_seconds) || 120);
@@ -783,7 +791,11 @@ async function exportCsv(columns) {
                       <select
                         className="admin-input"
                         value={f.preview_lesson_id ?? ''}
-                        onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, preview_lesson_id: e.target.value } })}
+                        onChange={e => {
+                          const lid = e.target.value;
+                          const l = lessons.find(x => x.id === lid);
+                          setCourseForm({ ...courseForm, [c.id]: { ...f, preview_lesson_id: lid, is_free: l?.is_free ?? false } });
+                        }}
                       >
                         <option value="">-- Chọn bài --</option>
                         {(lessons.filter(l => l.course_id === c.id)).map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
@@ -799,6 +811,15 @@ async function exportCsv(columns) {
                       />
                     </div>
                     <button className="admin-btn-ghost" onClick={() => handleSavePreview(c.id)}>Lưu preview</button>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--muted)' }}>
+                      <input
+                        type="checkbox"
+                        checked={!!f.is_free}
+                        onChange={e => setCourseForm({ ...courseForm, [c.id]: { ...f, is_free: e.target.checked } })}
+                      />
+                      Bài miễn phí
+                    </label>
+                    <button className="admin-btn-ghost" onClick={() => handleSaveFree(c.id)}>Lưu miễn phí</button>
                   </div>
                 </div>
               );
