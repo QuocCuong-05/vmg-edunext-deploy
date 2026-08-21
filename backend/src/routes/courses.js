@@ -57,8 +57,8 @@ router.get('/my-progress', authenticate, async (req, res) => {
     if (!courseIds.length) return res.json({ data: [] });
 
     const [{ data: courses }, { data: lessons }, { data: progress }] = await Promise.all([
-      supabase.from('courses').select('id, title, slug, level, category, lesson_count').in('id', courseIds),
-      supabase.from('lessons').select('id, course_id').in('course_id', courseIds),
+      supabaseAdmin.from('courses').select('id, title, slug, level, category, lesson_count').in('id', courseIds),
+      supabaseAdmin.from('lessons').select('id, course_id').in('course_id', courseIds),
       supabaseAdmin.from('lesson_progress').select('lesson_id, completed').eq('user_id', req.user.id),
     ]);
 
@@ -104,7 +104,7 @@ router.get('/my-progress', authenticate, async (req, res) => {
 router.get('/:slug', authenticate, async (req, res) => {
   try {
     let slug = req.params.slug;
-    let { data: course, error: courseError } = await supabase
+    let { data: course, error: courseError } = await supabaseAdmin
       .from('courses')
       .select('*')
       .eq('slug', slug)
@@ -115,7 +115,7 @@ router.get('/:slug', authenticate, async (req, res) => {
 
     if (!course && LEGACY_SLUGS[slug]) {
       slug = LEGACY_SLUGS[slug];
-      const legacy = await supabase
+      const legacy = await supabaseAdmin
         .from('courses')
         .select('*')
         .eq('slug', slug)
@@ -130,7 +130,7 @@ router.get('/:slug', authenticate, async (req, res) => {
 
     await logActivity(req.user.id, 'course_view', `Xem khóa học "${course.title}"`, req, `Khóa học: ${course.title}`);
 
-    const { data: lessons, error: lessonsError } = await supabase
+    const { data: lessons, error: lessonsError } = await supabaseAdmin
       .from('lessons')
       .select('*')
       .eq('course_id', course.id)
@@ -158,9 +158,21 @@ router.get('/:slug', authenticate, async (req, res) => {
 // POST /api/courses/:courseId/enroll — enroll user
 router.post('/:courseId/enroll', authenticate, async (req, res) => {
   try {
+    const courseId = req.params.courseId;
+    const { data: existing } = await supabaseAdmin
+      .from('enrollments')
+      .select('id, status')
+      .eq('user_id', req.user.id)
+      .eq('course_id', courseId)
+      .maybeSingle();
+
+    if (existing) {
+      return res.status(200).json({ data: existing, already_enrolled: true });
+    }
+
     const { data, error } = await supabaseAdmin
       .from('enrollments')
-      .insert({ user_id: req.user.id, course_id: req.params.courseId })
+      .insert({ user_id: req.user.id, course_id: courseId, status: 'active' })
       .select()
       .single();
 
@@ -174,13 +186,13 @@ router.post('/:courseId/enroll', authenticate, async (req, res) => {
 // GET /api/courses/:courseId/progress — user progress in course (tính % động từ lesson_progress)
 router.get('/:courseId/progress', authenticate, async (req, res) => {
   try {
-    const { data: course } = await supabase
+    const { data: course } = await supabaseAdmin
       .from('courses')
       .select('id, lesson_count')
       .eq('id', req.params.courseId)
       .maybeSingle();
 
-    const { data: lessons } = await supabase
+    const { data: lessons } = await supabaseAdmin
       .from('lessons')
       .select('id')
       .eq('course_id', req.params.courseId);

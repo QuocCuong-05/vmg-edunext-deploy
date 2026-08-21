@@ -157,13 +157,15 @@ router.post('/courses/free', async (req, res, next) => {
 
 router.post('/courses/preview', async (req, res, next) => {
   try {
-    const { lesson_id: lessonId, preview_text: previewText } = req.body;
+    const { lesson_id: lessonId, preview_text: previewText, preview_seconds: previewSeconds } = req.body;
     if (!lessonId) return res.status(400).json({ error: 'lesson_id là bắt buộc' });
+    const updateFields = { preview_text: previewText || null };
+    if (typeof previewSeconds === 'number') updateFields.preview_seconds = previewSeconds;
     const { data, error } = await supabaseAdmin
       .from('lessons')
-      .update({ preview_text: previewText || null, is_free: previewText ? true : undefined })
+      .update(updateFields)
       .eq('id', lessonId)
-      .select('id, title, is_free, preview_text');
+      .select('id, title, is_free, preview_text, preview_seconds');
     if (error) throw error;
     res.json(data);
   } catch (err) {

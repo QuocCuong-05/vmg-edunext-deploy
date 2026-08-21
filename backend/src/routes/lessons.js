@@ -9,7 +9,7 @@ const router = Router();
 // GET /api/lessons/:id — single lesson detail (sanitized theo quyền)
 router.get('/:id', authenticate, async (req, res) => {
   try {
-    const { data: lesson, error } = await supabase
+    const { data: lesson, error } = await supabaseAdmin
       .from('lessons')
       .select('*')
       .eq('id', req.params.id)
@@ -52,7 +52,7 @@ router.post('/:id/progress', authenticate, async (req, res) => {
   try {
     const { completed, watched_seconds, score } = req.body;
 
-    const { data: lesson, error: lessonError } = await supabase
+    const { data: lesson, error: lessonError } = await supabaseAdmin
       .from('lessons')
       .select('id, video_url')
       .eq('id', req.params.id)

@@ -80,7 +80,7 @@ export default function CourseDetail() {
       setProgress(p || { progress_pct: 0, completed_lessons: [] });
       setEnrolled(true);
     } catch (err) {
-      setEnrolled(true);
+      // enroll thất bại: KHÔNG đánh dấu đã enroll
     }
   };
 
