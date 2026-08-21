@@ -47,7 +47,7 @@ router.get('/', async (_req, res) => {
 // GET /api/courses/my-progress — tất cả khóa đã enroll + % tiến độ (cho Dashboard + trang Courses)
 router.get('/my-progress', authenticate, async (req, res) => {
   try {
-    const { data: enrolls, error: enrollErr } = await supabase
+    const { data: enrolls, error: enrollErr } = await supabaseAdmin
       .from('enrollments')
       .select('course_id')
       .eq('user_id', req.user.id);
@@ -198,7 +198,7 @@ router.get('/:courseId/progress', authenticate, async (req, res) => {
     const total = course?.lesson_count || lessonIds.length || 0;
     const progress_pct = total ? Math.round((completedLessons.length / total) * 100) : 0;
 
-    const { data: enrollment } = await supabase
+    const { data: enrollment } = await supabaseAdmin
       .from('enrollments')
       .select('*')
       .eq('user_id', req.user.id)
