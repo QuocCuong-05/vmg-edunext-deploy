@@ -555,8 +555,10 @@ export const api = {
         return [];
       }
     },
-    userChallenges: async () => [],
-    complete: async () => {},
+    userChallenges: async () => {
+      try { return await request('/level/challenges/user'); } catch { return []; }
+    },
+    complete: async (id) => request('/level/challenges/' + id + '/complete', { method: 'POST' }),
   },
 };
 

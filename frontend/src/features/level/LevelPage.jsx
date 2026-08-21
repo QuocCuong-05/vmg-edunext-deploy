@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
-import { getXp, addXp } from '../../lib/xp';
+import { getXp, setXp as setXpStorage } from '../../lib/xp';
 import { Icon } from '../../lib/icons';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -15,9 +15,6 @@ const CHALLENGES_KEY = 'vmg_challenges_completed';
 function loadCompleted() {
   try { return JSON.parse(localStorage.getItem(CHALLENGES_KEY) || '{}'); } catch { return {}; }
 }
-function saveCompleted(completed) {
-  localStorage.setItem(CHALLENGES_KEY, JSON.stringify(completed));
-}
 
 export default function LevelPage() {
   const navigate = useNavigate();
@@ -28,10 +25,15 @@ export default function LevelPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.level.challenges()
-      .then(data => { setChallenges(data || []); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    Promise.all([
+      api.level.challenges(),
+      api.level.userChallenges().catch(() => []),
+    ]).then(([data, doneIds]) => {
+      setChallenges(data || []);
+      const serverDone = {};
+      (doneIds || []).forEach(id => { serverDone[id] = true; });
+      setCompleted(prev => ({ ...prev, ...serverDone }));
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -44,16 +46,22 @@ export default function LevelPage() {
         localStorage.removeItem('vmg_quiz_completed');
         return;
       }
-      addXp(challenge.xp_reward);
-      setXp(getXp());
-      showToast('+' + challenge.xp_reward + ' XP', 'success');
-      setCompleted(prev => {
-        const next = { ...prev, [challenge.id]: true };
-        saveCompleted(next);
-        return next;
-      });
-      localStorage.removeItem('vmg_quiz_completed');
+      // Server-backed completion (M3): ghi user_challenges + XP trên server
+      api.level.complete(challenge.id)
+        .then(res => {
+          if (res?.xp != null) { setXpStorage(res.xp); setXp(getXp()); }
+          const earned = res?.xp_earned ?? challenge.xp_reward;
+          showToast('+' + earned + ' XP', 'success');
+        })
+        .catch(err => {
+          if (err?.status !== 409) console.error('[completeChallenge]', err?.message);
+        })
+        .finally(() => {
+          localStorage.removeItem('vmg_quiz_completed');
+          setCompleted(prev => ({ ...prev, [challenge.id]: true }));
+        });
     } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [challenges]);
 
   const totalXp = xp;

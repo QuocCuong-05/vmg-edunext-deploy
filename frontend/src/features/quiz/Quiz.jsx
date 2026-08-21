@@ -115,6 +115,7 @@ export default function Quiz() {
   const correctCount = results.filter(r => r.correct).length;
   const score = Math.round((correctCount / allQuestions.length) * 100);
   const [serverScore, setServerScore] = useState(null);
+  const [submitStatus, setSubmitStatus] = useState('idle');
 
   useEffect(() => {
     if (finished && score >= quiz.passing_score) {
@@ -123,13 +124,6 @@ export default function Quiz() {
       showToast('+' + quiz.xp_reward + ' XP', 'success');
       logActivity('quiz', 'Quiz: ' + score + '% - ' + quiz.title, 'Đạt ' + correctCount + '/' + allQuestions.length);
       dispatchAction('quiz_complete', { score });
-      if (slug) {
-        try { localStorage.setItem('vmg_quiz_completed', JSON.stringify({ slug, xp: quiz.xp_reward })); } catch {}
-        try {
-          const list = JSON.parse(localStorage.getItem('vmg_completed_quizzes') || '[]');
-          if (!list.includes(slug)) { list.push(slug); localStorage.setItem('vmg_completed_quizzes', JSON.stringify(list)); }
-        } catch {}
-      }
     }
   }, [finished, score]);
 
@@ -157,18 +151,36 @@ export default function Quiz() {
     saveProgress({ currentQ, selected: idx, answered: true, results: nextResults, finished: false, started: true });
   };
 
+  const doSubmit = () => {
+    setSubmitStatus('submitting');
+    const answers = results.map(r => ({ question_id: r.question_id, option_id: r.option_id }));
+    api.quiz.submit(quizSet.id, answers)
+      .then(res => {
+        const sc = res?.score ?? null;
+        setServerScore(sc);
+        setSubmitStatus('done');
+        saveProgress({ currentQ, selected, answered, results, finished: true, serverScore: sc, started: true });
+        trackEvent('Quiz', 'submit', `${quizSet.slug || ''} (${sc ?? 0}%)`);
+        // Handoff cho challenge completion (M3) — chỉ ghi khi submit thật sự thành công
+        if (slug) {
+          try { localStorage.setItem('vmg_quiz_completed', JSON.stringify({ slug, xp: quiz.xp_reward })); } catch {}
+          try {
+            const list = JSON.parse(localStorage.getItem('vmg_completed_quizzes') || '[]');
+            if (!list.includes(slug)) { list.push(slug); localStorage.setItem('vmg_completed_quizzes', JSON.stringify(list)); }
+          } catch {}
+        }
+      })
+      .catch(() => {
+        setSubmitStatus('error');
+        showToast('Lưu bài không thành công, vui lòng thử lại', 'error');
+      });
+  };
+
   const handleNext = () => {
     if (isLast) {
       setFinished(true);
       saveProgress({ currentQ, selected, answered, results, finished: true, started: true });
-      api.quiz.submit(quizSet.id, results.map(r => ({ question_id: r.question_id, option_id: r.option_id })))
-        .then(res => {
-          const sc = res?.score ?? null;
-          setServerScore(sc);
-          saveProgress({ currentQ, selected, answered, results, finished: true, serverScore: sc, started: true });
-          trackEvent('Quiz', 'submit', `${quizSet.slug || ''} (${sc ?? 0}%)`);
-        })
-        .catch(() => {});
+      doSubmit();
     } else {
       const nq = currentQ + 1;
       setCurrentQ(nq);
@@ -274,6 +286,19 @@ export default function Quiz() {
             Đạt {finalScore}% — Yêu cầu: {quiz.passing_score}%
           </div>
           {passed && <div style={{ fontSize: 13, color: 'var(--green)', marginBottom: 16 }}>+{quiz.xp_reward} XP</div>}
+
+          {submitStatus === 'submitting' && (
+            <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12 }}>Đang lưu kết quả…</div>
+          )}
+          {submitStatus === 'done' && (
+            <div style={{ fontSize: 13, color: 'var(--green)', marginBottom: 12 }}>✓ Đã lưu kết quả</div>
+          )}
+          {submitStatus === 'error' && (
+            <div style={{ background: 'var(--red-bg)', color: 'var(--red)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 13, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+              <span>Lưu kết quả không thành công. Tiến độ có thể chưa được ghi nhận.</span>
+              <Button variant="primary" size="sm" onClick={doSubmit}>Thử lại</Button>
+            </div>
+          )}
 
           <div style={{ textAlign: 'left', marginTop: 20 }}>
             <h3 style={{ fontSize: 15, marginBottom: 12 }}>Chi tiết</h3>
