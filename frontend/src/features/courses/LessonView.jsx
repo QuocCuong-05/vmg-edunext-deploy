@@ -12,6 +12,12 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import { useAuth } from '../auth/AuthContext';
 
+function safeResumeTarget(watched, duration) {
+  if (!watched || watched <= 0) return 0;
+  if (duration && watched >= duration - 3) return 0;
+  return Math.max(0, watched - 2);
+}
+
 export default function LessonView() {
   const { slug, lessonId } = useParams();
   const navigate = useNavigate();
@@ -118,7 +124,9 @@ export default function LessonView() {
           maxWatchedRef.current = row.watched_seconds;
           setMaxWatched(row.watched_seconds);
           if (videoRef.current?.readyState >= 1 && !restoredRef.current) {
-            videoRef.current.currentTime = row.watched_seconds;
+            const dur = videoRef.current.duration || 0;
+            const target = safeResumeTarget(row.watched_seconds, dur);
+            if (target > 0) videoRef.current.currentTime = target;
             restoredRef.current = true;
           }
           const l = course?.lessons?.find(x => x.id === lessonId);
@@ -196,7 +204,9 @@ export default function LessonView() {
 
   function handleLoadedMetadata() {
     if (videoRef.current && maxWatchedRef.current > 0 && !restoredRef.current) {
-      videoRef.current.currentTime = maxWatchedRef.current;
+      const dur = videoRef.current.duration || 0;
+      const target = safeResumeTarget(maxWatchedRef.current, dur);
+      if (target > 0) videoRef.current.currentTime = target;
       restoredRef.current = true;
     }
   }
