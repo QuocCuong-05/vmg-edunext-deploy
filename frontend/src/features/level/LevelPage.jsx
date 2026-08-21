@@ -31,8 +31,12 @@ export default function LevelPage() {
     ]).then(([data, doneIds]) => {
       setChallenges(data || []);
       const serverDone = {};
-      (doneIds || []).forEach(id => { serverDone[id] = true; });
+      (doneIds || []).forEach(d => { if (d && d.challenge_id) serverDone[d.challenge_id] = true; });
       setCompleted(prev => ({ ...prev, ...serverDone }));
+      // Backfill: copy các completion chỉ có ở localStorage lên server (không cộng XP)
+      const localDone = loadCompleted();
+      const toMigrate = Object.keys(localDone).filter(id => !serverDone[id]);
+      if (toMigrate.length) api.level.migrate(toMigrate).catch(() => {});
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 

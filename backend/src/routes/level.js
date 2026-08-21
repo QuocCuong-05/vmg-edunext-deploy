@@ -43,6 +43,45 @@ router.get('/challenges/user', async (req, res, next) => {
   }
 });
 
+router.post('/challenges/migrate', async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+    if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { ids } = req.body || {};
+    if (!Array.isArray(ids) || !ids.length) return res.json({ data: { migrated: 0 } });
+
+    const { data: existingRows, error: exErr } = await supabase
+      .from('user_challenges')
+      .select('challenge_id')
+      .eq('user_id', user.id)
+      .in('challenge_id', ids);
+    if (exErr) throw exErr;
+
+    const existingIds = new Set((existingRows || []).map(r => r.challenge_id));
+    const newRows = ids
+      .filter(id => !existingIds.has(id))
+      .map(id => ({
+        user_id: user.id,
+        challenge_id: id,
+        completed: true,
+        completed_at: new Date().toISOString(),
+      }));
+
+    if (newRows.length) {
+      const { error: insErr } = await supabase.from('user_challenges').insert(newRows);
+      if (insErr) throw insErr;
+    }
+
+    res.json({ data: { migrated: newRows.length } });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/challenges/:id/complete', async (req, res, next) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');

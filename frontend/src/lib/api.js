@@ -559,6 +559,7 @@ export const api = {
       try { return await request('/level/challenges/user'); } catch { return []; }
     },
     complete: async (id) => request('/level/challenges/' + id + '/complete', { method: 'POST' }),
+    migrate: async (ids) => request('/level/challenges/migrate', { method: 'POST', body: { ids } }),
   },
 };
 
