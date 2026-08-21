@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { supabase } from '../config/database.js';
+import { supabase, supabaseAdmin } from '../config/database.js';
 
 const router = Router();
 
@@ -54,7 +54,7 @@ router.post('/challenges/migrate', async (req, res, next) => {
     const { ids } = req.body || {};
     if (!Array.isArray(ids) || !ids.length) return res.json({ data: { migrated: 0 } });
 
-    const { data: existingRows, error: exErr } = await supabase
+    const { data: existingRows, error: exErr } = await supabaseAdmin
       .from('user_challenges')
       .select('challenge_id')
       .eq('user_id', user.id)
@@ -72,7 +72,7 @@ router.post('/challenges/migrate', async (req, res, next) => {
       }));
 
     if (newRows.length) {
-      const { error: insErr } = await supabase.from('user_challenges').insert(newRows);
+      const { error: insErr } = await supabaseAdmin.from('user_challenges').insert(newRows);
       if (insErr) throw insErr;
     }
 
