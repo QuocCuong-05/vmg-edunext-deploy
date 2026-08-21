@@ -60,19 +60,6 @@ export default function LevelPage() {
   const { lvl: level, current: currentLevelXp, required: xpRequired } = levelBounds(totalXp);
   const xpProgress = Math.min(100, (currentLevelXp / xpRequired) * 100);
 
-  const handleNonQuizChallenge = (c) => {
-    if (completed[c.id]) return;
-    if (c.level_min > level) return;
-    addXp(c.xp_reward);
-    setXp(getXp());
-    showToast('+' + c.xp_reward + ' XP', 'success');
-    setCompleted(prev => {
-      const next = { ...prev, [c.id]: true };
-      saveCompleted(next);
-      return next;
-    });
-  };
-
   useEffect(() => {
     const interval = setInterval(() => { setXp(getXp()); }, 2000);
     return () => clearInterval(interval);
@@ -127,32 +114,33 @@ export default function LevelPage() {
             const done = completed[c.id];
             const locked = c.level_min > level;
             return (
-              <Card
-                key={c.id}
-                style={{
-                  opacity: done || locked ? 0.5 : 1,
-                  cursor: !c.quiz_slug && !done && !locked ? 'pointer' : 'default',
-                  display: 'flex', flexDirection: 'column', gap: 8,
-                  padding: 20
-                }}
-                onClick={!c.quiz_slug && !done && !locked ? () => handleNonQuizChallenge(c) : undefined}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Icon.Brain size={20} color={done ? 'var(--green)' : 'var(--muted)'} />
-                  {done && <Icon.Check size={18} color="var(--green)" />}
-                  {locked && <Icon.X size={18} color="var(--muted)" />}
-                </div>
-                <div style={{ fontSize: 14, fontWeight: 700 }}>{c.title}</div>
-                <div style={{ fontSize: 12, color: 'var(--muted)' }}>{c.xp_reward} XP</div>
-                {locked && (
-                  <div style={{ fontSize: 11, color: 'var(--orange)' }}>
-                    Cần Level {c.level_min}
-                  </div>
-                )}
-                {c.quiz_slug && !locked && !done && (
-                  <Button size="small" onClick={() => navigate(`/level/quiz/${c.quiz_slug}`)}>Vào thi</Button>
-                )}
-              </Card>
+          <Card
+            key={c.id}
+            style={{
+              opacity: done || locked ? 0.5 : 1,
+              display: 'flex', flexDirection: 'column', gap: 8,
+              padding: 20
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Icon.Brain size={20} color={done ? 'var(--green)' : 'var(--muted)'} />
+              {done && <Icon.Check size={18} color="var(--green)" />}
+              {locked && <Icon.X size={18} color="var(--muted)" />}
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>{c.title}</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)' }}>{c.xp_reward} XP</div>
+            {locked && (
+              <div style={{ fontSize: 11, color: 'var(--orange)' }}>
+                Cần Level {c.level_min}
+              </div>
+            )}
+            {c.quiz_slug && !locked && !done && (
+              <Button size="small" onClick={() => navigate(`/level/quiz/${c.quiz_slug}`)}>Vào thi</Button>
+            )}
+            {!c.quiz_slug && !locked && !done && (
+              <div style={{ fontSize: 11, color: 'var(--muted)' }}>Chưa có bài thi</div>
+            )}
+          </Card>
             );
           })}
         </div>
