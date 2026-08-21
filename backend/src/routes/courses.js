@@ -53,7 +53,26 @@ router.get('/my-progress', authenticate, async (req, res) => {
       .eq('user_id', req.user.id);
     if (enrollErr) throw enrollErr;
 
-    const courseIds = (enrolls || []).map(e => e.course_id);
+    const enrollIds = new Set((enrolls || []).map(e => e.course_id));
+
+    // Khóa user có tiến độ (lesson_progress) nhưng chưa enroll — ví dụ học bài free trong khóa Premium
+    const { data: lpRows, error: lpErr } = await supabaseAdmin
+      .from('lesson_progress')
+      .select('lesson_id')
+      .eq('user_id', req.user.id);
+    if (lpErr) throw lpErr;
+
+    let courseIds = [...enrollIds];
+    if (lpRows && lpRows.length) {
+      const { data: lpLessons } = await supabaseAdmin
+        .from('lessons')
+        .select('course_id')
+        .in('id', lpRows.map(l => l.lesson_id));
+      (lpLessons || []).forEach(l => {
+        if (l.course_id && !enrollIds.has(l.course_id)) courseIds.push(l.course_id);
+      });
+    }
+
     if (!courseIds.length) return res.json({ data: [] });
 
     const [{ data: courses }, { data: lessons }, { data: progress }] = await Promise.all([
@@ -89,7 +108,7 @@ router.get('/my-progress', authenticate, async (req, res) => {
         category: c.category,
         lesson_count: total,
         progress_pct: pct,
-        enrolled: true,
+        enrolled: enrollIds.has(c.id),
         completed_lessons: info.completed,
       };
     });

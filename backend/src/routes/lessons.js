@@ -64,15 +64,22 @@ router.post('/:id/progress', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'Bài học chưa có video, không thể hoàn thành' });
     }
 
+    const { data: existing } = await supabaseAdmin
+      .from('lesson_progress')
+      .select('completed, completed_at')
+      .eq('user_id', req.user.id)
+      .eq('lesson_id', req.params.id)
+      .maybeSingle();
+
     const { data, error } = await supabaseAdmin
       .from('lesson_progress')
       .upsert({
         user_id: req.user.id,
         lesson_id: req.params.id,
-        completed: completed || false,
+        completed: completed || existing?.completed || false,
         watched_seconds: watched_seconds || 0,
         score: score || null,
-        completed_at: completed ? new Date().toISOString() : null
+        completed_at: completed ? new Date().toISOString() : (existing?.completed_at || null)
       }, { onConflict: 'user_id, lesson_id' })
       .select()
       .single();

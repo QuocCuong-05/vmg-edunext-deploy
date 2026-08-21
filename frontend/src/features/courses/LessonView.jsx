@@ -38,6 +38,9 @@ export default function LessonView() {
   const videoRef = useRef(null);
   const maxWatchedRef = useRef(0);
   const restoredRef = useRef(false);
+  const completedIdsRef = useRef(completedIds);
+  completedIdsRef.current = completedIds;
+  const saveProgressRef = useRef(() => {});
 
   useEffect(() => {
     if (!slug) return;
@@ -99,18 +102,37 @@ export default function LessonView() {
     return () => { cancelled = true; };
   }, [lessonId, course, isPlus, unlocked]);
 
+  // Hàm lưu vị trí hiện tại lên server (dùng cho ping 10s, pause, beforeunload)
+  useEffect(() => {
+    saveProgressRef.current = () => {
+      const v = videoRef.current;
+      const t = v ? Math.floor(v.currentTime || 0) : 0;
+      if (t > 0) {
+        api.lessons.progress(lessonId, { watched_seconds: t, completed: completedIdsRef.current.includes(lessonId) })
+          .catch(err => console.error('[progress]', err.message));
+      }
+    };
+  }, [lessonId]);
+
   // Ping tiến độ lên server mỗi 10s (chống mất tiến độ khi reload + dữ liệu KPI)
   useEffect(() => {
     if (!lessonId || !videoInfo || videoComplete) return;
     const timer = setInterval(() => {
       const w = Math.round(maxWatchedRef.current);
       if (w > 0) {
-        api.lessons.progress(lessonId, { watched_seconds: w })
+        api.lessons.progress(lessonId, { watched_seconds: w, completed: completedIdsRef.current.includes(lessonId) })
           .catch(err => console.error('[progress]', err.message));
       }
     }, 10000);
     return () => clearInterval(timer);
   }, [lessonId, videoInfo, videoComplete]);
+
+  // Lưu vị trí khi rời trang (reload/đóng tab) để không mất tiến độ
+  useEffect(() => {
+    const handler = () => saveProgressRef.current();
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, []);
 
   // Khôi phục tiến độ từ server khi mở bài (reload không mất)
   useEffect(() => {
@@ -288,6 +310,7 @@ export default function LessonView() {
               playsInline
               onContextMenu={e => e.preventDefault()}
               onTimeUpdate={handleTimeUpdate}
+              onPause={() => saveProgressRef.current()}
               onSeeking={handleSeeking}
               onSeeked={handleSeeked}
               onLoadedMetadata={handleLoadedMetadata}
