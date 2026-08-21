@@ -31,7 +31,7 @@ router.get('/challenges/user', async (req, res, next) => {
     const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !user) return res.json({ data: [] });
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('user_challenges')
       .select('challenge_id, completed, completed_at')
       .eq('user_id', user.id);
@@ -100,7 +100,7 @@ router.post('/challenges/:id/complete', async (req, res, next) => {
 
     if (chalErr || !challenge) return res.status(404).json({ error: 'Challenge not found' });
 
-    const { data: existing } = await supabase
+    const { data: existing } = await supabaseAdmin
       .from('user_challenges')
       .select('id')
       .eq('user_id', user.id)
@@ -109,7 +109,7 @@ router.post('/challenges/:id/complete', async (req, res, next) => {
 
     if (existing) return res.status(409).json({ error: 'Challenge already completed' });
 
-    await supabase
+    await supabaseAdmin
       .from('user_challenges')
       .insert({ user_id: user.id, challenge_id: id, completed: true, completed_at: new Date().toISOString() });
 
