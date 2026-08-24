@@ -20,12 +20,13 @@ import adminRoutes from './routes/admin.js';
 import orderRoutes from './routes/orders.js';
 import cmsRoutes from './routes/cms.js';
 import videoRoutes from './routes/videos.js';
+import practiceRoutes from './routes/practice.js';
 import { authenticate, requireAdmin } from './middleware/auth.js';
 
 const app = express();
 
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json({ limit: '15mb' }));
+app.use(express.json({ limit: '30mb' }));
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'VMG EduNext API', version: '1.0.0' });
@@ -45,6 +46,7 @@ app.use('/api/tips', tipsRoutes);
 app.use('/api/quests', questsRoutes);
 app.use('/api/rewards', rewardsRoutes);
 app.use('/api/level', levelRoutes);
+app.use('/api/practice', practiceRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/cms', cmsRoutes);

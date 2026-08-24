@@ -107,8 +107,21 @@ export const api = {
     enroll: async (courseId) => request(`/courses/${courseId}/enroll`, { method: 'POST' }),
   },
   lessons: {
+    get: async (id) => request(`/lessons/${id}`),
     progress: async (lessonId, data) =>
       request(`/lessons/${lessonId}/progress`, { method: 'POST', body: JSON.stringify(data) }),
+  },
+  practice: {
+    submit: async (payload) => request('/practice/submit', { method: 'POST', body: JSON.stringify(payload) }),
+    mySubmissions: async (lessonId) => request(`/practice/my-submissions${lessonId ? `?lesson_id=${lessonId}` : ''}`),
+    submissions: async (params = {}) => {
+      const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
+      return request(`/practice/submissions${qs ? '?' + qs : ''}`);
+    },
+    review: async (id, payload) =>
+      request(`/practice/submissions/${id}/review`, { method: 'POST', body: JSON.stringify(payload) }),
+    answer: async (payload) => request('/practice/answer', { method: 'POST', body: JSON.stringify(payload) }),
+    myAnswers: async (lessonId) => request(`/practice/my-answers${lessonId ? `?lesson_id=${lessonId}` : ''}`),
   },
   vimi: {
     chat: (message) => request('/vimi/chat', { method: 'POST', body: JSON.stringify({ message }) }),
@@ -523,6 +536,40 @@ export const api = {
       return requestRaw(`/admin/trace/devices${qs ? '?' + qs : ''}`);
     },
     traceStats: async () => request('/admin/trace/stats'),
+    modules: async (courseId) => request(`/admin/modules?course_id=${courseId}`),
+    createModule: async (payload) => request('/admin/modules', { method: 'POST', body: JSON.stringify(payload) }),
+    updateModule: async (id, payload) => request(`/admin/modules/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+    deleteModule: async (id) => request(`/admin/modules/${id}`, { method: 'DELETE' }),
+    items: async (courseId) => request(`/admin/items?course_id=${courseId}`),
+    createItem: async (payload) => request('/admin/items', { method: 'POST', body: JSON.stringify(payload) }),
+    updateItem: async (id, payload) => request(`/admin/items/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+    deleteItem: async (id) => request(`/admin/items/${id}`, { method: 'DELETE' }),
+    practiceWords: async (lessonId) => request(`/admin/practice-words?lesson_id=${lessonId}`),
+    createWord: async (payload) => request('/admin/practice-words', { method: 'POST', body: JSON.stringify(payload) }),
+    updateWord: async (id, payload) => request(`/admin/practice-words/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+    deleteWord: async (id) => request(`/admin/practice-words/${id}`, { method: 'DELETE' }),
+    practiceQuestions: async (lessonId) => request(`/admin/practice-questions?lesson_id=${lessonId}`),
+    createQuestion: async (payload) => request('/admin/practice-questions', { method: 'POST', body: JSON.stringify(payload) }),
+    updateQuestion: async (id, payload) => request(`/admin/practice-questions/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+    deleteQuestion: async (id) => request(`/admin/practice-questions/${id}`, { method: 'DELETE' }),
+    uploadAudio: async (file) => {
+      const b64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      return request('/admin/audio-upload', {
+        method: 'POST',
+        body: JSON.stringify({ file_b64: b64, filename: file.name, content_type: file.type || 'audio/mpeg' }),
+      });
+    },
+    users: async (params = {}) => {
+      const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
+      return request(`/admin/users${qs ? '?' + qs : ''}`);
+    },
+    setRole: async (userId, role) =>
+      request('/admin/users/role', { method: 'POST', body: JSON.stringify({ user_id: userId, role }) }),
   },
   ranking: {
     list: async ({ ward, school, limit = 50 } = {}) => {

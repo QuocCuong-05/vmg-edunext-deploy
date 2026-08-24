@@ -10,6 +10,9 @@ import { trackEvent } from '../../lib/ga';
 import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import SpeakPractice from '../../components/ui/SpeakPractice';
+import { ListenChoose, ListenFill, ListenMark, VoiceRecorder } from '../../components/ui/PracticeExercises';
+import { soundContext } from '../../lib/courseStructure';
 import { useAuth } from '../auth/AuthContext';
 
 function safeResumeTarget(watched, duration) {
@@ -35,6 +38,7 @@ export default function LessonView() {
   const [teaserEnded, setTeaserEnded] = useState(false);
   const [maxWatched, setMaxWatched] = useState(0);
   const [videoComplete, setVideoComplete] = useState(false);
+  const [lessonDetail, setLessonDetail] = useState(null);
   const videoRef = useRef(null);
   const maxWatchedRef = useRef(0);
   const restoredRef = useRef(false);
@@ -71,6 +75,12 @@ export default function LessonView() {
     maxWatchedRef.current = 0;
     setVideoComplete(false);
     restoredRef.current = false;
+    setLessonDetail(null);
+    if (lessonId) {
+      api.lessons.get(lessonId)
+        .then(d => setLessonDetail(d?.data || null))
+        .catch(() => setLessonDetail(null));
+    }
   }, [lessonId]);
 
   useEffect(() => {
@@ -180,8 +190,6 @@ export default function LessonView() {
   }
 
   const currentIdx = courseLessons.findIndex(l => l.id === lessonId);
-  const prevLesson = currentIdx > 0 ? courseLessons[currentIdx - 1] : null;
-  const nextLesson = currentIdx < courseLessons.length - 1 ? courseLessons[currentIdx + 1] : null;
 
   const isFree = lesson.is_free;
   const isPremium = course.access_type === 'premium' || course.access_type === 'paid';
@@ -189,6 +197,31 @@ export default function LessonView() {
   const isPreviewLesson = !canAccessFull && !!lesson.preview_text;
   const isLocked = !isFree && !canAccessFull && !isPreviewLesson;
   const isLessonCompleted = completedIds.includes(lessonId);
+
+  const itemType = lessonDetail?.item_type || lesson.item_type ||
+    (lesson.content_type === 'video' ? 'video_lesson'
+      : lesson.content_type === 'article' ? 'lesson'
+        : lesson.content_type === 'assignment' ? 'practice'
+          : lesson.content_type === 'quiz' ? 'quiz' : 'video_lesson');
+  const practiceWords = lessonDetail?.practice_words || [];
+  const bodyHtml = lessonDetail?.body_html || lesson.article_body || '<p>Nội dung bài học đang được cập nhật...</p>';
+
+  const ctx = soundContext(course, lessonId);
+  const soundItems = ctx?.sound?.items && ctx.sound.items.length ? ctx.sound.items : courseLessons;
+  const soundIdx = soundItems.findIndex(l => l.id === lessonId);
+  const prevInSound = soundIdx > 0 ? soundItems[soundIdx - 1] : null;
+  const nextInSound = soundIdx < soundItems.length - 1 ? soundItems[soundIdx + 1] : null;
+  const typeIcon = (l) => {
+    switch (l.item_type || l.content_type) {
+      case 'video_lesson': return '🎬';
+      case 'lesson': return '📄';
+      case 'practice': return '🎤';
+      case 'quiz': return '📝';
+      case 'video': return '🎬';
+      case 'article': return '📄';
+      default: return '📄';
+    }
+  };
 
   const teaserLimit = videoInfo?.previewSeconds ?? previewSeconds;
 
@@ -255,8 +288,7 @@ export default function LessonView() {
   }
 
   const dur = lesson.video_duration_seconds || lesson.duration || 0;
-  const content = lesson.article_body || '<p>Nội dung bài học đang được cập nhật...</p>';
-  const lessonHasVideo = !!lesson.video_url;
+  const lessonHasVideo = itemType === 'video_lesson' && !!lesson.video_url;
   const completeBlockedByVideo = lessonHasVideo && !videoComplete;
 
   const handleComplete = async () => {
@@ -284,7 +316,25 @@ export default function LessonView() {
 
   return (
     <div className="lesson-content page-enter">
-      <div className="back-btn" onClick={() => navigate(`/courses/${slug}`)}><Icon.ArrowLeft size={14} /> {course.title}</div>
+      <div className="back-btn" style={{ flexWrap: 'wrap', gap: 6 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} onClick={() => navigate(`/courses/${slug}`)}>
+          <Icon.ArrowLeft size={14} /> {course.title}
+        </span>
+        {ctx?.moduleId && (
+          <>
+            <span style={{ color: 'var(--muted)' }}>/</span>
+            <span style={{ cursor: 'pointer' }} onClick={() => navigate(`/courses/${slug}/module/${ctx.moduleId}`)}>{ctx.moduleTitle}</span>
+          </>
+        )}
+        {ctx?.sound && (
+          <>
+            <span style={{ color: 'var(--muted)' }}>/</span>
+            <span style={{ cursor: 'pointer' }} onClick={() => navigate(`/courses/${slug}/module/${ctx.moduleId}/sound/${ctx.soundNo}`)}>{ctx.sound.title}</span>
+          </>
+        )}
+        <span style={{ color: 'var(--muted)' }}>/</span>
+        <span style={{ color: 'var(--muted)', fontWeight: 600 }}>{lesson.title.length > 34 ? lesson.title.slice(0, 34) + '…' : lesson.title}</span>
+      </div>
 
       <h1 style={{ fontSize: 22, marginBottom: 8 }}>
         {lesson.title}{' '}
@@ -296,7 +346,36 @@ export default function LessonView() {
       </h1>
       <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>{lesson.description}</p>
 
-      {lesson.content_type === 'video' && (
+      {ctx?.sound && soundItems.length > 1 && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+          {soundItems.map(l => {
+            const done = completedIds.includes(l.id);
+            const active = l.id === lessonId;
+            return (
+              <div
+                key={l.id}
+                onClick={() => navigate(`/courses/${slug}/lessons/${l.id}`)}
+                title={l.title}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '7px 12px', borderRadius: 999, cursor: 'pointer',
+                  fontSize: 12, fontWeight: 700,
+                  border: `1px solid ${active ? 'var(--red)' : 'var(--line)'}`,
+                  background: active ? 'var(--red-bg)' : done ? 'var(--green-bg)' : 'var(--surface-hover)',
+                  color: active ? 'var(--red)' : done ? 'var(--green)' : 'var(--muted)',
+                }}
+              >
+                {done ? '✓' : typeIcon(l)}
+                <span style={{ maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {l.title.split(' - ').pop()}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {itemType === 'video_lesson' && (
         <div className="video-player" style={{ position: 'relative' }}>
           {videoInfo?.legacy ? (
             <iframe src={videoInfo.url} allowFullScreen title={lesson.title} />
@@ -371,41 +450,96 @@ export default function LessonView() {
       )}
 
       <Card style={{ marginBottom: 20, padding: 20 }}>
-        <div dangerouslySetInnerHTML={{ __html: content }} style={{ fontSize: 14, lineHeight: 1.8 }} />
+        {itemType === 'lesson' || itemType === 'video_lesson' ? (
+          <div dangerouslySetInnerHTML={{ __html: bodyHtml }} style={{ fontSize: 14, lineHeight: 1.8 }} />
+        ) : (
+          <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.7 }}>
+            {itemType === 'practice'
+              ? 'Luyện phát âm từng từ: nghe audio mẫu, bật mic đọc theo, gửi để được chấm điểm.'
+              : itemType === 'quiz'
+                ? 'Hoàn thành bài kiểm tra để ôn tập kiến thức.'
+                : bodyHtml}
+          </p>
+        )}
       </Card>
 
-      {lesson.content_type === 'assignment' && (
-        <Card style={{ background: 'var(--gold-bg)', borderColor: 'var(--gold)', marginBottom: 20, padding: 20 }}>
-          <h4 style={{ fontSize: 15, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}><Icon.Pen size={16} /> Bài tập</h4>
-          <div dangerouslySetInnerHTML={{ __html: content }} style={{ fontSize: 13, lineHeight: 1.7 }} />
-          <div style={{ marginTop: 16 }}>
-            <textarea
-              placeholder="Nhập câu trả lời của bạn..."
-              style={{ width: '100%', border: '1px solid var(--line)', borderRadius: 12, padding: 12, fontSize: 13, minHeight: 120, resize: 'vertical' }}
-            />
-          </div>
+      {itemType === 'practice' && (
+        <Card style={{ marginBottom: 20, padding: 20 }}>
+          <h4 style={{ fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>🎤</span> Luyện nói — {lessonDetail?.practice_type === 'listen_choose' ? 'Nghe & chọn đáp án'
+              : lessonDetail?.practice_type === 'listen_fill' ? 'Nghe & điền từ'
+                : lessonDetail?.practice_type === 'listen_mark' ? 'Nghe & đánh dấu từ'
+                  : lessonDetail?.practice_type === 'voice_recorder' ? 'Ghi âm bài nói'
+                    : 'Speak the Words'}
+            {lesson.points > 0 && <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>· tối đa {lesson.points} điểm</span>}
+          </h4>
+          {(() => {
+            const pt = lessonDetail?.practice_type || 'speak_words';
+            const ansMap = {};
+            (lessonDetail?.practice_answers || []).forEach(a => { ansMap[a.question_id] = a; });
+            const done = () => {
+              api.lessons.progress(lessonId, { completed: true })
+                .then(() => {
+                  setCompleted(true);
+                  updateStreak();
+                  addXp(60);
+                  showToast('+60 XP', 'success');
+                  logActivity('lesson', 'Đã hoàn thành bài tập: ' + lesson.title, course.title);
+                  dispatchAction('lesson_complete');
+                  setIsEnrolled(true);
+                  if (!completedIds.includes(lessonId)) setCompletedIds(prev => [...prev, lessonId]);
+                })
+                .catch(err => showToast(err.message || 'Lỗi lưu tiến độ', 'error'));
+            };
+            if (pt === 'listen_choose') return <ListenChoose lesson={lesson} questions={lessonDetail?.practice_questions || []} answers={ansMap} onCompleted={done} />;
+            if (pt === 'listen_fill') return <ListenFill lesson={lesson} questions={lessonDetail?.practice_questions || []} answers={ansMap} onCompleted={done} />;
+            if (pt === 'listen_mark') return <ListenMark lesson={lesson} questions={lessonDetail?.practice_questions || []} answers={ansMap} onCompleted={done} />;
+            if (pt === 'voice_recorder') return <VoiceRecorder lesson={lesson} questions={lessonDetail?.practice_questions || []} answers={ansMap} onCompleted={done} />;
+            return <SpeakPractice lesson={lesson} words={practiceWords} onCompleted={done} />;
+          })()}
         </Card>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
-        <Button variant="primary" onClick={handleComplete} isDisabled={completed || isLessonCompleted || completeBlockedByVideo}>
-          {completed || isLessonCompleted ? <><Icon.Check size={16} /> Đã hoàn thành</> : (completeBlockedByVideo ? 'Xem hết video để hoàn thành' : 'Đánh dấu hoàn thành')}
-        </Button>
-        {videoError && (
-          <p style={{ fontSize: 12, color: 'var(--red)', margin: 0 }}>{videoError}</p>
-        )}
-      </div>
+      {itemType === 'quiz' && (
+        <Card style={{ marginBottom: 20, padding: 20, textAlign: 'center' }}>
+          <h4 style={{ fontSize: 15, marginBottom: 8 }}>📝 Bài kiểm tra</h4>
+          <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>
+            Làm bài kiểm tra để ôn lại nội dung bài học.
+          </p>
+          <Button variant="primary" onClick={() => navigate(`/quiz/${lesson.quiz_slug || lessonDetail?.quiz_slug}`)}>
+            Vào làm bài kiểm tra
+          </Button>
+        </Card>
+      )}
+
+      {lesson.content_type === 'assignment' && itemType !== 'practice' && (
+        <Card style={{ background: 'var(--gold-bg)', borderColor: 'var(--gold)', marginBottom: 20, padding: 20 }}>
+          <h4 style={{ fontSize: 15, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}><Icon.Pen size={16} /> Bài tập</h4>
+          <div dangerouslySetInnerHTML={{ __html: bodyHtml }} style={{ fontSize: 13, lineHeight: 1.7 }} />
+        </Card>
+      )}
+
+      {itemType !== 'practice' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+          <Button variant="primary" onClick={handleComplete} isDisabled={completed || isLessonCompleted || completeBlockedByVideo}>
+            {completed || isLessonCompleted ? <><Icon.Check size={16} /> Đã hoàn thành</> : (completeBlockedByVideo ? 'Xem hết video để hoàn thành' : 'Đánh dấu hoàn thành')}
+          </Button>
+          {videoError && (
+            <p style={{ fontSize: 12, color: 'var(--red)', margin: 0 }}>{videoError}</p>
+          )}
+        </div>
+      )}
 
       <div className="lesson-nav">
-        {prevLesson ? (
-          <Button variant="ghost" onClick={() => navigate(`/courses/${slug}/lessons/${prevLesson.id}`)} style={{ minWidth: 0 }}>
+        {prevInSound ? (
+          <Button variant="ghost" onClick={() => navigate(`/courses/${slug}/lessons/${prevInSound.id}`)} style={{ minWidth: 0 }}>
             <Icon.ArrowLeft size={16} style={{ flexShrink: 0 }} />
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{prevLesson.title}</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{prevInSound.title}</span>
           </Button>
         ) : <div />}
-        {nextLesson ? (
-          <Button variant="primary" onClick={() => navigate(`/courses/${slug}/lessons/${nextLesson.id}`)} style={{ minWidth: 0 }}>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{nextLesson.title}</span>
+        {nextInSound ? (
+          <Button variant="primary" onClick={() => navigate(`/courses/${slug}/lessons/${nextInSound.id}`)} style={{ minWidth: 0 }}>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{nextInSound.title}</span>
             <Icon.ArrowRight size={16} style={{ flexShrink: 0 }} />
           </Button>
         ) : <div />}

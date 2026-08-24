@@ -18,6 +18,9 @@ function sanitizeLessons(lessons, canAccessFull) {
       title: l.title,
       sort_order: l.sort_order,
       content_type: l.content_type,
+      item_type: l.item_type ?? null,
+      module_id: l.module_id ?? null,
+      points: l.points ?? 0,
       duration_minutes: l.duration_minutes,
       duration: l.duration ?? null,
       video_duration_seconds: l.video_duration_seconds ?? null,
@@ -77,9 +80,43 @@ router.get('/my-progress', authenticate, async (req, res) => {
 
     const [{ data: courses }, { data: lessons }, { data: progress }] = await Promise.all([
       supabaseAdmin.from('courses').select('id, title, slug, level, category, lesson_count').in('id', courseIds),
-      supabaseAdmin.from('lessons').select('id, course_id').in('course_id', courseIds),
+      supabaseAdmin.from('lessons').select('id, course_id, item_type, points').in('course_id', courseIds),
       supabaseAdmin.from('lesson_progress').select('lesson_id, completed').eq('user_id', req.user.id),
     ]);
+
+    // Điểm practice: điểm tổng + điểm đạt được của user
+    const practiceLessonIds = (lessons || []).filter(l => l.item_type === 'practice').map(l => l.id);
+    let pointsTotalByCourse = {};
+    let pointsEarnedByCourse = {};
+    if (practiceLessonIds.length) {
+      const [answersRes, subsRes, qCountRes] = await Promise.all([
+        supabaseAdmin.from('practice_answers').select('lesson_id, score, is_correct').eq('user_id', req.user.id).in('lesson_id', practiceLessonIds),
+        supabaseAdmin.from('practice_submissions').select('lesson_id, ai_score, teacher_score').eq('user_id', req.user.id).in('lesson_id', practiceLessonIds),
+        supabaseAdmin.from('practice_questions').select('lesson_id').in('lesson_id', practiceLessonIds),
+      ]);
+      const answers = answersRes.data || [];
+      const subs = subsRes.data || [];
+      const qCount = {};
+      (qCountRes.data || []).forEach(q => { qCount[q.lesson_id] = (qCount[q.lesson_id] || 0) + 1; });
+
+      const bestVoice = {};
+      (subs || []).forEach(s => {
+        const sc = s.teacher_score ?? s.ai_score;
+        if (sc != null) bestVoice[s.lesson_id] = Math.max(bestVoice[s.lesson_id] || 0, sc);
+      });
+      const correctCount = {};
+      (answers || []).forEach(a => { if (a.is_correct) correctCount[a.lesson_id] = (correctCount[a.lesson_id] || 0) + 1; });
+
+      (lessons || []).forEach(l => {
+        if (l.item_type !== 'practice' || !l.points) return;
+        const cid = l.course_id;
+        pointsTotalByCourse[cid] = (pointsTotalByCourse[cid] || 0) + (l.points || 0);
+        let ratio = 0;
+        if (bestVoice[l.id] != null) ratio = bestVoice[l.id] / 10;
+        else if (qCount[l.id]) ratio = Math.min(1, (correctCount[l.id] || 0) / qCount[l.id]);
+        pointsEarnedByCourse[cid] = (pointsEarnedByCourse[cid] || 0) + Math.round((l.points || 0) * ratio);
+      });
+    }
 
     const byCourse = {};
     const lessonCourse = {};
@@ -110,6 +147,8 @@ router.get('/my-progress', authenticate, async (req, res) => {
         progress_pct: pct,
         enrolled: enrollIds.has(c.id),
         completed_lessons: info.completed,
+        points_total: pointsTotalByCourse[c.id] || 0,
+        points_earned: pointsEarnedByCourse[c.id] || 0,
       };
     });
 
@@ -168,7 +207,40 @@ router.get('/:slug', authenticate, async (req, res) => {
     ]);
     const canAccessFull = plusActive || !!enrolled?.data;
 
-    res.json({ data: { ...course, lessons: sanitizeLessons(lessons, canAccessFull) } });
+    const sanitized = sanitizeLessons(lessons, canAccessFull);
+
+    // Cấu trúc phân tầng theo module (course_modules) — giữ luôn lessons phẳng cho tương thích
+    let modules = [];
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('course_modules')
+        .select('id, title, position')
+        .eq('course_id', course.id)
+        .order('position', { ascending: true });
+      if (!error) modules = data || [];
+    } catch {}
+
+    const itemsByModule = {};
+    const loose = [];
+    (sanitized || []).forEach(l => {
+      if (l.module_id && modules?.some(m => m.id === l.module_id)) {
+        (itemsByModule[l.module_id] = itemsByModule[l.module_id] || []).push(l);
+      } else {
+        loose.push(l);
+      }
+    });
+
+    const modulesOut = (modules || []).map(m => ({
+      id: m.id,
+      title: m.title,
+      position: m.position,
+      items: (itemsByModule[m.id] || []).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
+    }));
+    if (loose.length) {
+      modulesOut.unshift({ id: null, title: 'Nội dung khác', position: -1, items: loose });
+    }
+
+    res.json({ data: { ...course, modules: modulesOut, lessons: sanitized } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -213,7 +285,7 @@ router.get('/:courseId/progress', authenticate, async (req, res) => {
 
     const { data: lessons } = await supabaseAdmin
       .from('lessons')
-      .select('id')
+      .select('id, item_type, points')
       .eq('course_id', req.params.courseId);
 
     const lessonIds = (lessons || []).map(l => l.id);
@@ -224,6 +296,42 @@ router.get('/:courseId/progress', authenticate, async (req, res) => {
       .eq('user_id', req.user.id)
       .in('lesson_id', lessonIds);
     if (progErr) throw progErr;
+
+    // Điểm practice
+    let pointsTotal = 0;
+    let pointsEarned = 0;
+    const practiceScores = {};
+    const practiceLessonIds = (lessons || []).filter(l => l.item_type === 'practice').map(l => l.id);
+    if (practiceLessonIds.length) {
+      const [answersRes, subsRes, qCountRes] = await Promise.all([
+        supabaseAdmin.from('practice_answers').select('lesson_id, score, is_correct').eq('user_id', req.user.id).in('lesson_id', practiceLessonIds),
+        supabaseAdmin.from('practice_submissions').select('lesson_id, ai_score, teacher_score').eq('user_id', req.user.id).in('lesson_id', practiceLessonIds),
+        supabaseAdmin.from('practice_questions').select('lesson_id').in('lesson_id', practiceLessonIds),
+      ]);
+      const answers = answersRes.data || [];
+      const subs = subsRes.data || [];
+      const qCount = {};
+      (qCountRes.data || []).forEach(q => { qCount[q.lesson_id] = (qCount[q.lesson_id] || 0) + 1; });
+      const bestVoice = {};
+      (subs || []).forEach(s => {
+        const sc = s.teacher_score ?? s.ai_score;
+        if (sc != null) bestVoice[s.lesson_id] = Math.max(bestVoice[s.lesson_id] || 0, sc);
+      });
+      const correctCount = {};
+      (answers || []).forEach(a => { if (a.is_correct) correctCount[a.lesson_id] = (correctCount[a.lesson_id] || 0) + 1; });
+
+      (lessons || []).forEach(l => {
+        if (l.item_type !== 'practice') return;
+        const max = l.points || 0;
+        pointsTotal += max;
+        let ratio = 0;
+        if (bestVoice[l.id] != null) ratio = bestVoice[l.id] / 10;
+        else if (qCount[l.id]) ratio = Math.min(1, (correctCount[l.id] || 0) / qCount[l.id]);
+        const earned = Math.round(max * ratio);
+        pointsEarned += earned;
+        if (max > 0) practiceScores[l.id] = { earned, max };
+      });
+    }
 
     const completedLessons = (progress || []).filter(p => p.completed).map(p => p.lesson_id);
     const total = course?.lesson_count || lessonIds.length || 0;
@@ -243,6 +351,9 @@ router.get('/:courseId/progress', authenticate, async (req, res) => {
         status: enrollment?.status || null,
         completed_lessons: completedLessons,
         details: progress || [],
+        points_total: pointsTotal,
+        points_earned: pointsEarned,
+        practice_scores: practiceScores,
       }
     });
   } catch (err) {

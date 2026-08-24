@@ -39,6 +39,9 @@ router.post('/signup', signupLimiter, async (req, res) => {
     if (!EMAIL_RULE.test(emailNorm)) {
       return res.status(400).json({ error: 'Địa chỉ email không hợp lệ' });
     }
+    if (/^test\+verify_/i.test(emailNorm)) {
+      return res.status(400).json({ error: 'Địa chỉ email không được hỗ trợ đăng ký' });
+    }
     const emailDomain = emailNorm.split('@')[1];
     if (DISPOSABLE_DOMAINS.has(emailDomain)) {
       return res.status(400).json({ error: 'Không hỗ trợ email dùng một lần (disposable). Vui lòng dùng email thật.' });

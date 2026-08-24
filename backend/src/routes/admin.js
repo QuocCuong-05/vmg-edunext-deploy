@@ -790,4 +790,309 @@ router.post('/cms-upload', async (req, res, next) => {
   }
 });
 
+// ====================================================================
+// CẤU TRÚC KHÓA HỌC (Course → Module → Item) + Practice words + role
+// ====================================================================
+
+function slugify(text) {
+  return String(text || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/đ/g, 'd')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'item';
+}
+
+// --- Modules ---
+router.get('/modules', async (req, res, next) => {
+  try {
+    if (!req.query.course_id) return res.status(400).json({ error: 'course_id là bắt buộc' });
+    const { data, error } = await supabaseAdmin
+      .from('course_modules')
+      .select('*')
+      .eq('course_id', req.query.course_id)
+      .order('position', { ascending: true });
+    if (error) throw error;
+    res.json({ data });
+  } catch (err) { next(err); }
+});
+
+router.post('/modules', async (req, res, next) => {
+  try {
+    const { course_id, title, position } = req.body;
+    if (!course_id || !title) return res.status(400).json({ error: 'course_id và title là bắt buộc' });
+    const { data, error } = await supabaseAdmin
+      .from('course_modules')
+      .insert({ course_id, title, position: position ?? 0 })
+      .select()
+      .single();
+    if (error) throw error;
+    res.status(201).json({ data });
+  } catch (err) { next(err); }
+});
+
+router.put('/modules/:id', async (req, res, next) => {
+  try {
+    const { title, position } = req.body;
+    const { data, error } = await supabaseAdmin
+      .from('course_modules')
+      .update({ ...(title !== undefined ? { title } : {}), ...(position !== undefined ? { position } : {}), updated_at: new Date().toISOString() })
+      .eq('id', req.params.id)
+      .select()
+      .single();
+    if (error) throw error;
+    res.json({ data });
+  } catch (err) { next(err); }
+});
+
+router.delete('/modules/:id', async (req, res, next) => {
+  try {
+    const { error } = await supabaseAdmin.from('course_modules').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// --- Items (lessons) ---
+router.get('/items', async (req, res, next) => {
+  try {
+    if (!req.query.course_id) return res.status(400).json({ error: 'course_id là bắt buộc' });
+    const { data, error } = await supabaseAdmin
+      .from('lessons')
+      .select('*')
+      .eq('course_id', req.query.course_id)
+      .order('sort_order', { ascending: true });
+    if (error) throw error;
+    res.json({ data });
+  } catch (err) { next(err); }
+});
+
+router.post('/items', async (req, res, next) => {
+  try {
+    const { course_id, module_id, title, item_type, video_url, body_html, points, external_url, audio_url, image_url, is_free, sort_order, quiz_slug } = req.body;
+    if (!course_id || !title) return res.status(400).json({ error: 'course_id và title là bắt buộc' });
+    const type = item_type || 'video_lesson';
+    const baseSlug = slugify(title);
+    let slug = baseSlug;
+    let n = 1;
+    while (true) {
+      const { data: dup } = await supabaseAdmin
+        .from('lessons').select('id').eq('course_id', course_id).eq('slug', slug).maybeSingle();
+      if (!dup) break;
+      slug = `${baseSlug}-${n++}`;
+    }
+    const { data, error } = await supabaseAdmin
+      .from('lessons')
+      .insert({
+        course_id, module_id: module_id || null, title, slug,
+        content_type: type === 'video_lesson' ? 'video' : type === 'lesson' ? 'article' : type === 'practice' ? 'assignment' : 'quiz',
+        item_type: type,
+        video_url: video_url || null,
+        body_html: body_html || null,
+        points: points ?? 0,
+        external_url: external_url || null,
+        audio_url: audio_url || null,
+        image_url: image_url || null,
+        quiz_slug: quiz_slug || null,
+        is_free: !!is_free,
+        sort_order: sort_order ?? 0,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    res.status(201).json({ data });
+  } catch (err) { next(err); }
+});
+
+router.put('/items/:id', async (req, res, next) => {
+  try {
+    const allowed = ['title', 'module_id', 'item_type', 'video_url', 'body_html', 'points', 'external_url', 'audio_url', 'image_url', 'is_free', 'sort_order', 'quiz_slug', 'practice_type'];
+    const patch = {};
+    allowed.forEach(k => { if (req.body[k] !== undefined) patch[k] = req.body[k]; });
+    if (patch.item_type !== undefined) {
+      patch.content_type = patch.item_type === 'video_lesson' ? 'video' : patch.item_type === 'lesson' ? 'article' : patch.item_type === 'practice' ? 'assignment' : 'quiz';
+    }
+    patch.updated_at = new Date().toISOString();
+    const { data, error } = await supabaseAdmin
+      .from('lessons')
+      .update(patch)
+      .eq('id', req.params.id)
+      .select()
+      .single();
+    if (error) throw error;
+    res.json({ data });
+  } catch (err) { next(err); }
+});
+
+router.delete('/items/:id', async (req, res, next) => {
+  try {
+    const { error } = await supabaseAdmin.from('lessons').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// --- Practice words ---
+router.get('/practice-words', async (req, res, next) => {
+  try {
+    if (!req.query.lesson_id) return res.status(400).json({ error: 'lesson_id là bắt buộc' });
+    const { data, error } = await supabaseAdmin
+      .from('practice_words')
+      .select('*')
+      .eq('lesson_id', req.query.lesson_id)
+      .order('position', { ascending: true });
+    if (error) throw error;
+    res.json({ data });
+  } catch (err) { next(err); }
+});
+
+router.post('/practice-words', async (req, res, next) => {
+  try {
+    const { lesson_id, word, audio_url, image_url, position } = req.body;
+    if (!lesson_id || !word) return res.status(400).json({ error: 'lesson_id và word là bắt buộc' });
+    const { data, error } = await supabaseAdmin
+      .from('practice_words')
+      .insert({ lesson_id, word, audio_url: audio_url || null, image_url: image_url || null, position: position ?? 0 })
+      .select()
+      .single();
+    if (error) throw error;
+    res.status(201).json({ data });
+  } catch (err) { next(err); }
+});
+
+router.put('/practice-words/:id', async (req, res, next) => {
+  try {
+    const allowed = ['word', 'audio_url', 'image_url', 'position'];
+    const patch = {};
+    allowed.forEach(k => { if (req.body[k] !== undefined) patch[k] = req.body[k]; });
+    const { data, error } = await supabaseAdmin
+      .from('practice_words')
+      .update(patch)
+      .eq('id', req.params.id)
+      .select()
+      .single();
+    if (error) throw error;
+    res.json({ data });
+  } catch (err) { next(err); }
+});
+
+router.delete('/practice-words/:id', async (req, res, next) => {
+  try {
+    const { error } = await supabaseAdmin.from('practice_words').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// --- Upload audio (practice / lesson) ---
+router.post('/audio-upload', async (req, res, next) => {
+  try {
+    const { file_b64, filename, content_type } = req.body;
+    if (!file_b64 || !filename) return res.status(400).json({ error: 'file_b64 và filename là bắt buộc' });
+    const buffer = Buffer.from(file_b64, 'base64');
+    if (buffer.length > 10 * 1024 * 1024) return res.status(400).json({ error: 'Audio tối đa 10MB' });
+    const { error: bErr } = await supabaseAdmin.storage.createBucket('practice-audio', { public: true });
+    if (bErr && !/already exists/i.test(bErr.message)) throw bErr;
+    const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `assets/${Date.now()}-${safeName}`;
+    const { error } = await supabaseAdmin.storage
+      .from('practice-audio')
+      .upload(path, buffer, { contentType: content_type || 'audio/mpeg', upsert: false });
+    if (error) throw error;
+    const { data: pubUrl } = supabaseAdmin.storage.from('practice-audio').getPublicUrl(path);
+    res.json({ data: { url: pubUrl.publicUrl } });
+  } catch (err) { next(err); }
+});
+
+// --- Practice questions (choose/fill/mark) ---
+router.get('/practice-questions', async (req, res, next) => {
+  try {
+    if (!req.query.lesson_id) return res.status(400).json({ error: 'lesson_id là bắt buộc' });
+    const { data, error } = await supabaseAdmin
+      .from('practice_questions')
+      .select('*')
+      .eq('lesson_id', req.query.lesson_id)
+      .order('position', { ascending: true });
+    if (error) throw error;
+    res.json({ data });
+  } catch (err) { next(err); }
+});
+
+router.post('/practice-questions', async (req, res, next) => {
+  try {
+    const { lesson_id, qtype, position, audio_url, prompt, text_content, options, correct } = req.body;
+    if (!lesson_id || !qtype) return res.status(400).json({ error: 'lesson_id và qtype là bắt buộc' });
+    const { data, error } = await supabaseAdmin
+      .from('practice_questions')
+      .insert({
+        lesson_id, qtype,
+        position: position ?? 0,
+        audio_url: audio_url || null,
+        prompt: prompt || null,
+        text_content: text_content || null,
+        options: options || null,
+        correct: correct || null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    res.status(201).json({ data });
+  } catch (err) { next(err); }
+});
+
+router.put('/practice-questions/:id', async (req, res, next) => {
+  try {
+    const allowed = ['qtype', 'position', 'audio_url', 'prompt', 'text_content', 'options', 'correct'];
+    const patch = {};
+    allowed.forEach(k => { if (req.body[k] !== undefined) patch[k] = req.body[k]; });
+    const { data, error } = await supabaseAdmin
+      .from('practice_questions')
+      .update(patch)
+      .eq('id', req.params.id)
+      .select()
+      .single();
+    if (error) throw error;
+    res.json({ data });
+  } catch (err) { next(err); }
+});
+
+router.delete('/practice-questions/:id', async (req, res, next) => {
+  try {
+    const { error } = await supabaseAdmin.from('practice_questions').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// --- Gán role (giáo viên/admin) ---
+router.get('/users', async (req, res, next) => {
+  try {
+    const { search, role } = req.query;
+    let q = supabaseAdmin.from('profiles').select('id, full_name, email, role').order('created_at', { ascending: false }).limit(100);
+    if (role) q = q.eq('role', role);
+    const { data, error } = await q;
+    if (error) throw error;
+    let rows = data || [];
+    if (search) {
+      const s = search.toLowerCase();
+      rows = rows.filter(r => (r.full_name || '').toLowerCase().includes(s) || (r.email || '').toLowerCase().includes(s));
+    }
+    res.json({ data: rows });
+  } catch (err) { next(err); }
+});
+
+router.post('/users/role', async (req, res, next) => {
+  try {
+    const { user_id, role } = req.body;
+    const valid = ['learner', 'teacher', 'admin', 'super_admin'];
+    if (!user_id || !valid.includes(role)) return res.status(400).json({ error: 'user_id và role (learner|teacher|admin|super_admin) là bắt buộc' });
+    const { data, error } = await supabaseAdmin
+      .from('profiles')
+      .update({ role })
+      .eq('id', user_id)
+      .select('id, full_name, email, role')
+      .single();
+    if (error) throw error;
+    res.json({ data });
+  } catch (err) { next(err); }
+});
+
 export default router;

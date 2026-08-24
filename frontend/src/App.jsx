@@ -11,6 +11,8 @@ import Dashboard from './features/dashboard/Dashboard';
 import Courses from './features/courses/Courses';
 import CourseDetail from './features/courses/CourseDetail';
 import OrderApprovePage from './features/courses/OrderApprovePage';
+import ModulePage from './features/courses/ModulePage';
+import SoundPage from './features/courses/SoundPage';
 import LessonView from './features/courses/LessonView';
 import Vocabulary from './features/vocabulary/Vocabulary';
 import Classroom from './features/classroom/Classroom';
@@ -32,6 +34,8 @@ import RewardsPage from './features/rewards/RewardsPage';
 import PlusPage from './features/plus/PlusPage';
 import AdminData from './features/admin/AdminData';
 import AdminRoute from './features/auth/AdminRoute';
+import TeacherRoute from './features/auth/TeacherRoute';
+import GradingPage from './features/teacher/GradingPage';
 import AccountPage from './features/profile/AccountPage';
 import ChangePasswordPage from './features/profile/ChangePasswordPage';
 import PolicyPage from './features/policy/PolicyPage';
@@ -80,6 +84,8 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/courses/:slug" element={<CourseDetail />} />
+        <Route path="/courses/:slug/module/:moduleId" element={<ModulePage />} />
+        <Route path="/courses/:slug/module/:moduleId/sound/:no" element={<SoundPage />} />
         <Route path="/courses/:slug/lessons/:lessonId" element={<LessonView />} />
         <Route path="/vocabulary" element={<Vocabulary />} />
         <Route path="/classroom" element={<Classroom />} />
@@ -103,6 +109,9 @@ export default function App() {
       </Route>
       <Route element={<AdminRoute><Layout /></AdminRoute>}>
         <Route path="/admin/data" element={<AdminData />} />
+      </Route>
+      <Route element={<TeacherRoute><Layout /></TeacherRoute>}>
+        <Route path="/teacher/grading" element={<GradingPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

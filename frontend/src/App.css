@@ -1448,14 +1448,22 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 .admin-badge.gold { background: var(--gold-bg); color: var(--gold); }
 .admin-badge.red { background: var(--red-bg); color: var(--red); }
 .admin-badge.gray { background: var(--surface); color: var(--muted); }
+.admin-tab-groups { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+.admin-tab-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.admin-tab-group-label {
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--muted); width: 62px; flex-shrink: 0;
+}
 .admin-tabs {
   display: flex;
   gap: 4px;
   background: var(--surface);
   border-radius: 10px;
   padding: 3px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
   flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
 }
 .admin-tab {
   flex: 1;

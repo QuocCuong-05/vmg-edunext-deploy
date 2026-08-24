@@ -48,6 +48,24 @@ export async function requireAdmin(req, res, next) {
   next();
 }
 
+export async function requireTeacher(req, res, next) {
+  const { data: profile, error } = await supabaseAdmin
+    .from('profiles')
+    .select('role')
+    .eq('id', req.user.id)
+    .maybeSingle();
+
+  if (error) {
+    return res.status(500).json({ error: 'Failed to check permissions' });
+  }
+
+  if (!profile || !['teacher', 'admin', 'super_admin'].includes(profile.role)) {
+    return res.status(403).json({ error: 'Teacher access required' });
+  }
+
+  next();
+}
+
 export function optionalAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

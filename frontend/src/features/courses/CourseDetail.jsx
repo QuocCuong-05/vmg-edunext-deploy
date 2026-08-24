@@ -101,7 +101,7 @@ export default function CourseDetail() {
               {course.title}{' '}
               {isPremium && (
                 <span className="pill" style={{ background: 'var(--red)', color: '#fff', fontSize: 10, verticalAlign: 'middle' }}>
-                  <Icon.Gem size={9} style={{ verticalAlign: 'middle', marginRight: 2 }} /> Gói Plus
+                  <Icon.Gem size={9} style={{ verticalAlign: 'middle', marginRight: 8, transform: 'translateY(-0.5px)' }} />&nbsp; Gói Plus
                 </span>
               )}
             </h1>
@@ -155,69 +155,46 @@ export default function CourseDetail() {
             <div className="progress-bar">
               <div className="progress-fill" style={{ width: `${enroll.progress_pct}%` }} />
             </div>
+            {enroll.points_total > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--gold)' }}>🏆 Điểm: {enroll.points_earned}/{enroll.points_total}</span>
+              </div>
+            )}
           </div>
         )}
       </Card>
 
-      <h3 style={{ fontSize: 17, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}><Icon.BookOpen size={18} /> Danh sách bài học</h3>
+      <h3 style={{ fontSize: 17, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}><Icon.BookOpen size={18} /> Nội dung khóa học</h3>
       {(() => {
-        const groups = [];
-        (course.lessons || []).forEach(l => {
-          const key = l.module || 'Bài học';
-          const g = groups.find(x => x.name === key);
-          if (g) g.items.push(l);
-          else groups.push({ name: key, items: [l] });
-        });
-        let globalIdx = 0;
-        return groups.map(group => (
-          <div key={group.name}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '18px 0 10px' }}>
-              <span style={{ width: 4, height: 18, borderRadius: 2, background: 'var(--red)', flexShrink: 0 }} />
-              <b style={{ fontSize: 14 }}>{group.name}</b>
-            </div>
-            {group.items.map(lesson => {
-              const isCompleted = completedIds.includes(lesson.id);
-              const locked = !canAccess && !lesson.is_free;
-              const isTeaser = locked && !!lesson.preview_text;
-              const idx = globalIdx++;
+        const modules = (course.modules || []).length
+          ? course.modules
+          : [{ id: null, title: 'Bài học', items: course.lessons || [] }];
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {modules.map(group => {
+              const items = group.items || [];
+              const done = items.filter(it => completedIds.includes(it.id)).length;
+              const pct = items.length ? Math.round((done / items.length) * 100) : 0;
               return (
                 <div
-                  key={lesson.id}
-                  className={`lesson-item ${isCompleted ? 'completed' : ''} ${locked ? 'locked' : ''}`}
-                  onClick={() => {
-                    navigate(`/courses/${course.slug}/lessons/${lesson.id}`);
-                  }}
+                  key={group.id || group.title}
+                  className="lesson-item"
+                  style={{ cursor: 'pointer', padding: '16px 18px' }}
+                  onClick={() => navigate(`/courses/${course.slug}/module/${group.id || 'loose'}`)}
                 >
-                  <div className="lesson-number">{isCompleted ? '✓' : idx + 1}</div>
+                  <div className="lesson-number" style={{ background: pct === 100 ? 'var(--green)' : 'var(--red-bg)', color: pct === 100 ? '#fff' : 'var(--red)' }}>
+                    {pct === 100 ? '✓' : pct > 0 ? pct + '%' : '▶'}
+                  </div>
                   <div className="lesson-info">
-                    <h4>{lesson.title}</h4>
-                    <p>{lesson.description}</p>
-                    {locked && lesson.preview_text && (
-                      <p style={{ fontSize: 11, color: 'var(--muted)', fontStyle: 'italic', marginTop: 4 }}>
-                        Xem trước: {lesson.preview_text}
-                      </p>
-                    )}
+                    <h4>{group.title}</h4>
+                    <p>{items.length} bài · {done}/{items.length} đã hoàn thành</p>
                   </div>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    {lesson.content_type !== 'video' && (
-                      <span className="pill" style={{ fontSize: 9, padding: '3px 8px' }}>
-                        {lesson.content_type === 'article' ? '📄' : '📝'}
-                      </span>
-                    )}
-                    {(lesson.video_duration_seconds || lesson.duration) > 0 && (
-                      <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-                        {Math.floor((lesson.video_duration_seconds || lesson.duration) / 60)}:{String((lesson.video_duration_seconds || lesson.duration) % 60).padStart(2, '0')}
-                      </span>
-                    )}
-                    <span className={`lesson-badge ${lesson.is_free ? 'free' : isTeaser ? 'free' : 'pro'}`}>
-                      {lesson.is_free ? 'Miễn phí' : (isTeaser ? 'Xem trước 2 phút' : (isPremium ? 'Plus' : 'Pro'))}
-                    </span>
-                  </div>
+                  <Icon.ArrowRight size={16} style={{ color: 'var(--muted)', flexShrink: 0 }} />
                 </div>
               );
             })}
           </div>
-        ));
+        );
       })()}
     </div>
   );

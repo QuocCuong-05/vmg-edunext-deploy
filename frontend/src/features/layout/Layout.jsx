@@ -14,6 +14,7 @@ const CORE_NAV = [
   { to: '/wordbook', label: 'Sổ từ của tôi', icon: Icon.Vocab, color: 'var(--gold)', bg: 'var(--gold-bg)' },
   { to: '/level', label: 'Thử thách lên cấp', icon: Icon.Target, color: 'var(--blue)', bg: 'var(--blue-bg)' },
   { to: '/admin/data', label: 'Quản lý dữ liệu', icon: Icon.Cog, color: 'var(--cyan)', bg: 'rgba(32,165,201,.12)', adminOnly: true },
+  { to: '/teacher/grading', label: 'Chấm bài phát âm', icon: Icon.Mic, color: 'var(--gold)', bg: 'var(--gold-bg)', staffOnly: true },
 ];
 
 const GROUPS = [
@@ -170,7 +171,11 @@ export default function Layout() {
               {!showRail && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Tổng quan</span>}
             </div>
 
-            {CORE_NAV.filter(item => !item.adminOnly || user?.role === 'admin').map(item => (
+            {CORE_NAV.filter(item => {
+              const staff = ['teacher', 'admin', 'super_admin'].includes(user?.role);
+              if (item.staffOnly) return staff;
+              return !item.adminOnly || user?.role === 'admin' || user?.role === 'super_admin';
+            }).map(item => (
               <div
                 key={item.to}
                 onClick={() => { navigate(item.to); closeDrawer(); }}

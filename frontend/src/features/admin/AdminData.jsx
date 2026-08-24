@@ -4,6 +4,7 @@ import { api } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { Icon } from '../../lib/icons';
 import CmsManager from './CmsManager';
+import CourseStructureEditor from './CourseStructureEditor';
 import usePersistedState from '../../lib/usePersistedState';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -87,15 +88,31 @@ function splitLine(line) {
   return result;
 }
 
-const TABS = [
-  { key: 'overview', label: 'Tổng quan', icon: Icon.Stats },
-  { key: 'import', label: 'Nhập CSV', icon: Icon.Download },
-  { key: 'orders', label: 'Đơn hàng', icon: Icon.CartAlt },
-  { key: 'plus', label: 'Tài khoản Plus', icon: Icon.Gem },
-  { key: 'courses', label: 'Khóa Premium', icon: Icon.Courses },
-  { key: 'trace', label: 'Truy vết', icon: Icon.Globe },
-  { key: 'content', label: 'Nội dung', icon: Icon.Pen },
-  { key: 'settings', label: 'Cấu hình', icon: Icon.Cog },
+const ADMIN_GROUPS = [
+  {
+    label: 'Hoạt động',
+    items: [
+      { key: 'overview', label: 'Tổng quan', icon: Icon.Stats },
+      { key: 'orders', label: 'Đơn hàng', icon: Icon.CartAlt },
+      { key: 'plus', label: 'Tài khoản Plus', icon: Icon.Gem },
+      { key: 'courses', label: 'Khóa Premium', icon: Icon.Courses },
+    ],
+  },
+  {
+    label: 'Nội dung',
+    items: [
+      { key: 'import', label: 'Nhập CSV', icon: Icon.Download },
+      { key: 'content', label: 'Nội dung', icon: Icon.Pen },
+      { key: 'structure', label: 'Cấu trúc khóa', icon: Icon.BookOpen },
+    ],
+  },
+  {
+    label: 'Hệ thống',
+    items: [
+      { key: 'trace', label: 'Truy vết', icon: Icon.Globe },
+      { key: 'settings', label: 'Cấu hình', icon: Icon.Cog },
+    ],
+  },
 ];
 
 const badge = (status) => {
@@ -369,15 +386,22 @@ async function exportCsv(columns) {
         <p>Quản lý dữ liệu, đơn hàng và khóa trả phí</p>
       </div>
 
-      <div className="admin-tabs">
-        {TABS.map(t => (
-          <button
-            key={t.key}
-            className={`admin-tab${tab === t.key ? ' active' : ''}`}
-            onClick={() => setTab(t.key)}
-          >
-            {t.label}
-          </button>
+      <div className="admin-tab-groups">
+        {ADMIN_GROUPS.map(g => (
+          <div key={g.label} className="admin-tab-group">
+            <span className="admin-tab-group-label">{g.label}</span>
+            <div className="admin-tabs">
+              {g.items.map(t => (
+                <button
+                  key={t.key}
+                  className={`admin-tab${tab === t.key ? ' active' : ''}`}
+                  onClick={() => setTab(t.key)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
 
@@ -1035,6 +1059,7 @@ async function exportCsv(columns) {
       )}
 
       {tab === 'content' && <CmsManager />}
+      {tab === 'structure' && <CourseStructureEditor />}
 
       {tab === 'settings' && (
         <div className="admin-panel" style={{ maxWidth: 520 }}>
