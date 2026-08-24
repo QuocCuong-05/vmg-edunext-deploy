@@ -78,7 +78,7 @@ export default function LessonView() {
     setLessonDetail(null);
     if (lessonId) {
       api.lessons.get(lessonId)
-        .then(d => setLessonDetail(d?.data || null))
+        .then(d => setLessonDetail(d || null))
         .catch(() => setLessonDetail(null));
     }
   }, [lessonId]);

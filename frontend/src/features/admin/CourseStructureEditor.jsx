@@ -41,16 +41,16 @@ export default function CourseStructureEditor() {
   const [uploading, setUploading] = useState(null);
 
   useEffect(() => {
-    api.courses.list().then(d => setCourses(d?.data || [])).catch(() => {});
-    api.admin.users({ role: 'teacher' }).then(d => setUsers(d?.data || [])).catch(() => {});
+    api.courses.list().then(d => setCourses(d || [])).catch(() => {});
+    api.admin.users({ role: 'teacher' }).then(d => setUsers(d || [])).catch(() => {});
   }, []);
 
   const loadStructure = useCallback(async (cid) => {
     if (!cid) return;
     try {
       const [m, i] = await Promise.all([api.admin.modules(cid), api.admin.items(cid)]);
-      setModules(m?.data || []);
-      setItems(i?.data || []);
+      setModules(m || []);
+      setItems(i || []);
     } catch {}
   }, []);
 
@@ -61,7 +61,7 @@ export default function CourseStructureEditor() {
   const loadWords = async (lessonId) => {
     try {
       const d = await api.admin.practiceWords(lessonId);
-      setWords(prev => ({ ...prev, [lessonId]: d?.data || [] }));
+      setWords(prev => ({ ...prev, [lessonId]: d || [] }));
     } catch {}
   };
 
@@ -155,7 +155,7 @@ export default function CourseStructureEditor() {
     setUploading(lessonId);
     try {
       const res = await api.admin.uploadAudio(file);
-      const url = res?.data?.url;
+      const url = res?.url;
       setWordForm({ ...wordForm, [lessonId]: { ...(wordForm[lessonId] || {}), audio_url: url } });
       showToast('Đã upload audio', 'success');
     } catch (e) { showToast(e.message || 'Upload thất bại', 'error'); } finally {
@@ -167,7 +167,7 @@ export default function CourseStructureEditor() {
     setUploading('img');
     try {
       const res = await api.cms.upload(file);
-      setItemForm(prev => ({ ...prev, image_url: res?.data?.url || '' }));
+      setItemForm(prev => ({ ...prev, image_url: res?.url || '' }));
       showToast('Đã upload ảnh', 'success');
     } catch (e) { showToast(e.message || 'Upload thất bại', 'error'); } finally {
       setUploading(null);
@@ -178,7 +178,7 @@ export default function CourseStructureEditor() {
     setUploading(lessonId + ':img');
     try {
       const res = await api.cms.upload(file);
-      const url = res?.data?.url;
+      const url = res?.url;
       setWordForm({ ...wordForm, [lessonId]: { ...(wordForm[lessonId] || {}), image_url: url } });
       showToast('Đã upload ảnh', 'success');
     } catch (e) { showToast(e.message || 'Upload thất bại', 'error'); } finally {
@@ -190,7 +190,7 @@ export default function CourseStructureEditor() {
   const loadQuestions = async (lessonId) => {
     try {
       const d = await api.admin.practiceQuestions(lessonId);
-      setQuestions(prev => ({ ...prev, [lessonId]: d?.data || [] }));
+      setQuestions(prev => ({ ...prev, [lessonId]: d || [] }));
     } catch {}
   };
 
@@ -241,7 +241,7 @@ export default function CourseStructureEditor() {
     setUploading(lessonId + ':qa');
     try {
       const res = await api.admin.uploadAudio(file);
-      setQuestionForm(prev => ({ ...prev, [lessonId]: { ...(prev[lessonId] || {}), audio_url: res?.data?.url } }));
+      setQuestionForm(prev => ({ ...prev, [lessonId]: { ...(prev[lessonId] || {}), audio_url: res?.url } }));
       showToast('Đã upload audio', 'success');
     } catch (e) { showToast(e.message || 'Upload thất bại', 'error'); } finally { setUploading(null); }
   };
@@ -250,14 +250,14 @@ export default function CourseStructureEditor() {
     try {
       await api.admin.setRole(userId, role);
       const d = await api.admin.users({ role: 'teacher' });
-      setUsers(d?.data || []);
+      setUsers(d || []);
       showToast('Đã cập nhật vai trò', 'success');
     } catch (e) { showToast(e.message, 'error'); }
   };
 
   const searchUsers = async () => {
     const d = await api.admin.users({ search: userSearch });
-    setUsers(d?.data || []);
+    setUsers(d || []);
   };
 
   const grouped = (moduleId) => items.filter(i => (i.module_id || null) === (moduleId || null));
@@ -450,7 +450,7 @@ export default function CourseStructureEditor() {
                   if (!file) return;
                   setUploading('va');
                   api.admin.uploadAudio(file).then(res => {
-                    setItemForm(prev => ({ ...prev, audio_url: res?.data?.url || '' }));
+                    setItemForm(prev => ({ ...prev, audio_url: res?.url || '' }));
                     showToast('Đã upload audio', 'success');
                   }).catch(err => showToast(err.message || 'Upload thất bại', 'error')).finally(() => setUploading(null));
                 }} />

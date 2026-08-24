@@ -15,9 +15,9 @@ export default function GradingPage() {
   const [busyId, setBusyId] = useState(null);
 
   useEffect(() => {
-    api.practice.submissions({ limit: 100 }).then(d => setRows(d?.data || [])).catch(() => {}).finally(() => setLoading(false));
+    api.practice.submissions({ limit: 100 }).then(d => setRows(d || [])).catch(() => {}).finally(() => setLoading(false));
     api.courses.list().then(async d => {
-      const list = d?.data || [];
+      const list = d || [];
       const all = [];
       for (const c of list.slice(0, 10)) {
         try {
@@ -33,7 +33,7 @@ export default function GradingPage() {
     setLoading(true);
     try {
       const d = await api.practice.submissions({ limit: 100, ...params });
-      setRows(d?.data || []);
+      setRows(d || []);
     } catch {
       setRows([]);
     } finally {

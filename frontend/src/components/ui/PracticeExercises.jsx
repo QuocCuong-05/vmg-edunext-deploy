@@ -35,8 +35,8 @@ export function ListenChoose({ lesson, questions, answers, onCompleted }) {
     setBusyId(q.id);
     try {
       const res = await api.practice.answer({ lesson_id: lesson.id, question_id: q.id, answer: String(idx) });
-      setResults(prev => ({ ...prev, [q.id]: res.data }));
-      showToast(res.data.is_correct ? 'Chính xác!' : 'Chưa đúng', res.data.is_correct ? 'success' : 'error');
+      setResults(prev => ({ ...prev, [q.id]: res }));
+      showToast(res.is_correct ? 'Chính xác!' : 'Chưa đúng', res.is_correct ? 'success' : 'error');
     } catch (e) { showToast(e.message || 'Lỗi', 'error'); } finally { setBusyId(null); }
   };
 
@@ -96,8 +96,8 @@ export function ListenFill({ lesson, questions, answers, onCompleted }) {
     setBusyId(q.id);
     try {
       const res = await api.practice.answer({ lesson_id: lesson.id, question_id: q.id, answer: JSON.stringify(list.map(v => v.trim())) });
-      setResults(prev => ({ ...prev, [q.id]: res.data }));
-      showToast(res.data.is_correct ? 'Chính xác!' : 'Chưa đúng', res.data.is_correct ? 'success' : 'error');
+      setResults(prev => ({ ...prev, [q.id]: res }));
+      showToast(res.is_correct ? 'Chính xác!' : 'Chưa đúng', res.is_correct ? 'success' : 'error');
     } catch (e) { showToast(e.message || 'Lỗi', 'error'); } finally { setBusyId(null); }
   };
 
@@ -171,8 +171,8 @@ export function ListenMark({ lesson, questions, answers, onCompleted }) {
     setBusyId(q.id);
     try {
       const res = await api.practice.answer({ lesson_id: lesson.id, question_id: q.id, answer: JSON.stringify(sel) });
-      setResults(prev => ({ ...prev, [q.id]: res.data }));
-      showToast(res.data.is_correct ? 'Chính xác!' : 'Chưa đúng', res.data.is_correct ? 'success' : 'error');
+      setResults(prev => ({ ...prev, [q.id]: res }));
+      showToast(res.is_correct ? 'Chính xác!' : 'Chưa đúng', res.is_correct ? 'success' : 'error');
     } catch (e) { showToast(e.message || 'Lỗi', 'error'); } finally { setBusyId(null); }
   };
 
@@ -286,7 +286,7 @@ export function VoiceRecorder({ lesson, questions, answers, onCompleted }) {
         filename: 'voice-rec.webm',
         transcript: '',
       });
-      setResult(res.data);
+      setResult(res);
       showToast('Đã nộp bài', 'success');
     } catch (e) { showToast(e.message || 'Nộp bài thất bại', 'error'); } finally { setBusy(false); }
   };

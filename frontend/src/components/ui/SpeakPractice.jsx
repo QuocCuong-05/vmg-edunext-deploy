@@ -110,8 +110,8 @@ export default function SpeakPractice({ lesson, words, onCompleted }) {
         filename: `${word.word}-rec.webm`,
         transcript: st.transcript || '',
       });
-      setResults(prev => ({ ...prev, [word.id]: res.data }));
-      showToast(res.data.ai_score != null ? `Chấm xong: ${res.data.ai_score}/10` : 'Đã gửi bài', 'success');
+      setResults(prev => ({ ...prev, [word.id]: res }));
+      showToast(res.ai_score != null ? `Chấm xong: ${res.ai_score}/10` : 'Đã gửi bài', 'success');
     } catch (err) {
       showToast(err.message || 'Gửi bài thất bại', 'error');
     } finally {
