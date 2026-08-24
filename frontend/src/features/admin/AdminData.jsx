@@ -90,6 +90,7 @@ function splitLine(line) {
 
 const ADMIN_GROUPS = [
   {
+    key: 'activity',
     label: 'Hoạt động',
     items: [
       { key: 'overview', label: 'Tổng quan', icon: Icon.Stats },
@@ -99,6 +100,7 @@ const ADMIN_GROUPS = [
     ],
   },
   {
+    key: 'content',
     label: 'Nội dung',
     items: [
       { key: 'import', label: 'Nhập CSV', icon: Icon.Download },
@@ -107,6 +109,7 @@ const ADMIN_GROUPS = [
     ],
   },
   {
+    key: 'system',
     label: 'Hệ thống',
     items: [
       { key: 'trace', label: 'Truy vết', icon: Icon.Globe },
@@ -128,6 +131,7 @@ const badge = (status) => {
 export default function AdminData() {
   const { user } = useAuth();
   const [tab, setTab] = usePersistedState('vmg_admin_tab', 'overview');
+  const [openGroup, setOpenGroup] = usePersistedState('vmg_admin_group', 'activity');
 
   const [dashboard, setDashboard] = useState(null);
 
@@ -386,23 +390,34 @@ async function exportCsv(columns) {
         <p>Quản lý dữ liệu, đơn hàng và khóa trả phí</p>
       </div>
 
-      <div className="admin-tab-groups">
-        {ADMIN_GROUPS.map(g => (
-          <div key={g.label} className="admin-tab-group">
-            <span className="admin-tab-group-label">{g.label}</span>
-            <div className="admin-tabs">
-              {g.items.map(t => (
-                <button
-                  key={t.key}
-                  className={`admin-tab${tab === t.key ? ' active' : ''}`}
-                  onClick={() => setTab(t.key)}
-                >
-                  {t.label}
-                </button>
-              ))}
+      <div className="admin-tab-acc">
+        {ADMIN_GROUPS.map(g => {
+          const open = openGroup === g.key;
+          return (
+            <div key={g.key} className="admin-tab-acc-group">
+              <button
+                className={`admin-tab-acc-head${open ? ' open' : ''}`}
+                onClick={() => setOpenGroup(open ? '' : g.key)}
+              >
+                <span>{g.label}</span>
+                <Icon.ArrowDown size={13} style={{ transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'rotate(0)' }} />
+              </button>
+              <div className="admin-tab-acc-body" style={{ maxHeight: open ? 240 : 0 }}>
+                <div className="admin-tabs">
+                  {g.items.map(t => (
+                    <button
+                      key={t.key}
+                      className={`admin-tab${tab === t.key ? ' active' : ''}`}
+                      onClick={() => setTab(t.key)}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {error && (
