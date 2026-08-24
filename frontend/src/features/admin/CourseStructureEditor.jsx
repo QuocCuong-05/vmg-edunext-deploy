@@ -36,6 +36,8 @@ export default function CourseStructureEditor() {
   const [wordForm, setWordForm] = useState({}); // lessonId -> {word, audio_url, image_url}
   const [questions, setQuestions] = useState({});
   const [questionForm, setQuestionForm] = useState({});
+  const [openMods, setOpenMods] = useState({});
+  const [confirmDel, setConfirmDel] = useState(null);
   const [users, setUsers] = useState([]);
   const [userSearch, setUserSearch] = useState('');
   const [uploading, setUploading] = useState(null);
@@ -89,10 +91,10 @@ export default function CourseStructureEditor() {
   };
 
   const deleteModule = async (id) => {
-    if (!window.confirm('Xóa module? Các item trong module sẽ chuyển về "Chưa phân nhóm".')) return;
     try {
       await api.admin.deleteModule(id);
       await loadStructure(courseId);
+      setConfirmDel(null);
     } catch (e) { showToast(e.message, 'error'); }
   };
 
@@ -110,6 +112,7 @@ export default function CourseStructureEditor() {
     } else {
       setItemForm({ ...EMPTY_ITEM, module_id: moduleId || '', sort_order: items.length + 1 });
     }
+    setTimeout(() => document.getElementById('item-form-box')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   };
 
   const saveItem = async () => {
@@ -126,10 +129,10 @@ export default function CourseStructureEditor() {
   };
 
   const deleteItem = async (id) => {
-    if (!window.confirm('Xóa item này?')) return;
     try {
       await api.admin.deleteItem(id);
       await loadStructure(courseId);
+      setConfirmDel(null);
     } catch (e) { showToast(e.message, 'error'); }
   };
 
@@ -148,6 +151,7 @@ export default function CourseStructureEditor() {
     try {
       await api.admin.deleteWord(id);
       await reloadWords(lessonId);
+      setConfirmDel(null);
     } catch (e) { showToast(e.message, 'error'); }
   };
 
@@ -234,6 +238,7 @@ export default function CourseStructureEditor() {
     try {
       await api.admin.deleteQuestion(id);
       await loadQuestions(lessonId);
+      setConfirmDel(null);
     } catch (e) { showToast(e.message, 'error'); }
   };
 
@@ -260,7 +265,32 @@ export default function CourseStructureEditor() {
     setUsers(d || []);
   };
 
+  const confirmLabel = confirmDel
+    ? (confirmDel.type === 'module' ? 'module này (item sẽ về "Chưa phân nhóm")'
+      : confirmDel.type === 'item' ? 'item này'
+        : confirmDel.type === 'word' ? 'từ này'
+          : 'câu hỏi này')
+    : '';
+
+  const doConfirmDel = async () => {
+    if (!confirmDel) return;
+    try {
+      if (confirmDel.type === 'module') await api.admin.deleteModule(confirmDel.id);
+      else if (confirmDel.type === 'item') await api.admin.deleteItem(confirmDel.id);
+      else if (confirmDel.type === 'word') await api.admin.deleteWord(confirmDel.id);
+      else if (confirmDel.type === 'question') await api.admin.deleteQuestion(confirmDel.id);
+      if (confirmDel.type === 'word' || confirmDel.type === 'question') {
+        await loadWords(confirmDel.extra);
+        if (confirmDel.type === 'question') await loadQuestions(confirmDel.extra);
+      }
+      if (confirmDel.type === 'module' || confirmDel.type === 'item') await loadStructure(courseId);
+      showToast('Đã xóa', 'success');
+    } catch (e) { showToast(e.message, 'error'); }
+    setConfirmDel(null);
+  };
+
   const grouped = (moduleId) => items.filter(i => (i.module_id || null) === (moduleId || null));
+  const firstKey = (grouped(null).length ? 'loose' : (modules[0]?.id ?? null));
 
   return (
     <div className="admin-panel">
@@ -288,131 +318,122 @@ export default function CourseStructureEditor() {
           {[{ id: null, title: 'Chưa phân nhóm' }, ...modules].map(mod => {
             const list = grouped(mod.id);
             if (!list.length && mod.id === null) return null;
+            const key = mod.id || 'loose';
+            const isOpen = openMods[key] === undefined ? (key === firstKey) : openMods[key];
             return (
-              <div key={mod.id || 'loose'} style={{ marginBottom: 18 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <span style={{ width: 4, height: 16, borderRadius: 2, background: 'var(--red)' }} />
+              <div key={key} style={{ marginBottom: 10, border: '1px solid var(--line)', borderRadius: 12, overflow: 'hidden', background: 'var(--surface-hover)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', cursor: 'pointer' }} onClick={() => setOpenMods({ ...openMods, [key]: !isOpen })}>
+                  <Icon.ArrowDown size={14} style={{ transition: 'transform .2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0)', color: 'var(--muted)', flexShrink: 0 }} />
                   {editingModule?.id === mod.id ? (
-                    <>
-                      <input className="admin-input" value={editingModule.title} onChange={e => setEditingModule({ ...editingModule, title: e.target.value })} style={{ flex: 1 }} />
+                    <span style={{ flex: 1, display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
+                      <input className="admin-input" style={{ flex: 1 }} value={editingModule.title} onChange={e => setEditingModule({ ...editingModule, title: e.target.value })} />
                       <button className="admin-btn" onClick={() => saveModule(mod.id)}>Lưu</button>
                       <button className="admin-btn-ghost" onClick={() => setEditingModule(null)}>Hủy</button>
-                    </>
+                    </span>
                   ) : (
+                    <b style={{ fontSize: 14, flex: 1 }}>{mod.title}</b>
+                  )}
+                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>{list.length} item</span>
+                </div>
+                <div style={{ borderTop: '1px solid var(--line)', padding: '6px 12px 8px', display: isOpen ? 'flex' : 'none', gap: 6, flexWrap: 'wrap', background: 'var(--card)' }}>
+                  {mod.id != null && (
                     <>
-                      <b style={{ fontSize: 14 }}>{mod.title}</b>
-                      {mod.id != null && (
-                        <>
-                          <button className="admin-btn-ghost" onClick={() => setEditingModule({ id: mod.id, title: mod.title })}>Sửa</button>
-                          <button className="admin-btn-ghost" style={{ color: 'var(--red)' }} onClick={() => deleteModule(mod.id)}>Xóa</button>
-                        </>
-                      )}
+                      <button className="admin-btn-ghost" onClick={() => setEditingModule({ id: mod.id, title: mod.title })}>Sửa tên</button>
+                      <button className="admin-btn-ghost" style={{ color: 'var(--red)' }} onClick={() => setConfirmDel({ type: 'module', id: mod.id })}>Xóa module</button>
                     </>
                   )}
                   <button className="admin-btn-ghost" onClick={() => openItemForm(mod.id, null)}>+ Thêm item</button>
                 </div>
-
-                {list.map(it => (
-                  <div key={it.id} style={{ padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 10, marginBottom: 6, background: 'var(--surface-hover)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 15 }}>{TYPES.find(t => t.value === it.item_type)?.label || '📄'}</span>
-                      <b style={{ fontSize: 13, flex: 1, minWidth: 140 }}>{it.title}</b>
-                      {it.is_free && <span className="admin-badge green">Miễn phí</span>}
-                      {it.points > 0 && <span className="admin-badge gray">{it.points} điểm</span>}
-                      <button className="admin-btn-ghost" onClick={() => openItemForm(mod.id, it)}>Sửa</button>
-                      <button className="admin-btn-ghost" style={{ color: 'var(--red)' }} onClick={() => deleteItem(it.id)}>Xóa</button>
-                    </div>
-                    {it.item_type === 'practice' && (
-                      <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--line)' }}>
-                        <button className="admin-btn-ghost" onClick={() => { if (!words[it.id]) loadWords(it.id); setWords(prev => ({ ...prev, _open: it.id })); }}>
-                          Từ luyện nói ({words[it.id]?.length ?? 0}) ▼
-                        </button>
-                        {words._open === it.id && (
-                          <div style={{ marginTop: 8 }}>
-                            {(words[it.id] || []).map(w => (
-                              <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                                {w.image_url && <img src={w.image_url} alt="" style={{ width: 28, height: 28, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--line)' }} />}
-                                <b style={{ fontSize: 13, width: 140 }}>{w.word}</b>
-                                {w.audio_url && <audio controls src={w.audio_url} style={{ height: 30, maxWidth: 140 }} />}
-                                <button className="admin-btn-ghost" style={{ color: 'var(--red)' }} onClick={() => deleteWord(w.id, it.id)}>Xóa</button>
-                              </div>
-                            ))}
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 6 }}>
-                              <input
-                                className="admin-input" style={{ width: 160 }}
-                                placeholder="Từ (vd: cheese)"
-                                value={wordForm[it.id]?.word || ''}
-                                onChange={e => setWordForm({ ...wordForm, [it.id]: { ...(wordForm[it.id] || {}), word: e.target.value } })}
-                              />
-                              <label className="admin-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                                {uploading === it.id ? 'Đang upload...' : (wordForm[it.id]?.audio_url ? 'Đổi audio ✓' : '📁 Audio mẫu')}
-                                <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadAudio(e.target.files[0], it.id)} />
-                              </label>
-                              {wordForm[it.id]?.audio_url && <audio controls src={wordForm[it.id].audio_url} style={{ height: 30, maxWidth: 140 }} />}
-                              <label className="admin-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                                {uploading === it.id + ':img' ? 'Đang up...' : (wordForm[it.id]?.image_url ? '📁 Đổi ảnh' : '📁 Ảnh từ')}
-                                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadWordImage(e.target.files[0], it.id)} />
-                              </label>
-                              {wordForm[it.id]?.image_url && (
-                                <img src={wordForm[it.id].image_url} alt="word" style={{ height: 34, borderRadius: 6, border: '1px solid var(--line)' }} />
-                              )}
-                              <button className="admin-btn" onClick={() => addWord(it.id)}>+ Thêm từ</button>
-                            </div>
-                          </div>
-                        )}
-                        {it.practice_type && it.practice_type !== 'speak_words' && it.practice_type !== 'voice_recorder' && (
-                          <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px dashed var(--line)' }}>
-                            <button className="admin-btn-ghost" onClick={() => { if (!questions[it.id]) loadQuestions(it.id); setQuestions(prev => ({ ...prev, _openQ: it.id })); }}>
-                              Câu hỏi nghe ({questions[it.id]?.length ?? 0}) ▼
+                {isOpen && (
+                  <div style={{ padding: '0 12px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {list.map(it => (
+                      <div key={it.id} style={{ padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 10, background: 'var(--card)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 15 }}>{TYPES.find(t => t.value === it.item_type)?.label || '📄'}</span>
+                          <b style={{ fontSize: 13, flex: 1, minWidth: 140 }}>{it.title}</b>
+                          {it.is_free && <span className="admin-badge green">Miễn phí</span>}
+                          {it.points > 0 && <span className="admin-badge gray">{it.points} điểm</span>}
+                          <button className="admin-btn-ghost" onClick={() => openItemForm(mod.id, it)}>Sửa</button>
+                          <button className="admin-btn-ghost" style={{ color: 'var(--red)' }} onClick={() => setConfirmDel({ type: 'item', id: it.id })}>Xóa</button>
+                        </div>
+                        {it.item_type === 'practice' && (
+                          <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--line)' }}>
+                            <button className="admin-btn-ghost" onClick={() => { if (!words[it.id]) loadWords(it.id); setWords(prev => ({ ...prev, _open: it.id })); }}>
+                              Từ luyện nói ({words[it.id]?.length ?? 0}) ▼
                             </button>
-                            {questions._openQ === it.id && (
+                            {words._open === it.id && (
                               <div style={{ marginTop: 8 }}>
-                                {(questions[it.id] || []).map(q => (
-                                  <div key={q.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-                                    <span style={{ fontSize: 12, flex: 1, minWidth: 140 }}>{q.prompt || q.text_content || `Câu ${q.position}`}</span>
-                                    {q.audio_url && <audio controls src={q.audio_url} style={{ height: 28, maxWidth: 120 }} />}
-                                    <button className="admin-btn-ghost" style={{ color: 'var(--red)' }} onClick={() => deleteQuestion(q.id, it.id)}>Xóa</button>
+                                {(words[it.id] || []).map(w => (
+                                  <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                                    {w.image_url && <img src={w.image_url} alt="" style={{ width: 28, height: 28, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--line)' }} />}
+                                    <b style={{ fontSize: 13, width: 140 }}>{w.word}</b>
+                                    {w.audio_url && <audio controls src={w.audio_url} style={{ height: 30, maxWidth: 140 }} />}
+                                    <button className="admin-btn-ghost" style={{ color: 'var(--red)' }} onClick={() => setConfirmDel({ type: 'word', id: w.id, extra: it.id })}>Xóa</button>
                                   </div>
                                 ))}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                                  <label className="admin-btn" style={{ cursor: 'pointer', alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                                    {uploading === it.id + ':qa' ? 'Đang upload...' : (questionForm[it.id]?.audio_url ? '📁 Đổi audio câu hỏi' : '📁 Audio câu hỏi')}
-                                    <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadQuestionAudio(e.target.files[0], it.id)} />
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 6 }}>
+                                  <input className="admin-input" style={{ width: 160 }} placeholder="Từ (vd: cheese)" value={wordForm[it.id]?.word || ''} onChange={e => setWordForm({ ...wordForm, [it.id]: { ...(wordForm[it.id] || {}), word: e.target.value } })} />
+                                  <label className="admin-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                    {uploading === it.id ? 'Đang upload...' : (wordForm[it.id]?.audio_url ? 'Đổi audio ✓' : '📁 Audio mẫu')}
+                                    <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadAudio(e.target.files[0], it.id)} />
                                   </label>
-                                  {questionForm[it.id]?.audio_url && <audio controls src={questionForm[it.id].audio_url} style={{ height: 30, maxWidth: 180 }} />}
-                                  <input className="admin-input" placeholder="Hướng dẫn / câu hỏi (prompt)" value={questionForm[it.id]?.prompt || ''}
-                                    onChange={e => setQuestionForm({ ...questionForm, [it.id]: { ...(questionForm[it.id] || {}), prompt: e.target.value } })} />
-                                  {it.practice_type === 'listen_choose' ? (
-                                    <>
-                                      <textarea className="admin-input" style={{ minHeight: 80, whiteSpace: 'pre-wrap' }} placeholder="Các đáp án (mỗi dòng 1 đáp án)"
-                                        value={questionForm[it.id]?.optionsText || ''}
-                                        onChange={e => setQuestionForm({ ...questionForm, [it.id]: { ...(questionForm[it.id] || {}), optionsText: e.target.value } })} />
-                                      <select className="admin-input" value={questionForm[it.id]?.correctIdx ?? ''}
-                                        onChange={e => setQuestionForm({ ...questionForm, [it.id]: { ...(questionForm[it.id] || {}), correctIdx: e.target.value } })}>
-                                        <option value="">-- Đáp án đúng --</option>
-                                        {(questionForm[it.id]?.optionsText || '').split('\n').map((s, i) => s.trim() ? <option key={i} value={i}>{i + 1}. {s.trim()}</option> : null)}
-                                      </select>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <textarea className="admin-input" style={{ minHeight: 90, whiteSpace: 'pre-wrap' }} placeholder="Đoạn text gốc — điền chỗ trống bằng ____ (listen_fill) / đoạn text cần chọn từ (listen_mark)"
-                                        value={questionForm[it.id]?.text_content || ''}
-                                        onChange={e => setQuestionForm({ ...questionForm, [it.id]: { ...(questionForm[it.id] || {}), text_content: e.target.value } })} />
-                                      <textarea className="admin-input" style={{ minHeight: 60, whiteSpace: 'pre-wrap' }} placeholder={it.practice_type === 'listen_fill' ? 'Đáp án điền (mỗi dòng 1 từ, theo thứ tự)' : 'Các từ đúng cần chọn (mỗi dòng 1 từ)'}
-                                        value={questionForm[it.id]?.correctText || ''}
-                                        onChange={e => setQuestionForm({ ...questionForm, [it.id]: { ...(questionForm[it.id] || {}), correctText: e.target.value } })} />
-                                    </>
-                                  )}
-                                  <button className="admin-btn" style={{ alignSelf: 'flex-start' }} onClick={() => saveQuestion(it.id, it.practice_type)}>+ Thêm câu hỏi</button>
+                                  {wordForm[it.id]?.audio_url && <audio controls src={wordForm[it.id].audio_url} style={{ height: 30, maxWidth: 140 }} />}
+                                  <label className="admin-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                    {uploading === it.id + ':img' ? 'Đang up...' : (wordForm[it.id]?.image_url ? '📁 Đổi ảnh' : '📁 Ảnh từ')}
+                                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadWordImage(e.target.files[0], it.id)} />
+                                  </label>
+                                  {wordForm[it.id]?.image_url && <img src={wordForm[it.id].image_url} alt="word" style={{ height: 34, borderRadius: 6, border: '1px solid var(--line)' }} />}
+                                  <button className="admin-btn" onClick={() => addWord(it.id)}>+ Thêm từ</button>
                                 </div>
+                              </div>
+                            )}
+                            {it.practice_type && it.practice_type !== 'speak_words' && it.practice_type !== 'voice_recorder' && (
+                              <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px dashed var(--line)' }}>
+                                <button className="admin-btn-ghost" onClick={() => { if (!questions[it.id]) loadQuestions(it.id); setQuestions(prev => ({ ...prev, _openQ: it.id })); }}>
+                                  Câu hỏi nghe ({questions[it.id]?.length ?? 0}) ▼
+                                </button>
+                                {questions._openQ === it.id && (
+                                  <div style={{ marginTop: 8 }}>
+                                    {(questions[it.id] || []).map(q => (
+                                      <div key={q.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                                        <span style={{ fontSize: 12, flex: 1, minWidth: 140 }}>{q.prompt || q.text_content || `Câu ${q.position}`}</span>
+                                        {q.audio_url && <audio controls src={q.audio_url} style={{ height: 28, maxWidth: 120 }} />}
+                                        <button className="admin-btn-ghost" style={{ color: 'var(--red)' }} onClick={() => setConfirmDel({ type: 'question', id: q.id, extra: it.id })}>Xóa</button>
+                                      </div>
+                                    ))}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                                      <label className="admin-btn" style={{ cursor: 'pointer', alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                        {uploading === it.id + ':qa' ? 'Đang upload...' : (questionForm[it.id]?.audio_url ? '📁 Đổi audio câu hỏi' : '📁 Audio câu hỏi')}
+                                        <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadQuestionAudio(e.target.files[0], it.id)} />
+                                      </label>
+                                      {questionForm[it.id]?.audio_url && <audio controls src={questionForm[it.id].audio_url} style={{ height: 30, maxWidth: 180 }} />}
+                                      <input className="admin-input" placeholder="Hướng dẫn / câu hỏi (prompt)" value={questionForm[it.id]?.prompt || ''} onChange={e => setQuestionForm({ ...questionForm, [it.id]: { ...(questionForm[it.id] || {}), prompt: e.target.value } })} />
+                                      {it.practice_type === 'listen_choose' ? (
+                                        <>
+                                          <textarea className="admin-input" style={{ minHeight: 80, whiteSpace: 'pre-wrap' }} placeholder="Các đáp án (mỗi dòng 1 đáp án)" value={questionForm[it.id]?.optionsText || ''} onChange={e => setQuestionForm({ ...questionForm, [it.id]: { ...(questionForm[it.id] || {}), optionsText: e.target.value } })} />
+                                          <select className="admin-input" value={questionForm[it.id]?.correctIdx ?? ''} onChange={e => setQuestionForm({ ...questionForm, [it.id]: { ...(questionForm[it.id] || {}), correctIdx: e.target.value } })}>
+                                            <option value="">-- Đáp án đúng --</option>
+                                            {(questionForm[it.id]?.optionsText || '').split('\n').map((s, i) => s.trim() ? <option key={i} value={i}>{i + 1}. {s.trim()}</option> : null)}
+                                          </select>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <textarea className="admin-input" style={{ minHeight: 90, whiteSpace: 'pre-wrap' }} placeholder="Đoạn text gốc — điền chỗ trống bằng ____ (listen_fill) / đoạn text cần chọn từ (listen_mark)" value={questionForm[it.id]?.text_content || ''} onChange={e => setQuestionForm({ ...questionForm, [it.id]: { ...(questionForm[it.id] || {}), text_content: e.target.value } })} />
+                                          <textarea className="admin-input" style={{ minHeight: 60, whiteSpace: 'pre-wrap' }} placeholder={it.practice_type === 'listen_fill' ? 'Đáp án điền (mỗi dòng 1 từ, theo thứ tự)' : 'Các từ đúng cần chọn (mỗi dòng 1 từ)'} value={questionForm[it.id]?.correctText || ''} onChange={e => setQuestionForm({ ...questionForm, [it.id]: { ...(questionForm[it.id] || {}), correctText: e.target.value } })} />
+                                        </>
+                                      )}
+                                      <button className="admin-btn" style={{ alignSelf: 'flex-start' }} onClick={() => saveQuestion(it.id, it.practice_type)}>+ Thêm câu hỏi</button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
                         )}
                       </div>
-                    )}
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             );
           })}
@@ -420,7 +441,7 @@ export default function CourseStructureEditor() {
       )}
 
       {itemForm && (
-        <div style={{ marginTop: 20, padding: 18, border: '1px solid var(--red)', borderRadius: 14, background: 'var(--surface-hover)' }}>
+        <div id="item-form-box" style={{ marginTop: 20, padding: 18, border: '1px solid var(--red)', borderRadius: 14, background: 'var(--surface-hover)' }}>
           <b style={{ fontSize: 14, display: 'block', marginBottom: 12 }}>{itemForm.id ? 'Sửa item' : 'Thêm item'}</b>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <input className="admin-input" placeholder="Tiêu đề item" value={itemForm.title} onChange={e => setItemForm({ ...itemForm, title: e.target.value })} />
@@ -517,6 +538,21 @@ export default function CourseStructureEditor() {
           ))}
         </div>
       </div>
+
+      {confirmDel && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 999,
+          background: 'var(--card)', border: '1px solid var(--red)', borderRadius: 14,
+          padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', justifyContent: 'center',
+          boxShadow: '0 10px 30px rgba(0,0,0,.18)', maxWidth: '92vw',
+        }}>
+          <b style={{ fontSize: 13 }}>Xóa {confirmLabel}?</b>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="admin-btn" style={{ background: 'var(--red)', color: '#fff', border: 'none' }} onClick={doConfirmDel}>Có, xóa</button>
+            <button className="admin-btn-ghost" onClick={() => setConfirmDel(null)}>Không</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
