@@ -265,6 +265,13 @@ export default function CourseStructureEditor() {
     } catch (e) { showToast(e.message, 'error'); }
   };
 
+  const deleteWordDirect = async (wordId, lessonId) => {
+    try {
+      await api.admin.deleteWord(wordId);
+      await loadWords(lessonId);
+    } catch (e) { showToast(e.message, 'error'); }
+  };
+
   const uploadAudio = async (file, lessonId) => {
     setUploading(lessonId);
     try {
@@ -744,7 +751,7 @@ export default function CourseStructureEditor() {
               {w.image_url && <img src={w.image_url} alt="" style={{ width: 26, height: 26, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--line)' }} />}
               <b style={{ fontSize: 13, width: 130 }}>{w.word}</b>
               {w.audio_url && <audio controls src={w.audio_url} style={{ height: 28, maxWidth: 140 }} />}
-              <button className="cs-icon-btn" title="Xóa từ" style={{ color: 'var(--red)' }} onClick={() => setConfirmDel({ type: 'word', id: w.id, extra: itemForm.id })}>
+              <button className="cs-icon-btn" title="Xóa từ" style={{ color: 'var(--red)' }} onClick={() => deleteWordDirect(w.id, itemForm.id)}>
                 <Icon.X size={13} />
               </button>
             </div>
