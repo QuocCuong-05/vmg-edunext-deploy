@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../lib/api';
+import { Icon } from '../../lib/icons';
 import { useToast } from '../../components/ui/Toast';
 
 const TYPES = [
