@@ -1584,6 +1584,62 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
   box-shadow: 0 10px 30px rgba(0,0,0,.18); max-width: 92vw;
 }
 
+/* ===== RichEditor: placeholder + bảng + popover màu ===== */
+.rich-editor-area p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left; height: 0; pointer-events: none;
+  color: var(--muted); opacity: .55;
+}
+.article-content table { border-collapse: collapse; }
+.article-content th, .article-content td {
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+.article-content th {
+  background: var(--surface-hover);
+  font-weight: 700;
+  color: var(--ink);
+}
+.rich-editor-area .selectedCell { background: var(--red-bg); }
+
+.re-select {
+  border: none; background: none; color: var(--ink);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  padding: 5px 4px; border-radius: 6px;
+}
+.re-select:hover { background: var(--surface-hover); }
+
+.re-pop {
+  position: absolute; top: calc(100% - 4px); left: 50%; transform: translateX(-50%);
+  z-index: 90; background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(25,37,60,.22); padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 8px; white-space: nowrap;
+}
+.re-pop-row { display: flex; align-items: center; gap: 6px; }
+.re-pop-label {
+  font-size: 10px; font-weight: 800; color: var(--muted);
+  width: 32px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.re-swatch {
+  width: 20px; height: 20px; border-radius: 6px; cursor: pointer; padding: 0;
+  border: 1px solid rgba(128,128,128,.35); flex-shrink: 0;
+}
+.re-swatch.active { outline: 2px solid var(--red); outline-offset: 1px; }
+.re-custom {
+  position: relative; width: 20px; height: 20px; border-radius: 6px;
+  overflow: hidden; cursor: pointer; flex-shrink: 0;
+  background: conic-gradient(#ef4444, #eab308, #22c55e, #3b82f6, #8b5cf6, #ef4444);
+  border: 1px solid var(--line); display: inline-block;
+}
+.re-custom input { position: absolute; inset: -6px; opacity: 0; cursor: pointer; }
+.re-reset {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  background: none; border: none; cursor: pointer; padding: 2px 4px;
+}
+.re-reset:hover { color: var(--ink); }
+
 .toast {
   position: fixed; top: 16px; right: 16px; z-index: 9999;
   display: flex; align-items: center; gap: 10px;
