@@ -173,6 +173,15 @@ export default function CourseStructureEditor() {
   const [uploading, setUploading] = useState(null);
   const [duplicating, setDuplicating] = useState(null);
   const [quickAdding, setQuickAdding] = useState(null);
+  const [editorExpanded, setEditorExpanded] = useState(false);
+
+  // Esc để thoát chế độ toàn màn hình
+  useEffect(() => {
+    if (!editorExpanded) return;
+    const onKey = (e) => { if (e.key === 'Escape') setEditorExpanded(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [editorExpanded]);
 
   // --- DnD ---
   const [activeId, setActiveId] = useState(null);
@@ -697,7 +706,7 @@ export default function CourseStructureEditor() {
 
       <div style={{ display: 'flex', gap: 8 }}>
         <button className="admin-btn" onClick={saveItem}>💾 Lưu bài</button>
-        <button className="admin-btn-ghost" onClick={() => { setPanel(null); setSelectedItemId(null); setItemForm(null); }}>Đóng</button>
+        <button className="admin-btn-ghost" onClick={() => { setPanel(null); setSelectedItemId(null); setItemForm(null); setEditorExpanded(false); }}>Đóng</button>
       </div>
     </>
   );
@@ -831,7 +840,7 @@ export default function CourseStructureEditor() {
 
       <div style={{ display: 'flex', gap: 8 }}>
         <button className="admin-btn" onClick={saveCourse} disabled={savingCourse}>{savingCourse ? 'Đang lưu...' : '💾 Lưu khóa học'}</button>
-        <button className="admin-btn-ghost" onClick={() => { setPanel(null); setCourseForm(null); }}>Đóng</button>
+        <button className="admin-btn-ghost" onClick={() => { setPanel(null); setCourseForm(null); setEditorExpanded(false); }}>Đóng</button>
       </div>
     </>
   );
@@ -962,7 +971,18 @@ export default function CourseStructureEditor() {
           </div>
 
           {/* ===== Cột phải: Editor panel ===== */}
-          <div className="cs-editor">
+          <div className={`cs-editor${editorExpanded ? ' cs-editor-full' : ''}`}>
+            {panel && (
+              <div className="cs-editor-bar">
+                <span className="admin-note" style={{ flex: 1 }}>
+                  {editorExpanded ? '🖥 Chế độ toàn màn hình — Esc để thoát' : ''}
+                </span>
+                <button className="admin-btn-ghost" onClick={() => setEditorExpanded(x => !x)}
+                  title={editorExpanded ? 'Thu nhỏ (Esc)' : 'Soạn ở màn hình lớn'}>
+                  {editorExpanded ? '⤡ Thu nhỏ' : '⤢ Mở rộng'}
+                </button>
+              </div>
+            )}
             {panel === 'course' && courseForm ? renderCourseForm()
               : panel === 'item' && itemForm ? (
                 <>

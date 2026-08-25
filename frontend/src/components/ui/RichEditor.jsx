@@ -11,7 +11,7 @@ import { api } from '../../lib/api';
 
 const TEXT_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6'];
 const BG_COLORS = ['#fde68a', '#fecaca', '#bbf7d0', '#bfdbfe', '#e9d5ff'];
-const FONT_SIZES = ['13px', '15px', '18px', '22px', '28px'];
+const FONT_SIZES = ['12px', '13px', '14px', '15px', '16px', '18px', '20px', '22px', '24px', '28px', '32px'];
 
 const AudioNode = Node.create({
   name: 'audio',
@@ -80,6 +80,8 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
   const fileRef = useRef(null);
   const audioRef = useRef(null);
   const [colorOpen, setColorOpen] = useState(false);
+  const [tableOpen, setTableOpen] = useState(false);
+  const [tableCfg, setTableCfg] = useState({ rows: 3, cols: 3 });
 
   const editor = useEditor({
     extensions: [
@@ -107,15 +109,18 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
     },
   });
 
-  // Đóng popover màu khi click ra ngoài
+  // Đóng popover khi click ra ngoài
   useEffect(() => {
-    if (!colorOpen) return;
+    if (!colorOpen && !tableOpen) return;
     const close = (e) => {
-      if (!e.target.closest?.('.re-pop') && !e.target.closest?.('[data-color-btn]')) setColorOpen(false);
+      if (!e.target.closest?.('.re-pop') && !e.target.closest?.('[data-color-btn]') && !e.target.closest?.('[data-table-btn]')) {
+        setColorOpen(false);
+        setTableOpen(false);
+      }
     };
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
-  }, [colorOpen]);
+  }, [colorOpen, tableOpen]);
 
   if (!editor) return null;
 
@@ -131,6 +136,14 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
   const curColor = editor.getAttributes('textStyle').color || '';
   const curBg = editor.getAttributes('textStyle').backgroundColor || '';
   const curSize = editor.getAttributes('textStyle').fontSize || '';
+
+  const insertTable = () => {
+    if (!editor) return;
+    const rows = Math.min(10, Math.max(1, Number(tableCfg.rows) || 3));
+    const cols = Math.min(10, Math.max(1, Number(tableCfg.cols) || 3));
+    editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+    setTableOpen(false);
+  };
 
   const handleUpload = async (file) => {
     if (!editor || !file) return;
@@ -224,7 +237,17 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
         <span style={{ width: 1, background: 'var(--line)', margin: '4px 6px' }} />
         {TOOL('🖼 Ảnh', () => fileRef.current?.click(), false, 'Chèn ảnh')}
         {TOOL('🎵 Audio', () => audioRef.current?.click(), false, 'Chèn audio')}
-        {TOOL('⊞ Bảng', () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), editor.isActive('table'), 'Chèn bảng 3×3')}
+        <button
+          type="button" data-table-btn
+          title="Chèn bảng"
+          onMouseDown={e => { e.preventDefault(); setTableOpen(o => !o); setColorOpen(false); }}
+          style={{
+            border: 'none', background: tableOpen || editor.isActive('table') ? 'var(--red-bg)' : 'none', color: 'var(--ink)',
+            borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 3,
+          }}
+        >
+          ⊞<span style={{ fontSize: 9, fontWeight: 800 }}>▾</span>
+        </button>
         {editor.isActive('table') && TOOL('🗑', () => editor.chain().focus().deleteTable().run(), false, 'Xóa bảng')}
         {TOOL('✕Định dạng', () => editor.chain().focus().unsetAllMarks().clearNodes().run(), false, 'Xóa định dạng vùng chọn')}
         <input
@@ -250,6 +273,24 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
             {swatchRow('Nền', BG_COLORS, curBg,
               c => editor.chain().focus().setBackgroundColor(c).run(),
               () => editor.chain().focus().unsetBackgroundColor().run())}
+          </div>
+        )}
+
+        {tableOpen && (
+          <div className="re-pop">
+            <div className="re-pop-title">Chèn bảng</div>
+            <div className="re-pop-row">
+              <span className="re-pop-label">Hàng</span>
+              <input type="number" min="1" max="10" className="re-num" value={tableCfg.rows}
+                onChange={e => setTableCfg(prev => ({ ...prev, rows: e.target.value }))} />
+              <span className="re-pop-label">Cột</span>
+              <input type="number" min="1" max="10" className="re-num" value={tableCfg.cols}
+                onChange={e => setTableCfg(prev => ({ ...prev, cols: e.target.value }))} />
+            </div>
+            <button type="button" className="admin-btn" style={{ alignSelf: 'stretch' }}
+              onMouseDown={e => { e.preventDefault(); insertTable(); }}>
+              ⊞ Chèn bảng
+            </button>
           </div>
         )}
       </div>
