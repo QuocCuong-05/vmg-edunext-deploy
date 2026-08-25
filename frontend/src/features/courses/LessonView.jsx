@@ -346,6 +346,13 @@ export default function LessonView() {
       </h1>
       <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>{lesson.description}</p>
 
+      {(lessonDetail?.audio_url || lesson.audio_url) && (
+        <div style={{ marginBottom: 16 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>🎵 Bài nghe</span>
+          <audio controls src={lessonDetail?.audio_url || lesson.audio_url} preload="none" style={{ width: '100%', maxWidth: 440, height: 42 }} />
+        </div>
+      )}
+
       {ctx?.sound && soundItems.length > 1 && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
           {soundItems.map(l => {

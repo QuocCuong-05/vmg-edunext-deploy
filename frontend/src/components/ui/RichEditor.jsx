@@ -1,9 +1,30 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
+import { Node, mergeAttributes } from '@tiptap/core';
 import ResizableImage from './ResizableImage.jsx';
 import { useRef } from 'react';
 import { api } from '../../lib/api';
+
+const AudioNode = Node.create({
+  name: 'audio',
+  group: 'block',
+  atom: true,
+  addAttributes() {
+    return { src: { default: null } };
+  },
+  parseHTML() {
+    return [{ tag: 'audio' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['audio', mergeAttributes(HTMLAttributes, { controls: 'true', style: 'width:100%;max-width:520px;' })];
+  },
+  addCommands() {
+    return {
+      setAudio: (src) => ({ commands }) => commands.insertContent({ type: 'audio', attrs: { src } }),
+    };
+  },
+});
 
 const TOOL = (label, onClick, active = false) => (
   <button
@@ -49,12 +70,14 @@ const AlignBtn = ({ align, editor }) => (
 
 export default function RichEditor({ value, onChange, placeholder = 'Soạn nội dung...' }) {
   const fileRef = useRef(null);
+  const audioRef = useRef(null);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ link: { openOnClick: false, autolink: true } }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       ResizableImage,
+      AudioNode,
     ],
     content: value || '',
     onUpdate: ({ editor }) => onChange?.(editor.getHTML()),
@@ -75,10 +98,22 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
   const handleUpload = async (file) => {
     if (!editor || !file) return;
     try {
-      const url = await api.cms.upload(file);
+      const res = await api.cms.upload(file);
+      const url = res?.url || res;
       editor.chain().focus().setResizableImage({ src: url }).run();
     } catch (err) {
       alert('Upload ảnh thất bại: ' + err.message);
+    }
+  };
+
+  const handleAudioUpload = async (file) => {
+    if (!editor || !file) return;
+    try {
+      const res = await api.admin.uploadAudio(file);
+      const url = res?.url || res;
+      editor.chain().focus().setAudio(url).run();
+    } catch (err) {
+      alert('Upload audio thất bại: ' + err.message);
     }
   };
 
@@ -110,6 +145,14 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
           accept="image/*"
           style={{ display: 'none' }}
           onChange={e => { handleUpload(e.target.files?.[0]); e.target.value = ''; }}
+        />
+        {TOOL('🎵 Audio', () => audioRef.current?.click())}
+        <input
+          ref={audioRef}
+          type="file"
+          accept="audio/*"
+          style={{ display: 'none' }}
+          onChange={e => { handleAudioUpload(e.target.files?.[0]); e.target.value = ''; }}
         />
       </div>
       <div style={{ padding: '12px 14px' }}>

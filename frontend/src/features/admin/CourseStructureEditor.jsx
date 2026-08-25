@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../lib/api';
 import { Icon } from '../../lib/icons';
 import { useToast } from '../../components/ui/Toast';
+import RichEditor from '../../components/ui/RichEditor';
 
 const TYPES = [
   { value: 'video_lesson', label: '🎬 Video bài giảng' },
@@ -444,29 +445,50 @@ export default function CourseStructureEditor() {
       {itemForm && (
         <div id="item-form-box" style={{ marginTop: 20, padding: 18, border: '1px solid var(--red)', borderRadius: 14, background: 'var(--surface-hover)' }}>
           <b style={{ fontSize: 14, display: 'block', marginBottom: 12 }}>{itemForm.id ? 'Sửa item' : 'Thêm item'}</b>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-            <input className="admin-input" placeholder="Tiêu đề item" value={itemForm.title} onChange={e => setItemForm({ ...itemForm, title: e.target.value })} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 6 }}>
+            <input className="admin-input" placeholder="Tiêu đề bài học" value={itemForm.title} onChange={e => setItemForm({ ...itemForm, title: e.target.value })} />
             <select className="admin-input" value={itemForm.item_type} onChange={e => setItemForm({ ...itemForm, item_type: e.target.value })}>
               {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-            <input className="admin-input" placeholder="sort_order (thứ tự)" type="number" value={itemForm.sort_order} onChange={e => setItemForm({ ...itemForm, sort_order: Number(e.target.value) })} />
-            {itemForm.item_type === 'practice' ? (
+          <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 10 }}>Tiêu đề hiển thị cho học viên · Loại bài học</div>
+
+          {itemForm.item_type === 'practice' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 6 }}>
               <select className="admin-input" value={itemForm.practice_type} onChange={e => setItemForm({ ...itemForm, practice_type: e.target.value })}>
                 {PRACTICE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
-            ) : (
-              <input className="admin-input" placeholder="Điểm tối đa (nếu là practice)" type="number" value={itemForm.points} onChange={e => setItemForm({ ...itemForm, points: Number(e.target.value) })} />
-            )}
-          </div>
-          {itemForm.item_type === 'practice' && (
-            <input className="admin-input" style={{ marginBottom: 10 }} placeholder="Điểm tối đa" type="number" value={itemForm.points} onChange={e => setItemForm({ ...itemForm, points: Number(e.target.value) })} />
+              <input className="admin-input" placeholder="Điểm tối đa" type="number" value={itemForm.points} onChange={e => setItemForm({ ...itemForm, points: Number(e.target.value) })} />
+            </div>
           )}
-          {itemForm.item_type === 'practice' && itemForm.practice_type === 'voice_recorder' && (
+          {itemForm.item_type === 'quiz' && (
+            <div style={{ marginBottom: 6 }}>
+              <input className="admin-input" placeholder="quiz_slug (slug bộ câu hỏi)" value={itemForm.quiz_slug} onChange={e => setItemForm({ ...itemForm, quiz_slug: e.target.value })} />
+              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>Slug của bộ câu hỏi trong trang Luyện tập (vd: monophthongs-1)</div>
+            </div>
+          )}
+          {itemForm.item_type === 'video_lesson' && (
+            <div style={{ marginBottom: 6 }}>
+              <input className="admin-input" placeholder="Video URL" value={itemForm.video_url} onChange={e => setItemForm({ ...itemForm, video_url: e.target.value })} />
+              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>Dán link YouTube embed hoặc đường dẫn file video (https://...)</div>
+            </div>
+          )}
+
+          {(itemForm.item_type === 'lesson' || itemForm.item_type === 'video_lesson' || itemForm.item_type === 'practice') && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 4 }}>Nội dung bài</div>
+              <RichEditor
+                value={itemForm.body_html || ''}
+                onChange={html => setItemForm({ ...itemForm, body_html: html })}
+                placeholder="Copy-paste nội dung từ LMS vào đây — giữ nguyên định dạng, chèn ảnh/audio bằng nút 🖼 🎵 phía trên..."
+              />
+            </div>
+          )}
+
+          {(itemForm.item_type === 'lesson' || itemForm.item_type === 'video_lesson' || itemForm.item_type === 'practice') && (
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap' }}>
               <label className="admin-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                {uploading === 'va' ? 'Đang upload...' : (itemForm.audio_url ? '📁 Đổi audio mẫu' : '📁 Audio mẫu')}
+                {uploading === 'va' ? 'Đang upload...' : (itemForm.audio_url ? '📁 Đổi audio bài' : '📁 Audio bài')}
                 <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={e => {
                   const file = e.target.files[0];
                   if (!file) return;
@@ -477,30 +499,19 @@ export default function CourseStructureEditor() {
                   }).catch(err => showToast(err.message || 'Upload thất bại', 'error')).finally(() => setUploading(null));
                 }} />
               </label>
-              {itemForm.audio_url && <audio controls src={itemForm.audio_url} style={{ height: 34, maxWidth: 200 }} />}
+              {itemForm.audio_url && <audio controls src={itemForm.audio_url} style={{ height: 34, maxWidth: 220 }} />}
+              <span style={{ fontSize: 11, color: 'var(--muted)' }}>Audio phát ở đầu bài (vd: bài nghe chính của bài học)</span>
             </div>
           )}
-          {itemForm.item_type === 'video_lesson' && (
-            <input className="admin-input" style={{ marginBottom: 10 }} placeholder="Video URL (YouTube embed / https...)" value={itemForm.video_url} onChange={e => setItemForm({ ...itemForm, video_url: e.target.value })} />
-          )}
-          {itemForm.item_type === 'quiz' && (
-            <input className="admin-input" style={{ marginBottom: 10 }} placeholder="quiz_slug (slug bộ câu hỏi)" value={itemForm.quiz_slug} onChange={e => setItemForm({ ...itemForm, quiz_slug: e.target.value })} />
-          )}
-          {(itemForm.item_type === 'lesson' || itemForm.item_type === 'video_lesson' || itemForm.item_type === 'practice') && (
-            <textarea
-              className="admin-input" style={{ marginBottom: 10, minHeight: 140, whiteSpace: 'pre-wrap' }}
-              placeholder="Nội dung chữ (copy-paste từ LMS, có thể dán HTML)..."
-              value={itemForm.body_html}
-              onChange={e => setItemForm({ ...itemForm, body_html: e.target.value })}
-            />
-          )}
+
           <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--muted)', marginBottom: 14 }}>
             <input type="checkbox" checked={itemForm.is_free} onChange={e => setItemForm({ ...itemForm, is_free: e.target.checked })} />
-            Item miễn phí
+            Bài miễn phí (xem được khi chưa mua/Plus)
           </label>
+
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginBottom: 14 }}>
             <label className="admin-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              {uploading === 'img' ? 'Đang upload...' : (itemForm.image_url ? '📁 Đổi ảnh' : '📁 Ảnh bài')}
+              {uploading === 'img' ? 'Đang upload...' : (itemForm.image_url ? '📁 Đổi ảnh bìa' : '📁 Ảnh bìa')}
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadImage(e.target.files[0])} />
             </label>
             {itemForm.image_url && (
@@ -509,9 +520,19 @@ export default function CourseStructureEditor() {
                 <button className="admin-btn-ghost" style={{ color: 'var(--red)' }} onClick={() => setItemForm({ ...itemForm, image_url: '' })}>Bỏ ảnh</button>
               </>
             )}
+            <span style={{ fontSize: 11, color: 'var(--muted)' }}>Ảnh minh họa đầu bài</span>
           </div>
+
+          <div style={{ marginBottom: 14, border: '1px solid var(--line)', borderRadius: 12, padding: 14, background: 'var(--card)' }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 8 }}>Xem trước bài</div>
+            {itemForm.title && <h3 style={{ fontSize: 18, marginBottom: 8 }}>{itemForm.title}</h3>}
+            {itemForm.audio_url && <audio controls src={itemForm.audio_url} style={{ height: 38, maxWidth: 320, marginBottom: 8 }} />}
+            {itemForm.image_url && <img src={itemForm.image_url} alt="" style={{ maxHeight: 160, borderRadius: 10, marginBottom: 8, display: 'block' }} />}
+            <div className="article-content" style={{ fontSize: 14, lineHeight: 1.8 }} dangerouslySetInnerHTML={{ __html: itemForm.body_html || '<p style="color:var(--muted)">Chưa có nội dung...</p>' }} />
+          </div>
+
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="admin-btn" onClick={saveItem}>Lưu</button>
+            <button className="admin-btn" onClick={saveItem}>Lưu bài</button>
             <button className="admin-btn-ghost" onClick={() => setItemForm(null)}>Hủy</button>
           </div>
         </div>
