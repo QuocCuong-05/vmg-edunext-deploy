@@ -1496,6 +1496,93 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 }
 .admin-note { font-size: 12px; color: var(--muted); line-height: 1.6; }
 .admin-section-title { font-size: 16px; font-weight: 800; margin: 0 0 4px; }
+.admin-label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin: 12px 0 4px; }
+
+/* ===== Curriculum Builder (Cấu trúc khóa) ===== */
+.cs-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+.cs-layout { display: grid; grid-template-columns: minmax(320px, 2fr) minmax(360px, 3fr); gap: 20px; align-items: start; }
+@media (max-width: 960px) {
+  .cs-layout { grid-template-columns: 1fr; }
+  .cs-editor { position: static !important; max-height: none !important; }
+}
+.cs-curriculum { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.cs-mod { border: 1px solid var(--line); border-radius: 14px; background: var(--surface-hover); overflow: hidden; transition: box-shadow .15s ease; }
+.cs-mod.dragging { opacity: .92; box-shadow: 0 8px 30px rgba(25,37,60,.22); z-index: 60; position: relative; }
+.cs-mod-head { display: flex; align-items: center; gap: 6px; padding: 9px 12px; cursor: pointer; user-select: none; }
+.cs-mod-head:hover { background: var(--surface-input, rgba(0,0,0,.03)); }
+.cs-items { padding: 2px 10px 10px; display: flex; flex-direction: column; gap: 6px; background: var(--card); }
+
+.cs-item-row {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--card);
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.cs-item-row:hover { border-color: var(--red); box-shadow: 0 2px 8px rgba(25,37,60,.08); }
+.cs-item-row.active { border-color: var(--red); background: var(--red-bg); }
+.cs-item-row.dragging { opacity: .95; box-shadow: 0 8px 24px rgba(25,37,60,.20); z-index: 70; position: relative; }
+
+.cs-handle {
+  cursor: grab; color: var(--muted); border: none; background: none;
+  padding: 4px; display: inline-flex; touch-action: none; border-radius: 6px; flex-shrink: 0;
+}
+.cs-handle:hover { color: var(--ink); background: var(--surface-hover); }
+.cs-handle:active { cursor: grabbing; }
+
+.cs-item-title {
+  font-size: 13px; font-weight: 600; flex: 1; min-width: 100px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  text-align: left; background: none; border: none; color: var(--ink);
+  cursor: pointer; padding: 0;
+}
+.cs-item-title:hover { text-decoration: underline; }
+
+.cs-icon-btn {
+  border: none; background: none; cursor: pointer; color: var(--muted);
+  padding: 5px; border-radius: 6px; display: inline-flex; flex-shrink: 0;
+  transition: background .15s ease, color .15s ease;
+}
+.cs-icon-btn:hover { color: var(--ink); background: var(--surface-hover); }
+
+.cs-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+  background: var(--surface-hover); color: var(--muted); white-space: nowrap; flex-shrink: 0;
+}
+.cs-badge.free { background: var(--green-bg); color: var(--green); }
+
+.cs-add {
+  margin-top: 4px; width: 100%;
+  border: 1.5px dashed var(--line); border-radius: 10px;
+  background: none; color: var(--muted);
+  padding: 9px; font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.cs-add:hover:not(:disabled) { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+.cs-add:disabled { opacity: .55; cursor: wait; }
+
+.cs-editor {
+  position: sticky; top: 84px;
+  max-height: calc(100vh - 104px); overflow-y: auto;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: var(--card); padding: 18px; min-width: 0;
+}
+.cs-manage {
+  margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--line);
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.cs-empty {
+  border: 1.5px dashed var(--line); border-radius: 14px;
+  padding: 36px 20px; text-align: center; color: var(--muted);
+}
+
+.cs-confirm {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 999;
+  background: var(--card); border: 1px solid var(--red); border-radius: 14px;
+  padding: 14px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,.18); max-width: 92vw;
+}
 
 .toast {
   position: fixed; top: 16px; right: 16px; z-index: 9999;

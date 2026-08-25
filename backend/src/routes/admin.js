@@ -801,6 +801,73 @@ function slugify(text) {
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'item';
 }
 
+async function syncLessonCount(courseId) {
+  if (!courseId) return;
+  try {
+    const { count } = await supabaseAdmin
+      .from('lessons').select('id', { count: 'exact', head: true })
+      .eq('course_id', courseId);
+    await supabaseAdmin.from('courses').update({ lesson_count: count || 0 }).eq('id', courseId);
+  } catch {}
+}
+
+// --- Courses (tạo/sửa từ UI) ---
+const COURSE_FIELDS = ['title', 'slug', 'description', 'level', 'category', 'duration_hours', 'instructor', 'thumbnail', 'is_published'];
+const COURSE_LEVELS = ['A1', 'A2', 'B1', 'B1+', 'B2', 'C1'];
+
+router.post('/courses', async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    if (!b.title || !String(b.title).trim()) return res.status(400).json({ error: 'title là bắt buộc' });
+    const access = ['free', 'premium', 'paid'].includes(b.access_type) ? b.access_type : 'free';
+    const baseSlug = slugify(b.slug || b.title);
+    let slug = baseSlug;
+    let n = 1;
+    while (true) {
+      const { data: dup } = await supabaseAdmin.from('courses').select('id').eq('slug', slug).maybeSingle();
+      if (!dup) break;
+      slug = `${baseSlug}-${n++}`;
+    }
+    const payload = {
+      title: String(b.title).trim(), slug,
+      description: b.description || '',
+      level: COURSE_LEVELS.includes(b.level) ? b.level : 'B1',
+      category: b.category || 'General',
+      duration_hours: Number(b.duration_hours) || 0,
+      instructor: b.instructor || 'VMG EduNext',
+      thumbnail: b.thumbnail || null,
+      access_type: access,
+      is_published: b.is_published !== false,
+      lesson_count: 0,
+    };
+    const { data, error } = await supabaseAdmin.from('courses').insert(payload).select().single();
+    if (error) throw error;
+    res.status(201).json({ data });
+  } catch (err) { next(err); }
+});
+
+router.put('/courses/:id', async (req, res, next) => {
+  try {
+    const patch = {};
+    COURSE_FIELDS.forEach(k => { if (req.body[k] !== undefined) patch[k] = req.body[k]; });
+    if (patch.level !== undefined && !COURSE_LEVELS.includes(patch.level)) {
+      return res.status(400).json({ error: `level phải là một trong: ${COURSE_LEVELS.join(', ')}` });
+    }
+    if (req.body.access_type !== undefined) {
+      if (!['free', 'premium', 'paid'].includes(req.body.access_type)) {
+        return res.status(400).json({ error: 'access_type phải là free/premium/paid' });
+      }
+      patch.access_type = req.body.access_type;
+    }
+    if (!Object.keys(patch).length) return res.status(400).json({ error: 'Không có trường nào để cập nhật' });
+    patch.updated_at = new Date().toISOString();
+    const { data, error } = await supabaseAdmin
+      .from('courses').update(patch).eq('id', req.params.id).select().single();
+    if (error) throw error;
+    res.json({ data });
+  } catch (err) { next(err); }
+});
+
 // --- Modules ---
 router.get('/modules', async (req, res, next) => {
   try {
@@ -851,6 +918,38 @@ router.delete('/modules/:id', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// --- Reorder (bulk, phục vụ kéo thả) ---
+router.post('/reorder-modules', async (req, res, next) => {
+  try {
+    const updates = Array.isArray(req.body?.updates) ? req.body.updates : [];
+    if (!updates.length) return res.status(400).json({ error: 'updates là bắt buộc' });
+    const results = await Promise.all(updates.map(u =>
+      supabaseAdmin
+        .from('course_modules')
+        .update({ position: Number(u.position) || 0, updated_at: new Date().toISOString() })
+        .eq('id', u.id)
+    ));
+    const failed = results.find(r => r.error);
+    if (failed) throw failed.error;
+    res.json({ ok: true, updated: updates.length });
+  } catch (err) { next(err); }
+});
+
+router.post('/reorder-items', async (req, res, next) => {
+  try {
+    const updates = Array.isArray(req.body?.updates) ? req.body.updates : [];
+    if (!updates.length) return res.status(400).json({ error: 'updates là bắt buộc' });
+    const results = await Promise.all(updates.map(u => {
+      const patch = { sort_order: Number(u.sort_order) || 0, updated_at: new Date().toISOString() };
+      if (u.module_id !== undefined) patch.module_id = u.module_id || null;
+      return supabaseAdmin.from('lessons').update(patch).eq('id', u.id);
+    }));
+    const failed = results.find(r => r.error);
+    if (failed) throw failed.error;
+    res.json({ ok: true, updated: updates.length });
+  } catch (err) { next(err); }
+});
+
 // --- Items (lessons) ---
 router.get('/items', async (req, res, next) => {
   try {
@@ -898,6 +997,7 @@ router.post('/items', async (req, res, next) => {
       .select()
       .single();
     if (error) throw error;
+    await syncLessonCount(course_id);
     res.status(201).json({ data });
   } catch (err) { next(err); }
 });
@@ -924,9 +1024,63 @@ router.put('/items/:id', async (req, res, next) => {
 
 router.delete('/items/:id', async (req, res, next) => {
   try {
-    const { error } = await supabaseAdmin.from('lessons').delete().eq('id', req.params.id);
-    if (error) throw error;
+    const { data: del } = await supabaseAdmin
+      .from('lessons').delete().eq('id', req.params.id).select('course_id').single();
+    if (del?.course_id) await syncLessonCount(del.course_id);
     res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// --- Duplicate item (nhân bản bài + từ luyện nói + câu hỏi nghe) ---
+router.post('/items/:id/duplicate', async (req, res, next) => {
+  try {
+    const { data: src, error } = await supabaseAdmin
+      .from('lessons').select('*').eq('id', req.params.id).maybeSingle();
+    if (error) throw error;
+    if (!src) return res.status(404).json({ error: 'Không tìm thấy bài học' });
+
+    let sibQ = supabaseAdmin.from('lessons').select('sort_order').eq('course_id', src.course_id);
+    sibQ = src.module_id ? sibQ.eq('module_id', src.module_id) : sibQ.is('module_id', null);
+    const { data: sibs } = await sibQ;
+    const nextOrder = (sibs || []).reduce((m, r) => Math.max(m, Number(r.sort_order) || 0), 0) + 1;
+
+    const baseSlug = slugify(`${src.title}-ban-sao`);
+    let slug = baseSlug;
+    let n = 1;
+    while (true) {
+      const { data: dup } = await supabaseAdmin
+        .from('lessons').select('id').eq('course_id', src.course_id).eq('slug', slug).maybeSingle();
+      if (!dup) break;
+      slug = `${baseSlug}-${n++}`;
+    }
+
+    const copy = { ...src };
+    delete copy.id;
+    delete copy.created_at;
+    delete copy.updated_at;
+    copy.title = `${src.title} (bản sao)`;
+    copy.slug = slug;
+    copy.sort_order = nextOrder;
+
+    const { data: created, error: insErr } = await supabaseAdmin
+      .from('lessons').insert(copy).select().single();
+    if (insErr) throw insErr;
+
+    const [wRes, qRes] = await Promise.all([
+      supabaseAdmin.from('practice_words').select('*').eq('lesson_id', src.id),
+      supabaseAdmin.from('practice_questions').select('*').eq('lesson_id', src.id),
+    ]);
+    if (wRes.data?.length) {
+      const rows = wRes.data.map(({ id, lesson_id, ...rest }) => ({ ...rest, lesson_id: created.id }));
+      await supabaseAdmin.from('practice_words').insert(rows);
+    }
+    if (qRes.data?.length) {
+      const rows = qRes.data.map(({ id, lesson_id, ...rest }) => ({ ...rest, lesson_id: created.id }));
+      await supabaseAdmin.from('practice_questions').insert(rows);
+    }
+
+    await syncLessonCount(src.course_id);
+    res.status(201).json({ data: created });
   } catch (err) { next(err); }
 });
 
