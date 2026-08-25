@@ -93,7 +93,7 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
       Color,
       FontSize,
       BackgroundColor,
-      Table.configure({ resizable: false }),
+      Table.configure({ resizable: true }),
       TableRow,
       TableHeader,
       TableCell,
@@ -248,7 +248,23 @@ export default function RichEditor({ value, onChange, placeholder = 'Soạn nộ
         >
           ⊞<span style={{ fontSize: 9, fontWeight: 800 }}>▾</span>
         </button>
-        {editor.isActive('table') && TOOL('🗑', () => editor.chain().focus().deleteTable().run(), false, 'Xóa bảng')}
+        {editor.isActive('table') && (
+          <>
+            {TOOL('🗑', () => editor.chain().focus().deleteTable().run(), false, 'Xóa bảng')}
+            <span style={{ flexBasis: '100%', height: 0 }} />
+            <span className="re-tbl-tools">
+              {TOOL('◀ Cột', () => editor.chain().focus().addColumnBefore().run(), false, 'Thêm cột bên trái')}
+              {TOOL('Cột ▶', () => editor.chain().focus().addColumnAfter().run(), false, 'Thêm cột bên phải')}
+              {TOOL('✕ Cột', () => editor.chain().focus().deleteColumn().run(), false, 'Xóa cột')}
+              {TOOL('▲ Dòng', () => editor.chain().focus().addRowBefore().run(), false, 'Thêm dòng bên trên')}
+              {TOOL('Dòng ▼', () => editor.chain().focus().addRowAfter().run(), false, 'Thêm dòng bên dưới')}
+              {TOOL('✕ Dòng', () => editor.chain().focus().deleteRow().run(), false, 'Xóa dòng')}
+              {TOOL('▦ Gộp', () => editor.chain().focus().mergeCells().run(), false, 'Gộp ô')}
+              {TOOL('⬚ Tách', () => editor.chain().focus().splitCell().run(), false, 'Tách ô')}
+              {TOOL('🔝 Header', () => editor.chain().focus().toggleHeaderRow().run(), false, 'Bật/tắt hàng tiêu đề')}
+            </span>
+          </>
+        )}
         {TOOL('✕Định dạng', () => editor.chain().focus().unsetAllMarks().clearNodes().run(), false, 'Xóa định dạng vùng chọn')}
         <input
           ref={fileRef}
