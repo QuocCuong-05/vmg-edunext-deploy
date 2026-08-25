@@ -459,7 +459,7 @@ export default function LessonView() {
 
       {hasRichBody ? (
         <Card style={{ marginBottom: 20, padding: 20 }}>
-          <div dangerouslySetInnerHTML={{ __html: bodyHtml }} style={{ fontSize: 14, lineHeight: 1.8 }} />
+          <div dangerouslySetInnerHTML={{ __html: bodyHtml }} style={{ fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }} />
         </Card>
       ) : itemType !== 'video_lesson' && (
         <Card style={{ marginBottom: 20, padding: 20 }}>
@@ -525,7 +525,7 @@ export default function LessonView() {
       {lesson.content_type === 'assignment' && itemType !== 'practice' && (
         <Card style={{ background: 'var(--gold-bg)', borderColor: 'var(--gold)', marginBottom: 20, padding: 20 }}>
           <h4 style={{ fontSize: 15, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}><Icon.Pen size={16} /> Bài tập</h4>
-          <div dangerouslySetInnerHTML={{ __html: bodyHtml }} style={{ fontSize: 13, lineHeight: 1.7 }} />
+          <div dangerouslySetInnerHTML={{ __html: bodyHtml }} style={{ fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap' }} />
         </Card>
       )}
 

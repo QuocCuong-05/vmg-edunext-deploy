@@ -166,12 +166,6 @@ export default function SpeakPractice({ lesson, words, onCompleted }) {
                 )}
               </div>
 
-              {st.transcript && (
-                <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10 }}>
-                  Nhận diện được: <b>{st.transcript}</b>
-                </p>
-              )}
-
               {res && (
                 <div style={{ marginTop: 14, padding: 14, borderRadius: 12, background: res.ai_score != null && res.ai_score >= 6 ? 'var(--green-bg)' : 'var(--red-bg)', border: `1px solid ${res.ai_score != null && res.ai_score >= 6 ? 'var(--green)' : 'var(--red)'}` }}>
                   <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 4 }}>
