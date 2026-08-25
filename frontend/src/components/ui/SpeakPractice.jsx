@@ -7,7 +7,7 @@ function browserRecognition() {
   return window.SpeechRecognition ?? window.webkitSpeechRecognition;
 }
 
-export default function SpeakPractice({ lesson, words, onCompleted }) {
+export default function SpeakPractice({ lesson, words, onCompleted, practiceType }) {
   const showToast = useToast();
   const [results, setResults] = useState({});
   const [busy, setBusy] = useState({});
@@ -119,8 +119,94 @@ export default function SpeakPractice({ lesson, words, onCompleted }) {
     }
   };
 
-  const allSubmitted = words.length > 0 && words.every(w => results[w.id]);
-  const someSubmitted = Object.keys(results).length > 0;
+  const isPassage = (practiceType || lesson.practice_type) === 'speak_passage';
+  const PASSAGE_KEY = '__passage__';
+  const allSubmitted = isPassage
+    ? !!results[PASSAGE_KEY]
+    : words.length > 0 && words.every(w => results[w.id]);
+  const someSubmitted = isPassage
+    ? !!results[PASSAGE_KEY]
+    : Object.keys(results).length > 0;
+
+  if (isPassage) {
+    const recState = recordState[PASSAGE_KEY] || {};
+    const res = results[PASSAGE_KEY];
+    const submitPassage = async () => {
+      if (!recState.blob) return;
+      setBusy(prev => ({ ...prev, [PASSAGE_KEY]: true }));
+      try {
+        const b64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+          reader.onerror = reject;
+          reader.readAsDataURL(recState.blob);
+        });
+        const passage = (words || []).map(w => w.word).join(' ');
+        const r = await api.practice.submit({
+          lesson_id: lesson.id,
+          practice_word_id: null,
+          word: passage,
+          audio_b64: b64,
+          filename: 'passage-rec.webm',
+          transcript: recState.transcript || '',
+          practice_type: 'speak_passage',
+        });
+        setResults(prev => ({ ...prev, [PASSAGE_KEY]: r }));
+        showToast(r.ai_score != null ? `Chấm xong: ${r.ai_score}/10` : 'Đã gửi bài', 'success');
+      } catch (err) {
+        showToast(err.message || 'Gửi bài thất bại', 'error');
+      } finally {
+        setBusy(prev => ({ ...prev, [PASSAGE_KEY]: false }));
+      }
+    };
+    return (
+      <div>
+        <div style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: 'var(--card)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {(words || []).map((w) => (
+              <span key={w.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, background: 'var(--surface-hover)', fontSize: 16 }}>
+                <b>{w.word}</b>
+                {w.audio_url && <audio controls src={w.audio_url} preload="none" style={{ height: 26, maxWidth: 120 }} />}
+              </span>
+            ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
+            {!recState.recording ? (
+              <Button size="sm" variant={recState.blobUrl ? 'ghost' : 'primary'} onClick={() => startRecording(PASSAGE_KEY)}>
+                {recState.blobUrl ? '🎙️ Ghi lại' : '🎙️ Nhấn để nói'}
+              </Button>
+            ) : (
+              <>
+                <span style={{ fontSize: 13, color: 'var(--red)', fontWeight: 700 }}>Đang ghi...</span>
+                <Button size="sm" variant="primary" onClick={() => stopRecording(PASSAGE_KEY)}>Dừng</Button>
+              </>
+            )}
+            {recState.blobUrl && !recState.recording && (
+              <>
+                <audio controls src={recState.blobUrl} style={{ height: 38, maxWidth: 180 }} />
+                <Button size="sm" variant="ghost" isDisabled={busy[PASSAGE_KEY] || !!res} onClick={submitPassage}>
+                  {busy[PASSAGE_KEY] ? 'Đang chấm...' : (res ? 'Đã chấm' : 'Gửi chấm điểm')}
+                </Button>
+              </>
+            )}
+          </div>
+          {res && (
+            <div style={{ marginTop: 14, padding: 14, borderRadius: 12, background: res.ai_score != null && res.ai_score >= 6 ? 'var(--green-bg)' : 'var(--red-bg)', border: `1px solid ${res.ai_score != null && res.ai_score >= 6 ? 'var(--green)' : 'var(--red)'}` }}>
+              <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 4 }}>
+                {res.ai_score != null ? `Điểm: ${res.ai_score}/10` : 'Chưa chấm được'}
+                {res.teacher_score != null && <span> · Giáo viên chấm: {res.teacher_score}/10</span>}
+              </div>
+              {res.ai_feedback && <p style={{ fontSize: 12, lineHeight: 1.6, margin: 0 }}>{res.ai_feedback}</p>}
+            </div>
+          )}
+        </div>
+        <div style={{ marginTop: 20 }}>
+          <Button variant="primary" onClick={onCompleted} isDisabled={!someSubmitted}>Hoàn thành bài tập ✓</Button>
+          {!someSubmitted && <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>Ghi âm & gửi bài để hoàn thành.</p>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

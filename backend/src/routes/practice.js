@@ -52,7 +52,7 @@ router.post('/submit', authenticate, async (req, res) => {
       }
     }
 
-    const grade = await gradePronunciation(word || '', transcript);
+    const grade = await gradePronunciation(word || '', transcript, { passage: (practice_type || '') === 'speak_passage' });
 
     const { data, error } = await supabaseAdmin
       .from('practice_submissions')

@@ -21,6 +21,7 @@ const TYPES = [
 
 const PRACTICE_TYPES = [
   { value: 'speak_words', label: '🎤 Đọc từ (mic)' },
+  { value: 'speak_passage', label: '📖 Đọc cả cụm (1 mic)' },
   { value: 'voice_recorder', label: '🎙️ Ghi âm tự do' },
   { value: 'listen_choose', label: '👂 Nghe → chọn đáp án' },
   { value: 'listen_fill', label: '📝 Nghe → điền từ' },
@@ -165,6 +166,7 @@ export default function CourseStructureEditor() {
 
   const [words, setWords] = useState({});
   const [wordForm, setWordForm] = useState({});
+  const [bulkText, setBulkText] = useState({});
   const [questions, setQuestions] = useState({});
   const [questionForm, setQuestionForm] = useState({});
   const [confirmDel, setConfirmDel] = useState(null);
@@ -240,6 +242,26 @@ export default function CourseStructureEditor() {
       await api.admin.createWord({ lesson_id: lessonId, word: f.word.trim(), audio_url: f.audio_url || null, image_url: f.image_url || null, position: (words[lessonId] || []).length + 1 });
       setWordForm({ ...wordForm, [lessonId]: { word: '', audio_url: '', image_url: '' } });
       await loadWords(lessonId);
+    } catch (e) { showToast(e.message, 'error'); }
+  };
+
+  const addWordsBulk = async (lessonId) => {
+    const raw = (bulkText[lessonId] || '').trim();
+    if (!raw) return;
+    const list = raw
+      .split(/[\n,;]+/)
+      .map(s => s.trim().replace(/\s+/g, ' '))
+      .filter(Boolean);
+    if (!list.length) return;
+    try {
+      let pos = (words[lessonId] || []).length;
+      for (const w of list) {
+        pos += 1;
+        await api.admin.createWord({ lesson_id: lessonId, word: w, audio_url: null, image_url: null, position: pos });
+      }
+      setBulkText({ ...bulkText, [lessonId]: '' });
+      await loadWords(lessonId);
+      showToast(`Đã thêm ${list.length} từ`, 'success');
     } catch (e) { showToast(e.message, 'error'); }
   };
 
@@ -738,6 +760,16 @@ export default function CourseStructureEditor() {
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadWordImage(e.target.files[0], itemForm.id)} />
             </label>
             <button className="admin-btn" onClick={() => addWord(itemForm.id)}>+ Thêm từ</button>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-start', marginTop: 10 }}>
+            <textarea
+              className="admin-input"
+              style={{ minHeight: 64, flex: 1, minWidth: 220, whiteSpace: 'pre-wrap' }}
+              placeholder="Thêm hàng loạt: dán danh sách từ, mỗi từ 1 dòng (hoặc cách/phẩy)"
+              value={bulkText[itemForm.id] || ''}
+              onChange={e => setBulkText({ ...bulkText, [itemForm.id]: e.target.value })}
+            />
+            <button className="admin-btn" onClick={() => addWordsBulk(itemForm.id)}>➕ Thêm hàng loạt</button>
           </div>
         </section>
       )}

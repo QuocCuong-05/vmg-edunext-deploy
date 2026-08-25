@@ -1,6 +1,6 @@
 import { generateText } from 'ai';
 
-const SYSTEM_PROMPT = `Bạn là chuyên gia đánh giá phát âm tiếng Anh cho giáo viên Việt Nam.
+const SYSTEM_PROMPT_WORD = `Bạn là chuyên gia đánh giá phát âm tiếng Anh cho giáo viên Việt Nam.
 Bạn nhận 1 từ/âm tiêu chuẩn (target) và transcript (nội dung nhận diện giọng nói của học viên khi họ đọc từ đó).
 Nhiệm vụ: đánh giá phát âm dựa trên độ khớp giữa transcript và từ đích, trả về JSON DUY NHẤT:
 {"score": <số nguyên 1-10>, "feedback": "<1-2 câu phản hồi ngắn gọn bằng tiếng Việt, gợi ý cách phát âm đúng>"}
@@ -10,7 +10,20 @@ Quy tắc:
 - transcript lệch nhiều/khác hoàn toàn => score 1-4.
 - Không thêm text ngoài JSON.`;
 
-export async function gradePronunciation(word, transcript) {
+const SYSTEM_PROMPT_PASSAGE = `Bạn là chuyên gia đánh giá phát âm tiếng Anh cho giáo viên Việt Nam.
+Học viên vừa đọc TOÀN BỘ một cụm/from vựng (danh sách từ mục tiêu) trong một lần ghi âm.
+Bạn nhận toàn bộ cụm từ mục tiêu (target) và transcript (nội dung nhận diện giọng nói của học viên).
+Nhiệm vụ: đánh giá phát âm tổng thể của cả cụm, trả về JSON DUY NHẤT:
+{"score": <số nguyên 1-10>, "feedback": "<1-2 câu phản hồi ngắn gọn bằng tiếng Việt, nhận xét chung và gợi ý từ nào phát âm chưa chuẩn>"}
+Quy tắc:
+- transcript bao quát được hầu hết các từ mục tiêu, phát âm rõ ràng => score 8-10.
+- thiếu/thay đổi 1-2 từ hoặc một vài âm chưa chuẩn => score 5-7, chỉ rõ từ nào.
+- bỏ sót nhiều từ/phát âm lệch xa => score 1-4.
+- Không thêm text ngoài JSON.`;
+
+export async function gradePronunciation(word, transcript, opts = {}) {
+  const isPassage = !!opts.passage;
+  const SYSTEM_PROMPT = isPassage ? SYSTEM_PROMPT_PASSAGE : SYSTEM_PROMPT_WORD;
   const cleaned = (transcript || '').trim().replace(/\s+/g, ' ').toLowerCase();
   const target = (word || '').trim().toLowerCase();
 
@@ -38,7 +51,7 @@ export async function gradePronunciation(word, transcript) {
     const { text } = await generateText({
       model: provider.chat('DeepSeek-V4-Flash'),
       system: SYSTEM_PROMPT,
-      prompt: `Từ đích: "${target}"\nTranscript của học viên: "${cleaned}"`,
+      prompt: `Cụm từ mục tiêu: "${target}"\nTranscript của học viên: "${cleaned}"`,
       temperature: 0.2,
     });
 
