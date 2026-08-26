@@ -1076,15 +1076,7 @@ export default function CourseStructureEditor() {
             <div className="cs-inner">
               {panel === 'course' && courseForm ? renderCourseForm()
                 : panel === 'item' && itemForm ? renderItemForm()
-                : (
-                  <div className="cs-empty" style={{ padding: '60px 20px' }}>
-                    <div style={{ fontSize: 36, marginBottom: 10 }}>👈</div>
-                    <b>Chọn một bài học để chỉnh sửa</b>
-                    <p style={{ fontSize: 13, margin: '8px auto 0', maxWidth: 340 }}>
-                      Bấm vào tên bài ở cột bên trái. Hoặc "＋ Thêm bài học" trong module để tạo bài mới ngay lập tức.
-                    </p>
-                  </div>
-                )}
+                : null}
             </div>
           </div>
         </div>

@@ -1500,13 +1500,9 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 
 /* ===== Curriculum Builder (Cấu trúc khóa) ===== */
 .cs-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
-.cs-layout { display: grid; grid-template-columns: minmax(320px, 2fr) minmax(360px, 3fr); gap: 20px; align-items: start; }
-.cs-layout.editing { display: block; }
-.cs-layout.editing .cs-curriculum { display: none; }
-@media (max-width: 960px) {
-  .cs-layout { grid-template-columns: 1fr; }
-  .cs-editor { position: static !important; max-height: none !important; }
-}
+.cs-layout { display: block; }
+.cs-layout .cs-editor { display: none; }
+.cs-layout.editing .cs-editor { display: block; }
 .cs-curriculum { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 
 .cs-mod { border: 1px solid var(--line); border-radius: 14px; background: var(--surface-hover); overflow: hidden; transition: box-shadow .15s ease; }
