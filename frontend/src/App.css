@@ -1501,6 +1501,8 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 /* ===== Curriculum Builder (Cấu trúc khóa) ===== */
 .cs-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
 .cs-layout { display: grid; grid-template-columns: minmax(320px, 2fr) minmax(360px, 3fr); gap: 20px; align-items: start; }
+.cs-layout.editing { display: block; }
+.cs-layout.editing .cs-curriculum { display: none; }
 @media (max-width: 960px) {
   .cs-layout { grid-template-columns: 1fr; }
   .cs-editor { position: static !important; max-height: none !important; }
@@ -1567,20 +1569,70 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
   border: 1px solid var(--line); border-radius: 14px;
   background: var(--card); padding: 18px; min-width: 0;
 }
-.cs-editor.cs-editor-full {
-  position: fixed !important; inset: 12px;
-  max-height: none !important; z-index: 1200;
-  box-shadow: 0 24px 64px rgba(0,0,0,.35);
-  overflow: auto;
+/* Focus mode: editor chiếm toàn bộ chiều ngang, không sticky nữa */
+.cs-editor.editing {
+  position: static; max-height: none;
 }
-@media (max-width: 960px) {
-  .cs-editor.cs-editor-full { inset: 8px; }
+.cs-focus-head { display: flex; margin-bottom: 6px; }
+.cs-inner { max-width: 980px; margin: 0 auto; }
+
+/* Section headers trong form soạn bài */
+.cs-sec-head {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px;
+  color: var(--muted);
+  margin: 24px 0 10px; padding-top: 16px; border-top: 1px dashed var(--line);
 }
-.cs-editor-bar {
-  display: flex; align-items: center; justify-content: flex-end; gap: 8px;
-  margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--line);
+
+/* Pills chọn loại */
+.cs-seg { display: flex; flex-wrap: wrap; gap: 7px; }
+.cs-seg-btn {
+  border: 1.5px solid var(--line); background: var(--card); color: var(--ink);
+  border-radius: 999px; padding: 7px 15px; font-size: 13.5px; font-weight: 600;
+  cursor: pointer; transition: border-color .15s ease, background .15s ease, color .15s ease;
 }
-.cs-editor-bar .admin-note { flex: 1; }
+.cs-seg-btn:hover { border-color: var(--red); color: var(--red); }
+.cs-seg-btn.on {
+  background: var(--red-bg); border-color: var(--red); color: var(--red); font-weight: 800;
+}
+
+/* Toggle switch */
+.cs-switch {
+  appearance: none; -webkit-appearance: none; position: relative;
+  width: 40px; height: 22px; border-radius: 999px; background: var(--line);
+  cursor: pointer; transition: background .2s ease; flex-shrink: 0; margin: 0;
+}
+.cs-switch:checked { background: var(--green, #22c55e); }
+.cs-switch::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px;
+  border-radius: 50%; background: #fff; transition: left .2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.cs-switch:checked::after { left: 21px; }
+
+/* Xem trước gập mặc định */
+details.cs-preview { margin-top: 18px; }
+details.cs-preview > summary {
+  cursor: pointer; font-size: 13px; font-weight: 700; color: var(--muted);
+  list-style: none; display: flex; align-items: center; gap: 7px; user-select: none;
+}
+details.cs-preview > summary::-webkit-details-marker { display: none; }
+details.cs-preview > summary::before { content: '▸'; transition: transform .15s ease; }
+details.cs-preview[open] > summary::before { transform: rotate(90deg); }
+details.cs-preview[open] > summary { color: var(--ink); }
+
+/* Savebar dính đáy panel */
+.cs-savebar {
+  position: sticky; bottom: -18px; z-index: 20;
+  margin: 20px -18px -18px;
+  padding: 12px 18px 14px;
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 -8px 20px rgba(25,37,60,.06);
+  display: flex; gap: 8px;
+}
+.cs-savebar .admin-btn { flex: 1; }
 .cs-manage {
   margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--line);
   display: flex; flex-direction: column; gap: 8px;
@@ -1588,7 +1640,7 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 .cs-practice-config {
   border: 1px solid var(--line); border-radius: 12px;
   background: var(--surface-hover);
-  padding: 14px; margin-top: 16px;
+  padding: 14px; margin-top: 0;
   display: flex; flex-direction: column; gap: 10px;
 }
 .cs-practice-config .cs-manage { margin-top: 0; padding-top: 0; border-top: none; }

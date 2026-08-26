@@ -174,15 +174,14 @@ export default function CourseStructureEditor() {
   const [uploading, setUploading] = useState(null);
   const [duplicating, setDuplicating] = useState(null);
   const [quickAdding, setQuickAdding] = useState(null);
-  const [editorExpanded, setEditorExpanded] = useState(false);
 
-  // Esc để thoát chế độ toàn màn hình
-  useEffect(() => {
-    if (!editorExpanded) return;
-    const onKey = (e) => { if (e.key === 'Escape') setEditorExpanded(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [editorExpanded]);
+  // Đóng editor, quay lại cấu trúc khóa
+  const closePanel = () => {
+    setPanel(null);
+    setSelectedItemId(null);
+    setItemForm(null);
+    setCourseForm(null);
+  };
 
   // --- DnD ---
   const [activeId, setActiveId] = useState(null);
@@ -268,6 +267,13 @@ export default function CourseStructureEditor() {
     try {
       await api.admin.deleteWord(wordId);
       await loadWords(lessonId);
+    } catch (e) { showToast(e.message, 'error'); }
+  };
+
+  const deleteQuestionDirect = async (questionId, lessonId) => {
+    try {
+      await api.admin.deleteQuestion(questionId);
+      await loadQuestions(lessonId);
     } catch (e) { showToast(e.message, 'error'); }
   };
 
@@ -438,12 +444,10 @@ export default function CourseStructureEditor() {
     }
   };
 
-  /* ---------- Confirm delete ---------- */
+  /* ---------- Confirm delete (chỉ dùng cho module & bài học) ---------- */
   const confirmLabel = confirmDel
     ? (confirmDel.type === 'module' ? 'module này (các bài sẽ về "Chưa phân nhóm")'
-      : confirmDel.type === 'item' ? 'bài học này'
-        : confirmDel.type === 'word' ? 'từ này'
-          : 'câu hỏi này')
+      : confirmDel.type === 'item' ? 'bài học này' : '')
     : '';
 
   const doConfirmDel = async () => {
@@ -627,44 +631,69 @@ export default function CourseStructureEditor() {
   const activeItem = items.find(i => i.id === selectedItemId);
   const selPracticeType = itemForm?.practice_type || 'speak_passage';
 
+  const ITEM_SHORT = { video_lesson: '🎬 Video', lesson: '📄 Bài đọc', practice: '🎤 Luyện nói', quiz: '📝 Kiểm tra' };
+  const PT_SHORT = { speak_passage: '📖 Từng từ', voice_recorder: '🎙️ Ghi âm', listen_choose: '👂 Nghe→chọn', listen_fill: '📝 Nghe→điền', listen_mark: '✏️ Nghe→đánh dấu' };
+  const PT_HINT = {
+    speak_passage: 'Dán danh sách từ vào mục 🧩 Cấu hình bài tập bên dưới (sau khi Lưu bài).',
+    voice_recorder: 'Không cần dữ liệu thêm — viết đề bài ở Nội dung bài.',
+    listen_choose: 'Thêm câu hỏi nghe (audio + đáp án chọn) ở mục 🧩 bên dưới sau khi Lưu bài.',
+    listen_fill: 'Thêm câu hỏi nghe (audio + đoạn text ____ + đáp án) ở mục 🧩 bên dưới sau khi Lưu bài.',
+    listen_mark: 'Thêm câu hỏi nghe (audio + các từ đúng) ở mục 🧩 bên dưới sau khi Lưu bài.',
+  };
+
   const renderItemForm = () => (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <b style={{ fontSize: 15 }}>{itemForm.id ? '✎ Sửa bài học' : 'Thêm bài học'}</b>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <b style={{ fontSize: 17 }}>{itemForm.id ? '✎ Sửa bài học' : 'Thêm bài học'}</b>
         {activeItem && <span className="cs-badge">{typeMeta(activeItem.item_type).label}</span>}
       </div>
 
-      <label className="admin-label">Tiêu đề bài học *</label>
-      <input className="admin-input" placeholder="vd: Monophthongs 1 - the /i:/ sound" value={itemForm.title} onChange={e => setItemForm({ ...itemForm, title: e.target.value })} />
-
-      <label className="admin-label">Loại bài học</label>
-      <select className="admin-input" value={itemForm.item_type} onChange={e => setItemForm({ ...itemForm, item_type: e.target.value })}>
-        {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-      </select>
+      {/* Loại bài học — pills */}
+      <div className="cs-sec-head" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Loại bài</div>
+      <div className="cs-seg">
+        {TYPES.map(t => (
+          <button key={t.value} type="button"
+            className={`cs-seg-btn${itemForm.item_type === t.value ? ' on' : ''}`}
+            onClick={() => setItemForm({ ...itemForm, item_type: t.value })}>
+            {ITEM_SHORT[t.value] || t.label}
+          </button>
+        ))}
+      </div>
 
       {itemForm.item_type === 'practice' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <div>
-            <label className="admin-label">Loại luyện nói</label>
-            <select className="admin-input" value={itemForm.practice_type} onChange={e => setItemForm({ ...itemForm, practice_type: e.target.value })}>
-              {PRACTICE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
-            <div className="admin-note" style={{ marginTop: 4 }}>
-              {{
-                speak_passage: 'Dán danh sách từ vào mục cấu hình bên dưới (sau khi Lưu bài).',
-                voice_recorder: 'Không cần dữ liệu thêm — viết đề bài ở Nội dung bài.',
-                listen_choose: 'Thêm câu hỏi nghe (audio + đáp án chọn) bên dưới sau khi Lưu bài.',
-                listen_fill: 'Thêm câu hỏi nghe (audio + đoạn text ____ + đáp án) bên dưới sau khi Lưu bài.',
-                listen_mark: 'Thêm câu hỏi nghe (audio + các từ đúng) bên dưới sau khi Lưu bài.',
-              }[itemForm.practice_type] || ''}
-            </div>
+        <>
+          <div className="cs-seg" style={{ marginTop: 10 }}>
+            {PRACTICE_TYPES.map(t => (
+              <button key={t.value} type="button"
+                className={`cs-seg-btn${itemForm.practice_type === t.value ? ' on' : ''}`}
+                onClick={() => setItemForm({ ...itemForm, practice_type: t.value })}>
+                {PT_SHORT[t.value] || t.label}
+              </button>
+            ))}
           </div>
-          <div>
-            <label className="admin-label">Điểm tối đa</label>
-            <input className="admin-input" placeholder="Điểm tối đa" type="number" value={itemForm.points} onChange={e => setItemForm({ ...itemForm, points: Number(e.target.value) })} />
-          </div>
-        </div>
+          <div className="admin-note" style={{ marginTop: 6 }}>{PT_HINT[itemForm.practice_type]}</div>
+        </>
       )}
+
+      {/* Thông tin chung */}
+      <div className="cs-sec-head">Thông tin chung</div>
+      <label className="admin-label">Tiêu đề bài học *</label>
+      <input className="admin-input" placeholder="vd: Monophthongs 1 - the /i:/ sound" value={itemForm.title} onChange={e => setItemForm({ ...itemForm, title: e.target.value })} />
+      <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 14, alignItems: 'center', marginTop: 12 }}>
+        <div>
+          <label className="admin-label">Điểm tối đa</label>
+          <input className="admin-input" type="number" value={itemForm.points} onChange={e => setItemForm({ ...itemForm, points: Number(e.target.value) })} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <input id="free-switch" type="checkbox" className="cs-switch" checked={itemForm.is_free} onChange={e => setItemForm({ ...itemForm, is_free: e.target.checked })} />
+          <label htmlFor="free-switch" style={{ fontSize: 13, color: 'var(--ink)', cursor: 'pointer', userSelect: 'none' }}>
+            Miễn phí — xem được khi chưa mua/Plus
+          </label>
+        </div>
+      </div>
+
+      {/* Nội dung */}
+      <div className="cs-sec-head">Nội dung</div>
 
       {itemForm.item_type === 'quiz' && (
         <>
@@ -714,12 +743,16 @@ export default function CourseStructureEditor() {
         </>
       )}
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--ink)', margin: '14px 0' }}>
-        <input type="checkbox" checked={itemForm.is_free} onChange={e => setItemForm({ ...itemForm, is_free: e.target.checked })} />
-        Bài miễn phí (xem được khi chưa mua/Plus)
-      </label>
+      {/* Cấu hình bài tập */}
+      {itemForm.item_type === 'practice' && (
+        <>
+          <div className="cs-sec-head">🧩 Cấu hình bài tập</div>
+          {renderPracticeManager()}
+        </>
+      )}
 
-      <label className="admin-label">Ảnh bìa</label>
+      {/* Hiển thị */}
+      <div className="cs-sec-head">Hiển thị</div>
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
         <label className="admin-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           {uploading === 'img' ? 'Đang upload...' : (itemForm.image_url ? '📁 Đổi ảnh' : '📁 Chọn ảnh')}
@@ -733,17 +766,21 @@ export default function CourseStructureEditor() {
         )}
       </div>
 
-      <div style={{ margin: '16px 0', border: '1px solid var(--line)', borderRadius: 12, padding: 14, background: 'var(--surface-hover)' }}>
-        <div className="admin-note" style={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: 8 }}>Xem trước bài</div>
-        {itemForm.title && <h3 style={{ fontSize: 18, margin: '0 0 8px' }}>{itemForm.title}</h3>}
-        {itemForm.audio_url && <audio controls src={itemForm.audio_url} style={{ height: 38, maxWidth: 320, marginBottom: 8 }} />}
-        {itemForm.image_url && <img src={itemForm.image_url} alt="" style={{ maxHeight: 160, borderRadius: 10, marginBottom: 8, display: 'block' }} />}
-        <div className="article-content" style={{ fontSize: 14, lineHeight: 1.8 }} dangerouslySetInnerHTML={{ __html: itemForm.body_html || '<p style="color:var(--muted)">Chưa có nội dung...</p>' }} />
-      </div>
+      {/* Xem trước — gập mặc định */}
+      <details className="cs-preview">
+        <summary>👁 Xem trước bài</summary>
+        <div style={{ border: '1px solid var(--line)', borderRadius: 12, padding: 14, background: 'var(--surface-hover)', marginTop: 10 }}>
+          {itemForm.title && <h3 style={{ fontSize: 18, margin: '0 0 8px' }}>{itemForm.title}</h3>}
+          {itemForm.audio_url && <audio controls src={itemForm.audio_url} style={{ height: 38, maxWidth: 320, marginBottom: 8 }} />}
+          {itemForm.image_url && <img src={itemForm.image_url} alt="" style={{ maxHeight: 160, borderRadius: 10, marginBottom: 8, display: 'block' }} />}
+          <div className="article-content" style={{ fontSize: 14, lineHeight: 1.8 }} dangerouslySetInnerHTML={{ __html: itemForm.body_html || '<p style="color:var(--muted)">Chưa có nội dung...</p>' }} />
+        </div>
+      </details>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      {/* Savebar dính đáy */}
+      <div className="cs-savebar">
         <button className="admin-btn" onClick={saveItem}>💾 Lưu bài</button>
-        <button className="admin-btn-ghost" onClick={() => { setPanel(null); setSelectedItemId(null); setItemForm(null); setEditorExpanded(false); }}>Đóng</button>
+        <button className="admin-btn-ghost" onClick={closePanel}>Đóng</button>
       </div>
     </>
   );
@@ -807,7 +844,7 @@ export default function CourseStructureEditor() {
             <div key={q.id} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 12, flex: 1, minWidth: 120 }}>{q.prompt || q.text_content || `Câu ${q.position}`}</span>
               {q.audio_url && <audio controls src={q.audio_url} style={{ height: 26, maxWidth: 110 }} />}
-              <button className="cs-icon-btn" title="Xóa câu hỏi" style={{ color: 'var(--red)' }} onClick={() => setConfirmDel({ type: 'question', id: q.id, extra: itemForm.id })}>
+              <button className="cs-icon-btn" title="Xóa câu hỏi" style={{ color: 'var(--red)' }} onClick={() => deleteQuestionDirect(q.id, itemForm.id)}>
                 <Icon.X size={13} />
               </button>
             </div>
@@ -898,7 +935,7 @@ export default function CourseStructureEditor() {
 
       <div style={{ display: 'flex', gap: 8 }}>
         <button className="admin-btn" onClick={saveCourse} disabled={savingCourse}>{savingCourse ? 'Đang lưu...' : '💾 Lưu khóa học'}</button>
-        <button className="admin-btn-ghost" onClick={() => { setPanel(null); setCourseForm(null); setEditorExpanded(false); }}>Đóng</button>
+        <button className="admin-btn-ghost" onClick={closePanel}>Đóng</button>
       </div>
     </>
   );
@@ -1028,34 +1065,26 @@ export default function CourseStructureEditor() {
             </DndContext>
           </div>
 
-          {/* ===== Cột phải: Editor panel ===== */}
-          <div className={`cs-editor${editorExpanded ? ' cs-editor-full' : ''}`}>
+          {/* ===== Editor panel — focus mode chiếm toàn bộ chiều ngang ===== */}
+          <div className={`cs-editor${panel ? ' editing' : ''}`}>
             {panel && (
-              <div className="cs-editor-bar">
-                <span className="admin-note" style={{ flex: 1 }}>
-                  {editorExpanded ? '🖥 Chế độ toàn màn hình — Esc để thoát' : ''}
-                </span>
-                <button className="admin-btn-ghost" onClick={() => setEditorExpanded(x => !x)}
-                  title={editorExpanded ? 'Thu nhỏ (Esc)' : 'Soạn ở màn hình lớn'}>
-                  {editorExpanded ? '⤡ Thu nhỏ' : '⤢ Mở rộng'}
-                </button>
+              <div className="cs-focus-head">
+                <button className="admin-btn-ghost" onClick={closePanel}>← Về cấu trúc khóa</button>
               </div>
             )}
-            {panel === 'course' && courseForm ? renderCourseForm()
-              : panel === 'item' && itemForm ? (
-                <>
-                  {renderItemForm()}
-                  {itemForm.item_type === 'practice' && renderPracticeManager()}
-                </>
-              ) : (
-                <div className="cs-empty" style={{ padding: '60px 20px' }}>
-                  <div style={{ fontSize: 36, marginBottom: 10 }}>👈</div>
-                  <b>Chọn một bài học để chỉnh sửa</b>
-                  <p style={{ fontSize: 13, margin: '8px auto 0', maxWidth: 340 }}>
-                    Bấm vào tên bài ở cột bên trái. Hoặc "＋ Thêm bài học" trong module để tạo bài mới ngay lập tức.
-                  </p>
-                </div>
-              )}
+            <div className="cs-inner">
+              {panel === 'course' && courseForm ? renderCourseForm()
+                : panel === 'item' && itemForm ? renderItemForm()
+                : (
+                  <div className="cs-empty" style={{ padding: '60px 20px' }}>
+                    <div style={{ fontSize: 36, marginBottom: 10 }}>👈</div>
+                    <b>Chọn một bài học để chỉnh sửa</b>
+                    <p style={{ fontSize: 13, margin: '8px auto 0', maxWidth: 340 }}>
+                      Bấm vào tên bài ở cột bên trái. Hoặc "＋ Thêm bài học" trong module để tạo bài mới ngay lập tức.
+                    </p>
+                  </div>
+                )}
+            </div>
           </div>
         </div>
       ) : (
