@@ -384,7 +384,7 @@ async function exportCsv(columns) {
   }
 
   return (
-    <div className="page-enter" style={{ maxWidth: 960, margin: '0 auto' }}>
+    <div className="page-enter" style={{ maxWidth: tab === 'structure' ? 1560 : 960, margin: '0 auto' }}>
       <div className="page-title">
         <h1 style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icon.Cog size={24} /> Quản trị</h1>
         <p>Quản lý dữ liệu, đơn hàng và khóa trả phí</p>
