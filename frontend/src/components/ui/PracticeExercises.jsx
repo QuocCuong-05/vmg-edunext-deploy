@@ -46,7 +46,7 @@ export function ListenChoose({ lesson, questions, answers, onCompleted }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {questions.map((q, i) => (
         <div key={q.id} style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: BASE }}>
-          <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {i + 1}</div>
+          {questions.length > 1 && <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {i + 1}</div>}
           {q.prompt && <p style={{ fontSize: 13, margin: '0 0 8px' }}>{q.prompt}</p>}
           <AudioRow src={q.audio_url} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
@@ -137,7 +137,7 @@ export function ListenFill({ lesson, questions, answers, onCompleted }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {questions.map((q, i) => (
         <div key={q.id} style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: BASE }}>
-          <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {i + 1}</div>
+          {questions.length > 1 && <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {i + 1}</div>}
           {q.prompt && <p style={{ fontSize: 13, margin: '0 0 8px' }}>{q.prompt}</p>}
           <AudioRow src={q.audio_url} />
           <p style={{ fontSize: 15, lineHeight: 2, margin: '12px 0', whiteSpace: 'pre-wrap' }}>{renderText(q)}</p>
@@ -185,7 +185,7 @@ export function ListenMark({ lesson, questions, answers, onCompleted }) {
         const correctWords = res && res.correct ? res.correct.map(w => w.toLowerCase()) : [];
         return (
           <div key={q.id} style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: BASE }}>
-            <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {i + 1}</div>
+          {questions.length > 1 && <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {i + 1}</div>}
             {q.prompt && <p style={{ fontSize: 13, margin: '0 0 8px' }}>{q.prompt}</p>}
             <AudioRow src={q.audio_url} />
             <p style={{ fontSize: 16, lineHeight: 2.2, margin: '12px 0', userSelect: 'none', whiteSpace: 'pre-wrap' }}>
