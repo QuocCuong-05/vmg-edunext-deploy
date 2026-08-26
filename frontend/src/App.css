@@ -1585,6 +1585,18 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
   margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--line);
   display: flex; flex-direction: column; gap: 8px;
 }
+.cs-practice-config {
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface-hover);
+  padding: 14px; margin-top: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.cs-practice-config .cs-manage { margin-top: 0; padding-top: 0; border-top: none; }
+.cs-config-head {
+  font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .4px; color: var(--muted);
+}
+.cs-config-head b { color: var(--ink); text-transform: none; letter-spacing: 0; }
 
 .cs-empty {
   border: 1.5px dashed var(--line); border-radius: 14px;

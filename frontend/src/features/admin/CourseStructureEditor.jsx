@@ -649,6 +649,15 @@ export default function CourseStructureEditor() {
             <select className="admin-input" value={itemForm.practice_type} onChange={e => setItemForm({ ...itemForm, practice_type: e.target.value })}>
               {PRACTICE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
+            <div className="admin-note" style={{ marginTop: 4 }}>
+              {{
+                speak_passage: 'Dán danh sách từ vào mục cấu hình bên dưới (sau khi Lưu bài).',
+                voice_recorder: 'Không cần dữ liệu thêm — viết đề bài ở Nội dung bài.',
+                listen_choose: 'Thêm câu hỏi nghe (audio + đáp án chọn) bên dưới sau khi Lưu bài.',
+                listen_fill: 'Thêm câu hỏi nghe (audio + đoạn text ____ + đáp án) bên dưới sau khi Lưu bài.',
+                listen_mark: 'Thêm câu hỏi nghe (audio + các từ đúng) bên dưới sau khi Lưu bài.',
+              }[itemForm.practice_type] || ''}
+            </div>
           </div>
           <div>
             <label className="admin-label">Điểm tối đa</label>
@@ -739,11 +748,21 @@ export default function CourseStructureEditor() {
     </>
   );
 
-  const renderPracticeManager = () => (
-    <>
-      {/* Từ luyện nói */}
-      {selPracticeType !== 'voice_recorder' && (
-        <section className="cs-manage">
+  const renderPracticeManager = () => {
+    const typeLabel = (PRACTICE_TYPES.find(t => t.value === selPracticeType) || {}).label || selPracticeType;
+    return (
+      <div className="cs-practice-config">
+        <div className="cs-config-head">🧩 Cấu hình bài tập — <b>{typeLabel}</b></div>
+
+        {selPracticeType === 'voice_recorder' && (
+          <p className="admin-note" style={{ margin: 0 }}>
+            Ghi âm tự do không cần thêm dữ liệu — hãy viết đề bài ở ô "Nội dung bài" phía trên rồi bấm 💾 Lưu bài.
+          </p>
+        )}
+
+        {/* Từ luyện nói — chỉ cho Luyện nói từng từ */}
+        {selPracticeType === 'speak_passage' && (
+          <section className="cs-manage">
           <b style={{ fontSize: 13 }}>Từ luyện nói ({(words[itemForm.id] || []).length})</b>
           {(words[itemForm.id] || []).map(w => (
             <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -815,8 +834,9 @@ export default function CourseStructureEditor() {
           <button className="admin-btn" style={{ alignSelf: 'flex-start' }} onClick={() => saveQuestion(itemForm.id, selPracticeType)}>+ Thêm câu hỏi</button>
         </section>
       )}
-    </>
-  );
+      </div>
+    );
+  };
 
   const renderCourseForm = () => (
     <>

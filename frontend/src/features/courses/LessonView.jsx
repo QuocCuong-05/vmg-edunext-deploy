@@ -206,6 +206,12 @@ export default function LessonView() {
   const practiceWords = lessonDetail?.practice_words || [];
   const bodyHtml = lessonDetail?.body_html || lesson.article_body || '';
   const hasRichBody = !!(lessonDetail?.body_html || lesson.article_body);
+  const ptType = lessonDetail?.practice_type || 'speak_passage';
+  const practiceHasContent =
+    ptType === 'voice_recorder' ||
+    (['listen_choose', 'listen_fill', 'listen_mark'].includes(ptType)
+      ? (lessonDetail?.practice_questions || []).length > 0
+      : practiceWords.length > 0);
 
   const ctx = soundContext(course, lessonId);
   const soundItems = ctx?.sound?.items && ctx.sound.items.length ? ctx.sound.items : courseLessons;
@@ -464,16 +470,18 @@ export default function LessonView() {
       ) : itemType !== 'video_lesson' && (
         <Card style={{ marginBottom: 20, padding: 20 }}>
           <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.7 }}>
-            {itemType === 'practice'
-              ? 'Luyện phát âm từng từ: nghe audio mẫu, bật mic đọc theo, gửi để được chấm điểm.'
-              : itemType === 'quiz'
+      {itemType === 'practice'
+        ? (practiceHasContent
+          ? 'Luyện phát âm từng từ: nghe audio mẫu, bật mic đọc theo, gửi để được chấm điểm.'
+          : 'Bài học đang được cập nhật...')
+        : itemType === 'quiz'
                 ? 'Hoàn thành bài kiểm tra để ôn tập kiến thức.'
                 : bodyHtml || 'Nội dung bài học đang được cập nhật...'}
           </p>
         </Card>
       )}
 
-      {itemType === 'practice' && (
+      {itemType === 'practice' && practiceHasContent && (
         <Card style={{ marginBottom: 20, padding: 20 }}>
           <h4 style={{ fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span>🎤</span> Luyện nói — {lessonDetail?.practice_type === 'listen_choose' ? 'Nghe & chọn đáp án'
