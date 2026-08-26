@@ -110,7 +110,7 @@ export default function GradingPage() {
               </div>
 
               <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
-                <audio controls src={r.audio_url} style={{ height: 38, maxWidth: 260 }} />
+                {r.audio_url ? <audio controls src={r.audio_url} style={{ height: 38, maxWidth: 260 }} /> : null}
                 {r.transcript && <span style={{ fontSize: 12, color: 'var(--muted)' }}>Transcript: <b>{r.transcript}</b></span>}
                 <span style={{ fontSize: 11, color: 'var(--muted)' }}>{new Date(r.created_at).toLocaleString('vi-VN')}</span>
               </div>

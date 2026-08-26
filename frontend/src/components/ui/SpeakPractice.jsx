@@ -7,282 +7,299 @@ function browserRecognition() {
   return window.SpeechRecognition ?? window.webkitSpeechRecognition;
 }
 
-export default function SpeakPractice({ lesson, words, onCompleted, practiceType }) {
-  const showToast = useToast();
-  const [results, setResults] = useState({});
-  const [busy, setBusy] = useState({});
-  const [recordState, setRecordState] = useState({}); // wordId -> {recording, blobUrl, transcript}
-  const mediaRecorderRef = useRef({});
-  const chunksRef = useRef({});
-  const recognitionRef = useRef({});
+const norm = (s) => (s || '')
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^a-z\s]/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
 
-  const cleanupRec = useCallback((wordId) => {
-    if (recognitionRef.current[wordId]) {
-      try { recognitionRef.current[wordId].onend = null; recognitionRef.current[wordId].stop(); } catch {}
-      recognitionRef.current[wordId] = null;
+const lev = (a, b) => {
+  const m = a.length;
+  const n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) {
+      cur[j] = Math.min(
+        prev[j] + 1,
+        cur[j - 1] + 1,
+        prev[j - 1] + (a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1)
+      );
     }
-    if (mediaRecorderRef.current[wordId] && mediaRecorderRef.current[wordId].state !== 'inactive') {
-      try { mediaRecorderRef.current[wordId].stop(); } catch {}
+    prev = cur;
+  }
+  return prev[n];
+};
+
+const similarity = (a, b) => {
+  if (!a && !b) return 1;
+  if (!a || !b) return 0;
+  return 1 - lev(a, b) / Math.max(a.length, b.length);
+};
+
+// So khớp từ mục tiêu với transcript (chuẩn H5P SpeakTheWords):
+// khớp chính xác/chứa trong chuỗi, hoặc tương đồng >= 75% theo từng token
+export function matchWord(target, heard) {
+  const t = norm(target);
+  const h = norm(heard);
+  if (!h) return false;
+  if (h === t || h.includes(t)) return true;
+  const tw = t.split(' ').filter(Boolean);
+  const hw = h.split(' ').filter(Boolean);
+  const used = new Set();
+  let hits = 0;
+  for (const w of tw) {
+    let best = 0;
+    let bi = -1;
+    hw.forEach((x, i) => {
+      if (!used.has(i)) {
+        const s = similarity(w, x);
+        if (s > best) { best = s; bi = i; }
+      }
+    });
+    if (best >= 0.75) { hits += 1; used.add(bi); }
+  }
+  return hits >= Math.ceil(tw.length * 0.8);
+}
+
+const LISTEN_TIMEOUT_MS = 8000;
+
+export default function SpeakPractice({ lesson, words, onCompleted }) {
+  const showToast = useToast();
+  const list = words || [];
+  const supported = !!browserRecognition();
+
+  const [phase, setPhase] = useState('intro'); // intro | word | result
+  const [idx, setIdx] = useState(0);
+  const [listening, setListening] = useState(false);
+  const [attempt, setAttempt] = useState(null); // {heard, correct} — lần đọc gần nhất của từ hiện tại
+  const [answers, setAnswers] = useState({}); // idx -> {heard, correct}
+  const [sending, setSending] = useState(false);
+  const recRef = useRef(null);
+  const timerRef = useRef(null);
+
+  const stopListening = useCallback(() => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    if (recRef.current) {
+      const r = recRef.current;
+      recRef.current = null;
+      try { r.onend = null; r.stop(); } catch {}
     }
-    mediaRecorderRef.current[wordId] = null;
+    setListening(false);
   }, []);
 
-  useEffect(() => {
-    return () => { Object.keys(recognitionRef.current).forEach(cleanupRec); };
-  }, [cleanupRec]);
+  useEffect(() => () => stopListening(), [stopListening]);
 
-  const startRecording = async (wordId) => {
+  const applyResult = (text) => {
+    const w = list[idx];
+    if (!w) return;
+    const res = { heard: text, correct: text ? matchWord(w.word, text) : false };
+    setAttempt(res);
+    setAnswers((prev) => ({ ...prev, [idx]: res }));
+  };
+
+  const startListening = async () => {
+    if (!supported || listening) return;
+    const Ctor = browserRecognition();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
-      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
-      chunksRef.current[wordId] = [];
-      rec.ondataavailable = (e) => { if (e.data && e.data.size) chunksRef.current[wordId].push(e.data); };
-      rec.onstop = () => {
-        stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunksRef.current[wordId] || [], { type: rec.mimeType || 'audio/webm' });
-        const url = URL.createObjectURL(blob);
-        setRecordState(prev => ({
-          ...prev,
-          [wordId]: { ...(prev[wordId] || {}), recording: false, blobUrl: url, blob },
-        }));
-        chunksRef.current[wordId] = [];
-      };
-      rec.start();
-      mediaRecorderRef.current[wordId] = rec;
-
-      // Transcript song song
-      const Ctor = browserRecognition();
-      let transcriptText = '';
-      if (Ctor) {
-        try {
-          const recognition = new Ctor();
-          recognition.continuous = false;
-          recognition.interimResults = true;
-          recognition.lang = 'en-US';
-          recognition.onresult = (e) => {
-            let t = '';
-            for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
-            transcriptText = t.trim();
-            setRecordState(prev => ({ ...prev, [wordId]: { ...(prev[wordId] || {}), transcript: transcriptText } }));
-          };
-          recognition.onend = () => {
-            setRecordState(prev => ({ ...prev, [wordId]: { ...(prev[wordId] || {}), transcript: transcriptText } }));
-            recognitionRef.current[wordId] = null;
-          };
-          recognition.onerror = () => { recognitionRef.current[wordId] = null; };
-          recognition.start();
-          recognitionRef.current[wordId] = recognition;
-        } catch {}
-      }
-
-      setRecordState(prev => ({ ...prev, [wordId]: { ...(prev[wordId] || {}), recording: true } }));
-    } catch (err) {
-      showToast('Không truy cập được mic. Hãy cho phép quyền microphone.', 'error');
-    }
-  };
-
-  const stopRecording = (wordId) => {
-    if (mediaRecorderRef.current[wordId]) {
-      try { mediaRecorderRef.current[wordId].stop(); } catch {}
-    }
-    if (recognitionRef.current[wordId]) {
-      try { recognitionRef.current[wordId].stop(); } catch {}
-    }
-  };
-
-  const submit = async (word) => {
-    const st = recordState[word.id] || {};
-    if (!st.blob) return;
-    setBusy(prev => ({ ...prev, [word.id]: true }));
-    try {
-      const b64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
-        reader.onerror = reject;
-        reader.readAsDataURL(st.blob);
-      });
-      const res = await api.practice.submit({
-        lesson_id: lesson.id,
-        practice_word_id: word.id,
-        word: word.word,
-        audio_b64: b64,
-        filename: `${word.word}-rec.webm`,
-        transcript: st.transcript || '',
-      });
-      setResults(prev => ({ ...prev, [word.id]: res }));
-      showToast(res.ai_score != null ? `Chấm xong: ${res.ai_score}/10` : 'Đã gửi bài', 'success');
-    } catch (err) {
-      showToast(err.message || 'Gửi bài thất bại', 'error');
-    } finally {
-      setBusy(prev => ({ ...prev, [word.id]: false }));
-    }
-  };
-
-  const isPassage = (practiceType || lesson.practice_type) === 'speak_passage';
-  const PASSAGE_KEY = '__passage__';
-  const allSubmitted = isPassage
-    ? !!results[PASSAGE_KEY]
-    : words.length > 0 && words.every(w => results[w.id]);
-  const someSubmitted = isPassage
-    ? !!results[PASSAGE_KEY]
-    : Object.keys(results).length > 0;
-
-  if (isPassage) {
-    const recState = recordState[PASSAGE_KEY] || {};
-    const res = results[PASSAGE_KEY];
-    const submitPassage = async () => {
-      if (!recState.blob) return;
-      setBusy(prev => ({ ...prev, [PASSAGE_KEY]: true }));
       try {
-        const b64 = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
-          reader.onerror = reject;
-          reader.readAsDataURL(recState.blob);
-        });
-        const passage = (words || []).map(w => w.word).join(' ');
-        const r = await api.practice.submit({
-          lesson_id: lesson.id,
-          practice_word_id: null,
-          word: passage,
-          audio_b64: b64,
-          filename: 'passage-rec.webm',
-          transcript: recState.transcript || '',
-          practice_type: 'speak_passage',
-        });
-        setResults(prev => ({ ...prev, [PASSAGE_KEY]: r }));
-        showToast(r.ai_score != null ? `Chấm xong: ${r.ai_score}/10` : 'Đã gửi bài', 'success');
-      } catch (err) {
-        showToast(err.message || 'Gửi bài thất bại', 'error');
-      } finally {
-        setBusy(prev => ({ ...prev, [PASSAGE_KEY]: false }));
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((t) => t.stop());
+      } catch {
+        showToast('Không truy cập được mic. Hãy cho phép quyền microphone.', 'error');
+        return;
       }
-    };
+      const recognition = new Ctor();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      let finalText = '';
+      recognition.onresult = (e) => {
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) finalText += e.results[i][0].transcript;
+        }
+      };
+      recognition.onerror = () => {
+        if (recRef.current === recognition) recRef.current = null;
+        setListening(false);
+      };
+      recognition.onend = () => {
+        if (recRef.current === recognition) recRef.current = null;
+        if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+        setListening(false);
+        applyResult(finalText.trim());
+      };
+      recRef.current = recognition;
+      setAttempt(null);
+      setListening(true);
+      recognition.start();
+      timerRef.current = setTimeout(() => {
+        if (recRef.current === recognition) {
+          try { recognition.stop(); } catch {}
+        }
+      }, LISTEN_TIMEOUT_MS);
+    } catch {
+      setListening(false);
+      showToast('Không bắt đầu được nhận diện giọng nói.', 'error');
+    }
+  };
+
+  const goTo = (i) => {
+    stopListening();
+    setIdx(i);
+    setAttempt(answers[i] || null);
+  };
+
+  const restart = () => {
+    stopListening();
+    setAnswers({});
+    setAttempt(null);
+    setIdx(0);
+    setPhase('word');
+  };
+
+  const correctCount = list.reduce((n, _, i) => n + (answers[i]?.correct ? 1 : 0), 0);
+
+  const handleComplete = async () => {
+    setSending(true);
+    const total = list.length;
+    const missed = list.filter((w, i) => !answers[i]?.correct).map((w) => w.word);
+    try {
+      await api.practice.submit({
+        lesson_id: lesson.id,
+        practice_word_id: null,
+        word: `Luyện nói từng từ: ${correctCount}/${total} đúng`,
+        audio_b64: null,
+        filename: null,
+        transcript: list.map((w, i) => `${w.word} → "${answers[i]?.heard || ''}"`).join('; '),
+        practice_type: 'speak_passage',
+        local_score: total ? Math.round((correctCount / total) * 10) : null,
+        local_detail: missed.length ? `Chưa đạt: ${missed.join(', ')}` : 'Đọc tốt tất cả các từ.',
+      });
+    } catch (e) {
+      showToast(e.message || 'Không lưu được kết quả.', 'error');
+      setSending(false);
+      return;
+    }
+    setSending(false);
+    onCompleted();
+  };
+
+  /* ==================== INTRO ==================== */
+  if (phase === 'intro') {
     return (
-      <div>
-        <div style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: 'var(--card)' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {(words || []).map((w) => (
-              <span key={w.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, background: 'var(--surface-hover)', fontSize: 16 }}>
-                <b>{w.word}</b>
-                {w.audio_url && <audio controls src={w.audio_url} preload="none" style={{ height: 26, maxWidth: 120 }} />}
-              </span>
-            ))}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-            {!recState.recording ? (
-              <Button size="sm" variant={recState.blobUrl ? 'ghost' : 'primary'} onClick={() => startRecording(PASSAGE_KEY)}>
-                {recState.blobUrl ? '🎙️ Ghi lại' : '🎙️ Nhấn để nói'}
-              </Button>
-            ) : (
-              <>
-                <span style={{ fontSize: 13, color: 'var(--red)', fontWeight: 700 }}>Đang ghi...</span>
-                <Button size="sm" variant="primary" onClick={() => stopRecording(PASSAGE_KEY)}>Dừng</Button>
-              </>
-            )}
-            {recState.blobUrl && !recState.recording && (
-              <>
-                <audio controls src={recState.blobUrl} style={{ height: 38, maxWidth: 180 }} />
-                <Button size="sm" variant="ghost" isDisabled={busy[PASSAGE_KEY] || !!res} onClick={submitPassage}>
-                  {busy[PASSAGE_KEY] ? 'Đang chấm...' : (res ? 'Đã chấm' : 'Gửi chấm điểm')}
-                </Button>
-              </>
-            )}
-          </div>
-          {res && (
-            <div style={{ marginTop: 14, padding: 14, borderRadius: 12, background: res.ai_score != null && res.ai_score >= 6 ? 'var(--green-bg)' : 'var(--red-bg)', border: `1px solid ${res.ai_score != null && res.ai_score >= 6 ? 'var(--green)' : 'var(--red)'}` }}>
-              <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 4 }}>
-                {res.ai_score != null ? `Điểm: ${res.ai_score}/10` : 'Chưa chấm được'}
-                {res.teacher_score != null && <span> · Giáo viên chấm: {res.teacher_score}/10</span>}
-              </div>
-              {res.ai_feedback && <p style={{ fontSize: 12, lineHeight: 1.6, margin: 0 }}>{res.ai_feedback}</p>}
-            </div>
-          )}
+      <div style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 28, background: 'var(--card)', textAlign: 'center' }}>
+        <div style={{ fontSize: 40 }}>🎤</div>
+        <h3 style={{ margin: '8px 0 4px', fontSize: 17 }}>Luyện nói — đọc từng từ</h3>
+        <p style={{ fontSize: 13, color: 'var(--muted)', margin: '0 0 6px' }}>
+          {list.length} từ cần đọc · mỗi lần hiện 1 từ, bấm mic và đọc rõ từ đó
+        </p>
+        {!supported && (
+          <p style={{ fontSize: 12, color: 'var(--red)', margin: '0 0 6px' }}>
+            ⚠️ Trình duyệt này không hỗ trợ nhận diện giọng nói. Hãy dùng Chrome hoặc Edge.
+          </p>
+        )}
+        <Button variant="primary" isDisabled={!supported || !list.length} onClick={() => setPhase('word')}>
+          ▶ Bắt đầu chương trình!
+        </Button>
+      </div>
+    );
+  }
+
+  /* ==================== RESULT ==================== */
+  if (phase === 'result') {
+    const pct = list.length ? Math.round((correctCount / list.length) * 100) : 0;
+    return (
+      <div style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 24, background: 'var(--card)', textAlign: 'center' }}>
+        <div style={{ fontSize: 34, fontWeight: 900 }}>{correctCount}/{list.length} đúng</div>
+        <div style={{ height: 10, borderRadius: 999, background: 'var(--surface-hover)', margin: '14px auto', maxWidth: 360, overflow: 'hidden' }}>
+          <div style={{ width: `${pct}%`, height: '100%', background: pct >= 60 ? 'var(--green)' : 'var(--red)', transition: 'width .4s' }} />
         </div>
-        <div style={{ marginTop: 20 }}>
-          <Button variant="primary" onClick={onCompleted} isDisabled={!someSubmitted}>Hoàn thành bài tập ✓</Button>
-          {!someSubmitted && <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>Ghi âm & gửi bài để hoàn thành.</p>}
+        <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 14 }}>
+          {pct >= 80 ? 'Tuyệt vời! 🎉' : pct >= 50 ? 'Khá ổn, luyện thêm nhé!' : 'Thử lại để cải thiện nào!'}
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginBottom: 18 }}>
+          {list.map((w, i) => (
+            <span key={w.id} style={{ padding: '4px 10px', borderRadius: 999, fontSize: 13, fontWeight: 700, background: answers[i]?.correct ? 'var(--green-bg)' : 'var(--red-bg)', border: `1px solid ${answers[i]?.correct ? 'var(--green)' : 'var(--red)'}` }}>
+              {answers[i]?.correct ? '✓' : '✗'} {w.word}
+            </span>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Button variant="ghost" onClick={restart}>🔄 Thử lại</Button>
+          <Button variant="primary" isDisabled={sending} onClick={handleComplete}>
+            {sending ? 'Đang lưu...' : '✓ Hoàn thành bài tập'}
+          </Button>
         </div>
       </div>
     );
   }
 
+  /* ==================== WORD SLIDE ==================== */
+  const w = list[idx];
+  if (!w) return null;
+  const isLast = idx >= list.length - 1;
   return (
-    <div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {(words || []).map((word, i) => {
-          const st = recordState[word.id] || {};
-          const res = results[word.id];
-          return (
-            <div key={word.id} style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: 'var(--card)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--red-bg)', color: 'var(--red)', fontWeight: 800, display: 'grid', placeItems: 'center', flexShrink: 0 }}>{i + 1}</div>
-                {word.image_url && (
-                  <img src={word.image_url} alt={word.word} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--line)', flexShrink: 0 }} />
-                )}
-                <b style={{ fontSize: 20, letterSpacing: 0.3 }}>{word.word}</b>
-                {word.audio_url && (
-                  <audio controls src={word.audio_url} preload="none" style={{ height: 38, maxWidth: 180 }} />
-                )}
-                {!word.audio_url && (
-                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>Chưa có audio mẫu</span>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
-                {!st.recording ? (
-                  <Button size="sm" variant={st.blobUrl ? 'ghost' : 'primary'} onClick={() => startRecording(word.id)}>
-                    {st.blobUrl ? '🎙️ Ghi lại' : '🎙️ Bật mic đọc từ này'}
-                  </Button>
-                ) : (
-                  <>
-                    <span style={{ fontSize: 13, color: 'var(--red)', fontWeight: 700 }}>Đang ghi...</span>
-                    <Button size="sm" variant="primary" onClick={() => stopRecording(word.id)}>Dừng</Button>
-                  </>
-                )}
-
-                {st.blobUrl && !st.recording && (
-                  <>
-                    <audio controls src={st.blobUrl} style={{ height: 38, maxWidth: 180 }} />
-                    <Button size="sm" variant="ghost" isDisabled={busy[word.id] || !!res} onClick={() => submit(word)}>
-                      {busy[word.id] ? 'Đang chấm...' : (res ? 'Đã chấm' : 'Gửi chấm điểm')}
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              {res && (
-                <div style={{ marginTop: 14, padding: 14, borderRadius: 12, background: res.ai_score != null && res.ai_score >= 6 ? 'var(--green-bg)' : 'var(--red-bg)', border: `1px solid ${res.ai_score != null && res.ai_score >= 6 ? 'var(--green)' : 'var(--red)'}` }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 4 }}>
-                    {res.ai_score != null ? `Điểm: ${res.ai_score}/10` : 'Chưa chấm được'}
-                    {res.teacher_score != null && <span> · Giáo viên chấm: {res.teacher_score}/10</span>}
-                  </div>
-                  {res.ai_feedback && <p style={{ fontSize: 12, lineHeight: 1.6, margin: 0 }}>{res.ai_feedback}</p>}
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {!words.length && (
-          <div className="placeholder">
-            <p>Chưa có từ nào trong bài luyện nói này. Quản trị viên sẽ cập nhật sớm.</p>
-          </div>
-        )}
+    <div style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 24, background: 'var(--card)' }}>
+      {/* Progress */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <span style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 700 }}>Từ {idx + 1}/{list.length}</span>
+        <Button size="sm" variant="ghost" onClick={() => { stopListening(); setPhase('result'); }}>Xem kết quả</Button>
+      </div>
+      <div style={{ height: 6, borderRadius: 999, background: 'var(--surface-hover)', overflow: 'hidden', marginBottom: 22 }}>
+        <div style={{ width: `${((idx + (attempt ? 1 : 0)) / list.length) * 100}%`, height: '100%', background: 'var(--red)', transition: 'width .3s' }} />
       </div>
 
-      <div style={{ marginTop: 20 }}>
-        <Button
-          variant="primary"
-          onClick={onCompleted}
-          isDisabled={!someSubmitted}
-        >
-          {allSubmitted ? 'Hoàn thành bài tập ✓' : 'Đánh dấu hoàn thành'}
-        </Button>
-        {!someSubmitted && (
-          <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>Gửi ít nhất 1 từ để hoàn thành bài tập.</p>
+      {/* Word */}
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ display: 'inline-block', padding: '14px 34px', borderRadius: 16, background: 'var(--surface-hover)', fontSize: 32, fontWeight: 900, letterSpacing: 0.5 }}>
+          {w.word}
+        </div>
+        {w.audio_url && (
+          <div style={{ marginTop: 12 }}>
+            <audio controls src={w.audio_url} preload="none" style={{ height: 36, maxWidth: 220 }} />
+          </div>
         )}
+
+        {/* Mic */}
+        <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          {!listening ? (
+            <Button variant={attempt ? 'ghost' : 'primary'} onClick={startListening}>
+              {attempt ? '🎙️ Đọc lại' : '🎙️ Nhấn để nói'}
+            </Button>
+          ) : (
+            <>
+              <span className="sp-listening">🔴 Đang nghe...</span>
+              <Button size="sm" variant="ghost" onClick={stopListening}>Dừng</Button>
+            </>
+          )}
+        </div>
+
+        {/* Feedback */}
+        {attempt && !listening && (
+          <div style={{
+            marginTop: 16, padding: '10px 14px', borderRadius: 12, fontSize: 13, textAlign: 'left',
+            background: attempt.heard === '' ? '#fef9c3' : attempt.correct ? 'var(--green-bg)' : 'var(--red-bg)',
+            border: `1px solid ${attempt.heard === '' ? '#eab308' : attempt.correct ? 'var(--green)' : 'var(--red)'}`,
+          }}>
+            {attempt.heard === ''
+              ? <>🔇 Tôi không thể nghe thấy bạn — đảm bảo microphone được bật và hãy nói to hơn.</>
+              : attempt.correct
+                ? <>✓ Câu trả lời của bạn đã được hiểu là: <b>{attempt.heard}</b></>
+                : <>✗ Đã hiểu là: <b>{attempt.heard}</b> — chưa khớp với <b>{w.word}</b>, thử đọc lại nhé!</>}
+          </div>
+        )}
+
+        {/* Next */}
+        <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
+          <Button variant="primary" onClick={() => (isLast ? setPhase('result') : goTo(idx + 1))}>
+            {isLast ? '🏁 Xem kết quả' : 'Câu tiếp theo →'}
+          </Button>
+        </div>
       </div>
     </div>
   );

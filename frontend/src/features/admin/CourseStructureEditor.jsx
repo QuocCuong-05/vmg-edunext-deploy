@@ -20,8 +20,7 @@ const TYPES = [
 ];
 
 const PRACTICE_TYPES = [
-  { value: 'speak_words', label: '🎤 Đọc từ (mic)' },
-  { value: 'speak_passage', label: '📖 Đọc cả cụm (1 mic)' },
+  { value: 'speak_passage', label: '📖 Luyện nói từng từ (kiểu LMS)' },
   { value: 'voice_recorder', label: '🎙️ Ghi âm tự do' },
   { value: 'listen_choose', label: '👂 Nghe → chọn đáp án' },
   { value: 'listen_fill', label: '📝 Nghe → điền từ' },
@@ -40,7 +39,7 @@ const LEVELS = ['A1', 'A2', 'B1', 'B1+', 'B2', 'C1'];
 const EMPTY_ITEM = {
   title: '', item_type: 'video_lesson', module_id: '', video_url: '',
   body_html: '', points: 0, audio_url: '', image_url: '', quiz_slug: '', is_free: false, sort_order: 0,
-  practice_type: 'speak_words',
+  practice_type: 'speak_passage',
 };
 
 const EMPTY_COURSE = {
@@ -387,11 +386,11 @@ export default function CourseStructureEditor() {
       body_html: it.body_html || '', points: it.points || 0, audio_url: it.audio_url || '',
       image_url: it.image_url || '', quiz_slug: it.quiz_slug || '',
       is_free: !!it.is_free, sort_order: it.sort_order || 0,
-      practice_type: it.practice_type || 'speak_words',
+      practice_type: !it.practice_type || it.practice_type === 'speak_words' ? 'speak_passage' : it.practice_type,
     });
     if ((it.item_type || '') === 'practice') {
       if (!words[it.id]) loadWords(it.id);
-      if (QUESTION_PRACTICE_TYPES.includes(it.practice_type || 'speak_words') && !questions[it.id]) loadQuestions(it.id);
+      if (QUESTION_PRACTICE_TYPES.includes(it.practice_type) && !questions[it.id]) loadQuestions(it.id);
     }
     setCourseForm(null);
   }, [words, questions]);
@@ -626,7 +625,7 @@ export default function CourseStructureEditor() {
   };
 
   const activeItem = items.find(i => i.id === selectedItemId);
-  const selPracticeType = itemForm?.practice_type || 'speak_words';
+  const selPracticeType = itemForm?.practice_type || 'speak_passage';
 
   const renderItemForm = () => (
     <>

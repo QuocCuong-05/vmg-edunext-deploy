@@ -32,7 +32,7 @@ async function uploadAudio(fileB64, filename) {
 // POST /api/practice/submit — học viên gửi bài ghi âm + transcript, chấm AI
 router.post('/submit', authenticate, async (req, res) => {
   try {
-    const { lesson_id, practice_word_id, word, audio_b64, filename, transcript, practice_type } = req.body;
+    const { lesson_id, practice_word_id, word, audio_b64, filename, transcript, practice_type, local_score, local_detail } = req.body;
     if (!lesson_id) return res.status(400).json({ error: 'lesson_id là bắt buộc' });
 
     const { data: lesson, error: lerr } = await supabaseAdmin
@@ -52,7 +52,16 @@ router.post('/submit', authenticate, async (req, res) => {
       }
     }
 
-    const grade = await gradePronunciation(word || '', transcript, { passage: (practice_type || '') === 'speak_passage' });
+    // Ưu tiên điểm khớp local (kiểu H5P) nếu client gửi lên — bỏ qua AI
+    let grade;
+    if (local_score != null && Number.isFinite(Number(local_score))) {
+      grade = {
+        score: Math.max(1, Math.min(10, Math.round(Number(local_score)))),
+        feedback: String(local_detail || 'Đã hoàn thành bài luyện nói.').slice(0, 500),
+      };
+    } else {
+      grade = await gradePronunciation(word || '', transcript, { passage: (practice_type || '') === 'speak_passage' });
+    }
 
     const { data, error } = await supabaseAdmin
       .from('practice_submissions')

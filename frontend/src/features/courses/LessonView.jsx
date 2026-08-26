@@ -480,8 +480,7 @@ export default function LessonView() {
               : lessonDetail?.practice_type === 'listen_fill' ? 'Nghe & điền từ'
                 : lessonDetail?.practice_type === 'listen_mark' ? 'Nghe & đánh dấu từ'
                   : lessonDetail?.practice_type === 'voice_recorder' ? 'Ghi âm bài nói'
-                    : lessonDetail?.practice_type === 'speak_passage' ? 'Đọc cả cụm (1 mic)'
-                      : 'Speak the Words'}
+                    : 'Luyện nói từng từ'}
             {lesson.points > 0 && <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>· tối đa {lesson.points} điểm</span>}
           </h4>
           {(() => {
@@ -506,7 +505,7 @@ export default function LessonView() {
             if (pt === 'listen_fill') return <ListenFill lesson={lesson} questions={lessonDetail?.practice_questions || []} answers={ansMap} onCompleted={done} />;
             if (pt === 'listen_mark') return <ListenMark lesson={lesson} questions={lessonDetail?.practice_questions || []} answers={ansMap} onCompleted={done} />;
             if (pt === 'voice_recorder') return <VoiceRecorder lesson={lesson} questions={lessonDetail?.practice_questions || []} answers={ansMap} onCompleted={done} />;
-            return <SpeakPractice lesson={lesson} practiceType={lessonDetail?.practice_type} words={practiceWords} onCompleted={done} />;
+            return <SpeakPractice lesson={lesson} words={practiceWords} onCompleted={done} />;
           })()}
         </Card>
       )}

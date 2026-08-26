@@ -1683,6 +1683,11 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 }
 .column-resize-handle:hover { opacity: 1; }
 .resize-cursor { cursor: col-resize; }
+.sp-listening {
+  font-size: 14px; font-weight: 800; color: var(--red);
+  animation: sp-pulse 1.1s ease-in-out infinite;
+}
+@keyframes sp-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
 
 .toast {
   position: fixed; top: 16px; right: 16px; z-index: 9999;
