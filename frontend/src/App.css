@@ -1503,6 +1503,7 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; bord
 .cs-layout { display: block; }
 .cs-layout .cs-editor { display: none; }
 .cs-layout.editing .cs-editor { display: block; }
+.cs-layout.editing .cs-curriculum { display: none; }
 .cs-curriculum { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 
 .cs-mod { border: 1px solid var(--line); border-radius: 14px; background: var(--surface-hover); overflow: hidden; transition: box-shadow .15s ease; }

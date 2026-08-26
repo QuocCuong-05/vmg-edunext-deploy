@@ -183,10 +183,10 @@ export default function CourseStructureEditor() {
     setCourseForm(null);
   };
 
-  // Mở editor (sửa bài/khóa) → cuộn lên đầu trang cho thấy form ngay
+  // Mở editor (sửa bài/khóa) hoặc đổi sang bài khác → cuộn lên đầu trang cho thấy form ngay
   useEffect(() => {
     if (panel) window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [panel]);
+  }, [panel, selectedItemId]);
 
   // --- DnD ---
   const [activeId, setActiveId] = useState(null);
