@@ -207,6 +207,11 @@ export default function LessonView() {
   const bodyHtml = lessonDetail?.body_html || lesson.article_body || '';
   const hasRichBody = !!(lessonDetail?.body_html || lesson.article_body);
   const ptType = lessonDetail?.practice_type || 'speak_passage';
+  const ptLabel = ptType === 'listen_choose' ? 'Nghe & chọn đáp án'
+    : ptType === 'listen_fill' ? 'Nghe & điền từ'
+      : ptType === 'listen_mark' ? 'Nghe & đánh dấu từ'
+        : ptType === 'voice_recorder' ? 'Ghi âm bài nói'
+          : 'Luyện nói từng từ';
   const practiceHasContent =
     ptType === 'voice_recorder' ||
     (['listen_choose', 'listen_fill', 'listen_mark'].includes(ptType)
@@ -463,36 +468,20 @@ export default function LessonView() {
         </div>
       )}
 
-      {hasRichBody ? (
+      {itemType === 'practice' && practiceHasContent ? (
+        /* Một khối liền mạch: nội dung giới thiệu + bài tập như H5P.Column của LMS */
         <Card style={{ marginBottom: 20, padding: 20 }}>
-          <div className="article-content" dangerouslySetInnerHTML={{ __html: bodyHtml }} style={{ fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }} />
-        </Card>
-      ) : itemType !== 'video_lesson' && (
-        <Card style={{ marginBottom: 20, padding: 20 }}>
-          <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.7 }}>
-      {itemType === 'practice'
-        ? (practiceHasContent
-          ? 'Luyện phát âm từng từ: nghe audio mẫu, bật mic đọc theo, gửi để được chấm điểm.'
-          : 'Bài học đang được cập nhật...')
-        : itemType === 'quiz'
-                ? 'Hoàn thành bài kiểm tra để ôn tập kiến thức.'
-                : bodyHtml || 'Nội dung bài học đang được cập nhật...'}
-          </p>
-        </Card>
-      )}
-
-      {itemType === 'practice' && practiceHasContent && (
-        <Card style={{ marginBottom: 20, padding: 20 }}>
-          <h4 style={{ fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>🎤</span> Luyện nói — {lessonDetail?.practice_type === 'listen_choose' ? 'Nghe & chọn đáp án'
-              : lessonDetail?.practice_type === 'listen_fill' ? 'Nghe & điền từ'
-                : lessonDetail?.practice_type === 'listen_mark' ? 'Nghe & đánh dấu từ'
-                  : lessonDetail?.practice_type === 'voice_recorder' ? 'Ghi âm bài nói'
-                    : 'Luyện nói từng từ'}
-            {lesson.points > 0 && <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>· tối đa {lesson.points} điểm</span>}
-          </h4>
+          {hasRichBody && (
+            <>
+              <div className="article-content" dangerouslySetInnerHTML={{ __html: bodyHtml }} style={{ fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }} />
+              <div style={{ borderTop: '1px dashed var(--line)', margin: '18px 0 12px' }} />
+            </>
+          )}
+          <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: hasRichBody ? 0 : 14 }}>
+            🎤 {ptLabel}{lesson.points > 0 ? ` · tối đa ${lesson.points} điểm` : ''}
+          </div>
           {(() => {
-            const pt = lessonDetail?.practice_type || 'speak_words';
+            const pt = ptType;
             const ansMap = {};
             (lessonDetail?.practice_answers || []).forEach(a => { ansMap[a.question_id] = a; });
             const done = () => {
@@ -515,6 +504,20 @@ export default function LessonView() {
             if (pt === 'voice_recorder') return <VoiceRecorder lesson={lesson} questions={lessonDetail?.practice_questions || []} answers={ansMap} onCompleted={done} />;
             return <SpeakPractice lesson={lesson} words={practiceWords} onCompleted={done} />;
           })()}
+        </Card>
+      ) : hasRichBody ? (
+        <Card style={{ marginBottom: 20, padding: 20 }}>
+          <div className="article-content" dangerouslySetInnerHTML={{ __html: bodyHtml }} style={{ fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }} />
+        </Card>
+      ) : itemType !== 'video_lesson' && (
+        <Card style={{ marginBottom: 20, padding: 20 }}>
+          <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.7 }}>
+            {itemType === 'practice'
+              ? 'Bài học đang được cập nhật...'
+              : itemType === 'quiz'
+                ? 'Hoàn thành bài kiểm tra để ôn tập kiến thức.'
+                : bodyHtml || 'Nội dung bài học đang được cập nhật...'}
+          </p>
         </Card>
       )}
 
