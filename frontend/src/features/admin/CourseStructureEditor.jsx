@@ -247,7 +247,7 @@ export default function CourseStructureEditor() {
     const raw = (bulkText[lessonId] || '').trim();
     if (!raw) return;
     const list = raw
-      .split(/[\n,;]+/)
+      .split(/\n+/)
       .map(s => s.trim().replace(/\s+/g, ' '))
       .filter(Boolean);
     if (!list.length) return;
@@ -828,7 +828,7 @@ export default function CourseStructureEditor() {
             <textarea
               className="admin-input"
               style={{ minHeight: 64, flex: 1, minWidth: 220, whiteSpace: 'pre-wrap' }}
-              placeholder="Thêm hàng loạt: dán danh sách từ, mỗi từ 1 dòng (hoặc cách/phẩy)"
+              placeholder="Thêm hàng loạt: dán danh sách từ/cụm từ, mỗi dòng 1 mục"
               value={bulkText[itemForm.id] || ''}
               onChange={e => setBulkText({ ...bulkText, [itemForm.id]: e.target.value })}
             />
