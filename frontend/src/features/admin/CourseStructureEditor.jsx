@@ -661,18 +661,19 @@ export default function CourseStructureEditor() {
       </div>
 
       {itemForm.item_type === 'practice' && (
-        <>
-          <div className="cs-seg" style={{ marginTop: 10 }}>
+        <div className="cs-sub-type">
+          <div className="cs-sub-label">↳ Chọn kiểu luyện nói</div>
+          <div className="cs-seg">
             {PRACTICE_TYPES.map(t => (
               <button key={t.value} type="button"
-                className={`cs-seg-btn${itemForm.practice_type === t.value ? ' on' : ''}`}
+                className={`cs-seg-btn sm${itemForm.practice_type === t.value ? ' on' : ''}`}
                 onClick={() => setItemForm({ ...itemForm, practice_type: t.value })}>
                 {PT_SHORT[t.value] || t.label}
               </button>
             ))}
           </div>
-          <div className="admin-note" style={{ marginTop: 6 }}>{PT_HINT[itemForm.practice_type]}</div>
-        </>
+          <div className="admin-note" style={{ marginTop: 8 }}>{PT_HINT[itemForm.practice_type]}</div>
+        </div>
       )}
 
       {/* Thông tin chung */}
@@ -958,7 +959,7 @@ export default function CourseStructureEditor() {
       </div>
 
       {courseId ? (
-        <div className="cs-layout">
+        <div className={`cs-layout${panel ? ' editing' : ''}`}>
           {/* ===== Cột trái: Curriculum ===== */}
           <div className="cs-curriculum">
             <div style={{ display: 'flex', gap: 8 }}>
@@ -1066,7 +1067,7 @@ export default function CourseStructureEditor() {
           </div>
 
           {/* ===== Editor panel — focus mode chiếm toàn bộ chiều ngang ===== */}
-          <div className={`cs-editor${panel ? ' editing' : ''}`}>
+          <div className="cs-editor">
             {panel && (
               <div className="cs-focus-head">
                 <button className="admin-btn-ghost" onClick={closePanel}>← Về cấu trúc khóa</button>
