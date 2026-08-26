@@ -300,7 +300,6 @@ export function VoiceRecorder({ lesson, questions, answers, onCompleted }) {
           <audio controls src={lesson.audio_url || questions[0].audio_url} preload="none" style={{ height: 38, maxWidth: 240, marginLeft: 8 }} />
         </div>
       )}
-      {lesson.body_html && <p style={{ fontSize: 13, lineHeight: 1.7, marginBottom: 12 }}>{lesson.body_html}</p>}
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
         {!recording ? (
           <Button size="sm" variant={blobUrl ? 'ghost' : 'primary'} onClick={start}>{blobUrl ? '🎙️ Ghi lại' : '🎙️ Bắt đầu ghi âm'}</Button>
