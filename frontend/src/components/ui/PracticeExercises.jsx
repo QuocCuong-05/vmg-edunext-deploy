@@ -101,10 +101,15 @@ export function ListenFill({ lesson, questions, answers, onCompleted }) {
     } catch (e) { showToast(e.message || 'Lỗi', 'error'); } finally { setBusyId(null); }
   };
 
+  const redo = (q) => {
+    setResults(prev => { const n = { ...prev }; delete n[q.id]; return n; });
+    setValues(prev => { const n = { ...prev }; delete n[q.id]; return n; });
+  };
+
   const blankCount = (q) => ((q.text_content || '').match(/____/g) || []).length;
   const renderText = (q) => {
     const res = results[q.id];
-    const correct = res && res.correct ? res.correct : [];
+    const correct = res && res.correct ? res.correct : (q.correct || []);
     const parts = (q.text_content || '').split('____');
     const vals = values[q.id] || [];
     let correctIdx = 0;
@@ -141,8 +146,8 @@ export function ListenFill({ lesson, questions, answers, onCompleted }) {
           {q.prompt && <p style={{ fontSize: 13, margin: '0 0 8px' }}>{q.prompt}</p>}
           <AudioRow src={q.audio_url} />
           <p style={{ fontSize: 15, lineHeight: 2, margin: '12px 0', whiteSpace: 'pre-wrap' }}>{renderText(q)}</p>
-          <Button size="sm" variant="primary" isDisabled={busyId === q.id || !!results[q.id]} onClick={() => submit(q)}>
-            {results[q.id] ? 'Đã chấm' : 'Kiểm tra'}
+          <Button size="sm" variant={results[q.id] ? 'ghost' : 'primary'} isDisabled={busyId === q.id} onClick={() => results[q.id] ? redo(q) : submit(q)}>
+            {results[q.id] ? 'Làm lại' : 'Kiểm tra'}
           </Button>
         </div>
       ))}
@@ -176,13 +181,18 @@ export function ListenMark({ lesson, questions, answers, onCompleted }) {
     } catch (e) { showToast(e.message || 'Lỗi', 'error'); } finally { setBusyId(null); }
   };
 
+  const redo = (q) => {
+    setResults(prev => { const n = { ...prev }; delete n[q.id]; return n; });
+    setSelected(prev => { const n = { ...prev }; delete n[q.id]; return n; });
+  };
+
   const answered = questions.length > 0 && questions.every(q => results[q.id]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {questions.map((q, i) => {
         const res = results[q.id];
-        const correctWords = res && res.correct ? res.correct.map(w => w.toLowerCase()) : [];
+        const correctWords = res && res.correct ? res.correct.map(w => w.toLowerCase()) : (q.correct || []).map(w => w.toLowerCase());
         return (
           <div key={q.id} style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: BASE }}>
           {questions.length > 1 && <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {i + 1}</div>}
@@ -194,8 +204,9 @@ export function ListenMark({ lesson, questions, answers, onCompleted }) {
                 if (isSpace) return <span key={ti}>{tok}</span>;
                 const clean = tok.replace(/[^a-zA-Z']/g, '').toLowerCase();
                 const sel = (selected[q.id] || []).includes(tok);
-                const inCorrect = res && clean && correctWords.includes(clean);
-                const selWrong = res && sel && !inCorrect;
+                const inCorrect = res && sel && clean && correctWords.includes(clean);
+                const selWrong = res && sel && clean && !correctWords.includes(clean);
+                const missed = res && !sel && clean && correctWords.includes(clean);
                 return (
                   <span
                     key={ti}
@@ -205,10 +216,10 @@ export function ListenMark({ lesson, questions, answers, onCompleted }) {
                     })}
                     style={{
                       cursor: res ? 'default' : 'pointer', margin: '0 2px', padding: '1px 6px', borderRadius: 8,
-                      background: inCorrect ? 'var(--green-bg)' : selWrong ? 'var(--red-bg)' : sel ? 'var(--gold-bg)' : 'transparent',
-                      color: inCorrect ? 'var(--green)' : selWrong ? 'var(--red)' : sel ? 'var(--gold)' : 'var(--ink)',
-                      fontWeight: sel || inCorrect ? 800 : 500,
-                      textDecoration: inCorrect ? 'none' : undefined,
+                      background: inCorrect ? 'var(--green-bg)' : selWrong ? 'var(--red-bg)' : (missed || sel) ? 'var(--gold-bg)' : 'transparent',
+                      color: inCorrect ? 'var(--green)' : selWrong ? 'var(--red)' : (missed || sel) ? 'var(--gold)' : 'var(--ink)',
+                      fontWeight: sel || inCorrect || missed ? 800 : 500,
+                      textDecoration: missed ? 'underline' : (inCorrect ? 'none' : undefined),
                     }}
                   >
                     {tok}
@@ -216,8 +227,8 @@ export function ListenMark({ lesson, questions, answers, onCompleted }) {
                 );
               })}
             </p>
-            <Button size="sm" variant="primary" isDisabled={busyId === q.id || !!res || !(selected[q.id] || []).length} onClick={() => submit(q)}>
-              {res ? 'Đã chấm' : 'Kiểm tra'}
+            <Button size="sm" variant={res ? 'ghost' : 'primary'} isDisabled={busyId === q.id || (!res && !(selected[q.id] || []).length)} onClick={() => res ? redo(q) : submit(q)}>
+              {res ? 'Làm lại' : 'Kiểm tra'}
             </Button>
           </div>
         );
