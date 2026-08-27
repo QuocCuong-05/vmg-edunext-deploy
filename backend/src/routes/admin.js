@@ -982,7 +982,7 @@ router.post('/items', async (req, res, next) => {
       .from('lessons')
       .insert({
         course_id, module_id: module_id || null, title, slug,
-        content_type: type === 'video_lesson' ? 'video' : type === 'lesson' ? 'article' : type === 'practice' ? 'assignment' : 'quiz',
+        content_type: type === 'video_lesson' ? 'video' : type === 'lesson' ? 'article' : type === 'practice' ? 'assignment' : type === 'slides' ? 'article' : 'quiz',
         item_type: type,
         practice_type: practice_type || null,
         video_url: video_url || null,

@@ -12,6 +12,7 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import SpeakPractice from '../../components/ui/SpeakPractice';
 import { ListenChoose, ListenFill, ListenMark, VoiceRecorder } from '../../components/ui/PracticeExercises';
+import SlidesViewer from '../../components/ui/SlidesViewer';
 import { soundContext } from '../../lib/courseStructure';
 import { useAuth } from '../auth/AuthContext';
 
@@ -223,6 +224,7 @@ export default function LessonView() {
       case 'video_lesson': return '🎬';
       case 'lesson': return '📄';
       case 'practice': return '🎤';
+      case 'slides': return '🖼';
       case 'quiz': return '📝';
       case 'video': return '🎬';
       case 'article': return '📄';
@@ -319,6 +321,20 @@ export default function LessonView() {
     if (!completedIds.includes(lessonId)) {
       setCompletedIds(prev => [...prev, lessonId]);
     }
+  };
+
+  const completeSlides = () => {
+    api.lessons.progress(lessonId, { completed: true })
+      .then(() => {
+        setCompleted(true);
+        updateStreak();
+        addXp(60);
+        showToast('+60 XP', 'success');
+        logActivity('lesson', 'Đã hoàn thành bài trình chiếu: ' + lesson.title, course.title);
+        dispatchAction('lesson_complete');
+        if (!completedIds.includes(lessonId)) setCompletedIds(prev => [...prev, lessonId]);
+      })
+      .catch(err => showToast(err.message || 'Lỗi lưu tiến độ', 'error'));
   };
 
   return (
@@ -463,7 +479,11 @@ export default function LessonView() {
         </div>
       )}
 
-      {itemType === 'practice' && practiceHasContent ? (
+      {itemType === 'slides' && hasRichBody ? (
+        <Card style={{ marginBottom: 20, padding: 20 }}>
+          <SlidesViewer html={bodyHtml} onComplete={completeSlides} completed={completed} />
+        </Card>
+      ) : itemType === 'practice' && practiceHasContent ? (
         /* Một khối liền mạch: nội dung giới thiệu + bài tập như H5P.Column của LMS */
         <Card style={{ marginBottom: 20, padding: 20 }}>
           {hasRichBody && (

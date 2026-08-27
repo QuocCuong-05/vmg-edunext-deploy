@@ -10,6 +10,7 @@ const typeIcon = (l) => {
     case 'lesson': return '📄';
     case 'practice': return '🎤';
     case 'quiz': return '📝';
+    case 'slides': return '🖼';
     default: return '📄';
   }
 };

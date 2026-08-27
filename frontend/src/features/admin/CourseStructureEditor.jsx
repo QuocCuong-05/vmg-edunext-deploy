@@ -17,6 +17,7 @@ const TYPES = [
   { value: 'lesson', label: '📄 Bài đọc (text)', icon: '📄' },
   { value: 'practice', label: '🎤 Luyện nói (practice)', icon: '🎤' },
   { value: 'quiz', label: '📝 Kiểm tra (quiz)', icon: '📝' },
+  { value: 'slides', label: '🖼 Bài trình chiếu (slides)', icon: '🖼' },
 ];
 
 const PRACTICE_TYPES = [
@@ -636,7 +637,7 @@ export default function CourseStructureEditor() {
   const activeItem = items.find(i => i.id === selectedItemId);
   const selPracticeType = itemForm?.practice_type || 'speak_passage';
 
-  const ITEM_SHORT = { video_lesson: '🎬 Video', lesson: '📄 Bài đọc', practice: '🎤 Luyện nói', quiz: '📝 Kiểm tra' };
+  const ITEM_SHORT = { video_lesson: '🎬 Video', lesson: '📄 Bài đọc', practice: '🎤 Luyện nói', quiz: '📝 Kiểm tra', slides: '🖼 Slides' };
   const PT_SHORT = { speak_passage: '📖 Từng từ', voice_recorder: '🎙️ Ghi âm', listen_choose: '👂 Nghe→chọn', listen_fill: '📝 Nghe→điền', listen_mark: '✏️ Nghe→đánh dấu' };
   const PT_HINT = {
     speak_passage: 'Dán danh sách từ vào mục 🧩 Cấu hình bài tập bên dưới (sau khi Lưu bài).',
@@ -717,7 +718,7 @@ export default function CourseStructureEditor() {
         </>
       )}
 
-      {(itemForm.item_type === 'lesson' || itemForm.item_type === 'video_lesson' || itemForm.item_type === 'practice') && (
+      {(itemForm.item_type === 'lesson' || itemForm.item_type === 'video_lesson' || itemForm.item_type === 'practice' || itemForm.item_type === 'slides') && (
         <>
           <label className="admin-label">Nội dung bài</label>
           <RichEditor
@@ -725,6 +726,9 @@ export default function CourseStructureEditor() {
             onChange={html => setItemForm({ ...itemForm, body_html: html })}
             placeholder="Copy-paste nội dung từ LMS vào đây — chèn ảnh/audio bằng nút 🖼 🎵..."
           />
+          {itemForm.item_type === 'slides' && (
+            <div className="admin-note" style={{ marginTop: 4 }}>Dùng nút ― (Gạch ngang) để ngăn các slide. Mỗi slide = 1 màn hình bên học viên, có nút ◀ ▶ chuyển trang.</div>
+          )}
         </>
       )}
 
