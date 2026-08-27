@@ -207,10 +207,10 @@ router.post('/answer', authenticate, async (req, res) => {
       isCorrect = given.length === expected.length && expected.every((e, i) => e === given[i]);
       correctInfo = correct || [];
     } else if (q.qtype === 'mark') {
-      const expected = (correct || []).map(normalizeAnswer).sort();
+      const expected = (correct || []).map(normalizeAnswer);
       let given;
       try { given = JSON.parse(answer || '[]'); } catch { given = []; }
-      given = given.map(normalizeAnswer).sort();
+      given = given.map(normalizeAnswer);
       isCorrect = given.length === expected.length && expected.every((e, i) => e === given[i]);
       correctInfo = correct || [];
     }
