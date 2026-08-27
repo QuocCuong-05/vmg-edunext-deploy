@@ -3,16 +3,23 @@ import Button from '../../components/ui/Button';
 
 export default function SlidesViewer({ html, onComplete, completed }) {
   const [index, setIndex] = useState(0);
+  const [visited, setVisited] = useState({});
   const slideRef = useRef(null);
 
   const slides = (html || '')
-    .split(/<hr\s*\/?>/i)
+    .split(/<hr[^>]*>/gi)
     .map(s => s.trim())
     .filter(s => s.length > 0);
 
   const count = slides.length;
   const safeIndex = Math.min(index, Math.max(0, count - 1));
   const isLast = safeIndex >= count - 1;
+
+  useEffect(() => {
+    setVisited(prev => ({ ...prev, [safeIndex]: true }));
+  }, [safeIndex]);
+
+  const allViewed = Object.keys(visited).length >= count;
 
   const go = (step) => {
     setIndex(prev => Math.max(0, Math.min(count - 1, prev + step)));
@@ -62,8 +69,14 @@ export default function SlidesViewer({ html, onComplete, completed }) {
 
       {isLast && (
         <div style={{ marginTop: 16, textAlign: 'center' }}>
-          <Button variant="primary" size="md" isDisabled={completed} onClick={onComplete}>
-            {completed ? '✓ Đã hoàn thành' : 'Hoàn thành bài học'}
+          <Button
+            variant="primary"
+            size="md"
+            isDisabled={completed || !allViewed}
+            onClick={onComplete}
+            title={allViewed ? '' : 'Hãy xem hết các slide trước khi hoàn thành'}
+          >
+            {completed ? '✓ Đã hoàn thành' : (allViewed ? 'Hoàn thành bài học' : 'Xem hết các slide để hoàn thành')}
           </Button>
         </div>
       )}
