@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   DndContext, closestCorners, PointerSensor, TouchSensor, KeyboardSensor,
   useSensor, useSensors, DragOverlay,
@@ -151,7 +152,8 @@ function SortableModule({ mod, count, open, onToggle, onRename, onStartRename, o
 export default function CourseStructureEditor() {
   const showToast = useToast();
   const [courses, setCourses] = useState([]);
-  const [courseId, setCourseId] = useState('');
+  const [params, setParams] = useSearchParams();
+  const [courseId, setCourseId] = useState(params.get('course') || '');
   const [modules, setModules] = useState([]);
   const [items, setItems] = useState([]);
   const [groups, setGroups] = useState({});
@@ -159,7 +161,17 @@ export default function CourseStructureEditor() {
   const [modTitle, setModTitle] = useState('');
   const [renaming, setRenaming] = useState(null); // {id, title}
   const [panel, setPanel] = useState(null); // null | 'course' | 'item'
-  const [selectedItemId, setSelectedItemId] = useState(null);
+  const [selectedItemId, setSelectedItemId] = useState(params.get('item') || null);
+
+  // Đồng bộ khóa/bài đang sửa vào URL (?course=&item=) để reload/back giữ nguyên ngữ cảnh
+  const updateParams = (cid, iid) => {
+    setParams(prev => {
+      const p = new URLSearchParams(prev);
+      if (cid) p.set('course', cid); else p.delete('course');
+      if (iid) p.set('item', iid); else p.delete('item');
+      return p;
+    }, { replace: true });
+  };
   const [itemForm, setItemForm] = useState(null);
   const [courseForm, setCourseForm] = useState(null); // {..., id?: string}
   const [savingCourse, setSavingCourse] = useState(false);
@@ -182,6 +194,7 @@ export default function CourseStructureEditor() {
     setSelectedItemId(null);
     setItemForm(null);
     setCourseForm(null);
+    updateParams(courseId, '');
   };
 
   // Mở editor (sửa bài/khóa) hoặc đổi sang bài khác → cuộn lên đầu trang cho thấy form ngay
@@ -392,6 +405,7 @@ export default function CourseStructureEditor() {
   const openItemEditor = useCallback((it) => {
     setSelectedItemId(it.id);
     setPanel('item');
+    updateParams(courseId, it.id);
     setItemForm({
       id: it.id, module_id: it.module_id || '', title: it.title,
       item_type: it.item_type || 'video_lesson', video_url: it.video_url || '',
@@ -406,6 +420,17 @@ export default function CourseStructureEditor() {
     }
     setCourseForm(null);
   }, [words, questions]);
+
+  // Khôi phục bài đang sửa sau khi reload (đọc từ URL ?course=&item=)
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current) return;
+    const item = params.get('item');
+    if (courseId && item && items.some(i => i.id === item)) {
+      openItemEditor(items.find(i => i.id === item));
+      restoredRef.current = true;
+    }
+  }, [courseId, items, params, openItemEditor]);
 
   const saveItem = async () => {
     const f = itemForm;
@@ -462,7 +487,7 @@ export default function CourseStructureEditor() {
       if (confirmDel.type === 'module') await api.admin.deleteModule(confirmDel.id);
       else if (confirmDel.type === 'item') {
         await api.admin.deleteItem(confirmDel.id);
-        if (selectedItemId === confirmDel.id) { setSelectedItemId(null); setPanel(null); setItemForm(null); }
+        if (selectedItemId === confirmDel.id) { setSelectedItemId(null); setPanel(null); setItemForm(null); updateParams(courseId, ''); }
       } else if (confirmDel.type === 'word') await api.admin.deleteWord(confirmDel.id);
       else if (confirmDel.type === 'question') await api.admin.deleteQuestion(confirmDel.id);
       if (confirmDel.type === 'word' || confirmDel.type === 'question') {
@@ -959,7 +984,7 @@ export default function CourseStructureEditor() {
 
       {/* Toolbar */}
       <div className="cs-toolbar">
-        <select className="admin-input" style={{ flex: 1, minWidth: 200 }} value={courseId} onChange={e => { setCourseId(e.target.value); setPanel(null); setSelectedItemId(null); }}>
+        <select className="admin-input" style={{ flex: 1, minWidth: 200 }} value={courseId} onChange={e => { setCourseId(e.target.value); setPanel(null); setSelectedItemId(null); updateParams(e.target.value, ''); }}>
           <option value="">-- Chọn khóa học --</option>
           {courses.map(c => <option key={c.id} value={c.id}>{c.title}{c.is_published === false ? ' (nháp)' : ''}</option>)}
         </select>
