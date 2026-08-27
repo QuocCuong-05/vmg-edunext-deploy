@@ -113,7 +113,7 @@ export function ListenFill({ lesson, questions, answers, onCompleted }) {
         {part}
         {i < parts.length - 1 && (
           res ? (
-            <b style={{ color: correct.includes((vals[i] || '').trim().toLowerCase()) ? 'var(--green)' : 'var(--red)' }}>
+            <b style={{ color: (correct[i] || '').trim().toLowerCase() === (vals[i] || '').trim().toLowerCase() ? 'var(--green)' : 'var(--red)' }}>
               {vals[i] || '...'}
             </b>
           ) : (
