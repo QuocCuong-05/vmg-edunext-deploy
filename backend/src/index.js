@@ -5,7 +5,6 @@ import { PORT } from './config/database.js';
 import authRoutes from './routes/auth.js';
 import courseRoutes from './routes/courses.js';
 import lessonRoutes from './routes/lessons.js';
-import vimiRoutes from './routes/vimi.js';
 import vocabularyRoutes from './routes/vocabulary.js';
 import classroomRoutes from './routes/classroom.js';
 import quizRoutes from './routes/quiz.js';
@@ -35,7 +34,6 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/lessons', lessonRoutes);
-app.use('/api/vimi', vimiRoutes);
 app.use('/api/vocabulary', vocabularyRoutes);
 app.use('/api/classroom', classroomRoutes);
 app.use('/api/quiz', quizRoutes);

@@ -123,9 +123,6 @@ export const api = {
     answer: async (payload) => request('/practice/answer', { method: 'POST', body: JSON.stringify(payload) }),
     myAnswers: async (lessonId) => request(`/practice/my-answers${lessonId ? `?lesson_id=${lessonId}` : ''}`),
   },
-  vimi: {
-    chat: (message) => request('/vimi/chat', { method: 'POST', body: JSON.stringify({ message }) }),
-  },
   tts: {
     speak: async (text) => {
       const res = await fetch(`${API_BASE}/tts`, {
@@ -367,6 +364,11 @@ export const api = {
           return getMockReportedComments(userId).map(id => ({ comment_id: id }));
         }
       },
+    },
+    groups: {
+      list: () => request('/community/groups'),
+      create: (name, description) => request('/community/groups', { method: 'POST', body: JSON.stringify({ name, description }) }),
+      join: (id) => request(`/community/groups/${id}/join`, { method: 'POST' }),
     },
   },
   users: {

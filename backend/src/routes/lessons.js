@@ -100,13 +100,13 @@ router.post('/:id/progress', authenticate, async (req, res) => {
 
     const { data: lesson, error: lessonError } = await supabaseAdmin
       .from('lessons')
-      .select('id, video_url')
+      .select('id, video_url, content_type')
       .eq('id', req.params.id)
       .maybeSingle();
     if (lessonError) return res.status(400).json({ error: lessonError.message });
     if (!lesson) return res.status(404).json({ error: 'Lesson not found' });
 
-    if (completed && !lesson.video_url) {
+    if (completed && !lesson.video_url && lesson.content_type === 'video') {
       return res.status(400).json({ error: 'Bài học chưa có video, không thể hoàn thành' });
     }
 

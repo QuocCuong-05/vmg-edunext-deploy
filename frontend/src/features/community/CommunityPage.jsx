@@ -7,6 +7,7 @@ import { api, notifyPostOwner } from '../../lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { TOPICS } from '../../mock/community';
 import { useMediaQuery } from '../../lib/useMediaQuery';
+import GroupsPanel from './GroupsPanel';
 
 const COLORS = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--gold)'];
 
@@ -533,6 +534,8 @@ export default function CommunityPage() {
         </div>
 
         <div>
+          <GroupsPanel />
+
           {user && (
             <Card style={{ marginBottom: 16, padding: 20 }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>

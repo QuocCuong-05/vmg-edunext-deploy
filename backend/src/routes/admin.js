@@ -966,7 +966,7 @@ router.get('/items', async (req, res, next) => {
 
 router.post('/items', async (req, res, next) => {
   try {
-    const { course_id, module_id, title, item_type, video_url, body_html, points, external_url, audio_url, image_url, is_free, sort_order, quiz_slug } = req.body;
+    const { course_id, module_id, title, item_type, video_url, body_html, points, external_url, audio_url, image_url, is_free, sort_order, quiz_slug, practice_type } = req.body;
     if (!course_id || !title) return res.status(400).json({ error: 'course_id và title là bắt buộc' });
     const type = item_type || 'video_lesson';
     const baseSlug = slugify(title);
@@ -984,6 +984,7 @@ router.post('/items', async (req, res, next) => {
         course_id, module_id: module_id || null, title, slug,
         content_type: type === 'video_lesson' ? 'video' : type === 'lesson' ? 'article' : type === 'practice' ? 'assignment' : 'quiz',
         item_type: type,
+        practice_type: practice_type || null,
         video_url: video_url || null,
         body_html: body_html || null,
         points: points ?? 0,
