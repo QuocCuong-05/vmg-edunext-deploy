@@ -192,6 +192,7 @@ router.post('/answer', authenticate, async (req, res) => {
 
     let isCorrect = false;
     let correctInfo = null;
+    let correctCount = 0;
     const correct = q.correct || [];
 
     if (q.qtype === 'choose') {
@@ -213,9 +214,19 @@ router.post('/answer', authenticate, async (req, res) => {
       given = given.map(normalizeAnswer).sort();
       isCorrect = given.length === expected.length && expected.every((e, i) => e === given[i]);
       correctInfo = correct || [];
+    } else if (q.qtype === 'match') {
+      const expected = (correct || []).map(normalizeAnswer);
+      let given;
+      try { given = JSON.parse(answer || '[]'); } catch { given = []; }
+      given = given.map(normalizeAnswer);
+      for (let i = 0; i < expected.length; i++) {
+        if (given[i] && given[i] === expected[i]) correctCount++;
+      }
+      isCorrect = expected.length > 0 && correctCount === expected.length;
+      correctInfo = correct || [];
     }
 
-    const score = isCorrect ? 10 : 0;
+    const score = isCorrect ? 10 : (q.qtype === 'match' && (correct || []).length ? Math.round((10 * correctCount) / correct.length) : 0);
 
     // upsert giữ điểm cao nhất
     const { data: existing } = await supabaseAdmin

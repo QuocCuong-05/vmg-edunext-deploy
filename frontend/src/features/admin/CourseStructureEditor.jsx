@@ -27,9 +27,10 @@ const PRACTICE_TYPES = [
   { value: 'listen_choose', label: '👂 Nghe → chọn đáp án' },
   { value: 'listen_fill', label: '📝 Nghe → điền từ' },
   { value: 'listen_mark', label: '✏️ Nghe → đánh dấu từ' },
+  { value: 'match', label: '🔗 Ghép đôi (matching)' },
 ];
 
-const QUESTION_PRACTICE_TYPES = ['listen_choose', 'listen_fill', 'listen_mark'];
+const QUESTION_PRACTICE_TYPES = ['listen_choose', 'listen_fill', 'listen_mark', 'match'];
 
 const ACCESS_TYPES = [
   { value: 'free', label: 'Miễn phí' },
@@ -337,24 +338,31 @@ export default function CourseStructureEditor() {
     } catch {}
   };
 
-  const qtypeOf = (pt) => pt === 'listen_fill' ? 'fill' : pt === 'listen_mark' ? 'mark' : 'choose';
+  const qtypeOf = (pt) => pt === 'listen_fill' ? 'fill' : pt === 'listen_mark' ? 'mark' : pt === 'match' ? 'match' : 'choose';
 
   const saveQuestion = async (lessonId, pt) => {
     const f = questionForm[lessonId] || {};
-    if (pt === 'listen_fill' || pt === 'listen_mark') {
-      if (!f.text_content || !f.text_content.trim()) { showToast('Cần nhập đoạn text', 'error'); return; }
-    }
     let options = null;
     let correct = null;
+    let textContent = null;
     if (pt === 'listen_choose') {
       options = (f.optionsText || '').split('\n').map(s => s.trim()).filter(Boolean);
       const idx = Number(f.correctIdx);
       if (!options.length) { showToast('Nhập các đáp án (mỗi dòng 1 đáp án)', 'error'); return; }
       if (idx < 0 || idx >= options.length) { showToast('Chọn đáp án đúng', 'error'); return; }
       correct = [idx];
+    } else if (pt === 'match') {
+      const lefts = (f.leftText || '').split('\n').map(s => s.trim()).filter(Boolean);
+      options = (f.optionsText || '').split('\n').map(s => s.trim()).filter(Boolean);
+      if (!lefts.length || !options.length) { showToast('Nhập cả cột trái và cột phải (mỗi dòng 1 mục)', 'error'); return; }
+      if (lefts.length !== options.length) { showToast('Số mục cột trái phải bằng số cột phải', 'error'); return; }
+      correct = options;
+      textContent = lefts.join('\n');
     } else {
+      if (!f.text_content || !f.text_content.trim()) { showToast('Cần nhập đoạn text', 'error'); return; }
       correct = (f.correctText || '').split('\n').map(s => s.trim().toLowerCase()).filter(Boolean);
       if (!correct.length) { showToast('Nhập đáp án (fill) / từ đúng (mark)', 'error'); return; }
+      textContent = f.text_content;
     }
     try {
       await api.admin.createQuestion({
@@ -363,11 +371,11 @@ export default function CourseStructureEditor() {
         position: (questions[lessonId] || []).length + 1,
         audio_url: f.audio_url || null,
         prompt: f.prompt || null,
-        text_content: pt === 'listen_choose' ? null : (f.text_content || null),
+        text_content: textContent,
         options,
         correct,
       });
-      setQuestionForm(prev => ({ ...prev, [lessonId]: { prompt: '', audio_url: '', optionsText: '', correctText: '', correctIdx: '', text_content: '' } }));
+      setQuestionForm(prev => ({ ...prev, [lessonId]: { prompt: '', audio_url: '', optionsText: '', correctText: '', correctIdx: '', text_content: '', leftText: '' } }));
       await loadQuestions(lessonId);
       showToast('Đã thêm câu hỏi', 'success');
     } catch (e) { showToast(e.message, 'error'); }
@@ -663,13 +671,14 @@ export default function CourseStructureEditor() {
   const selPracticeType = itemForm?.practice_type || 'speak_passage';
 
   const ITEM_SHORT = { video_lesson: '🎬 Video', lesson: '📄 Bài đọc', practice: '🎤 Luyện nói', quiz: '📝 Kiểm tra', slides: '🖼 Slides' };
-  const PT_SHORT = { speak_passage: '📖 Từng từ', voice_recorder: '🎙️ Ghi âm', listen_choose: '👂 Nghe→chọn', listen_fill: '📝 Nghe→điền', listen_mark: '✏️ Nghe→đánh dấu' };
+  const PT_SHORT = { speak_passage: '📖 Từng từ', voice_recorder: '🎙️ Ghi âm', listen_choose: '👂 Nghe→chọn', listen_fill: '📝 Nghe→điền', listen_mark: '✏️ Nghe→đánh dấu', match: '🔗 Ghép đôi' };
   const PT_HINT = {
     speak_passage: 'Dán danh sách từ vào mục 🧩 Cấu hình bài tập bên dưới (sau khi Lưu bài).',
     voice_recorder: 'Không cần dữ liệu thêm — viết đề bài ở Nội dung bài.',
     listen_choose: 'Thêm câu hỏi nghe (audio + đáp án chọn) ở mục 🧩 bên dưới sau khi Lưu bài.',
     listen_fill: 'Thêm câu hỏi nghe (audio + đoạn text ____ + đáp án) ở mục 🧩 bên dưới sau khi Lưu bài.',
     listen_mark: 'Thêm câu hỏi nghe (audio + các từ đúng) ở mục 🧩 bên dưới sau khi Lưu bài.',
+    match: 'Thêm câu hỏi ghép đôi ở mục 🧩 bên dưới: nhập cột trái và cột phải (số dòng bằng nhau, mỗi dòng 1 mục, ghép theo thứ tự dòng).',
   };
 
   const renderItemForm = () => (
@@ -897,9 +906,14 @@ export default function CourseStructureEditor() {
                 {(questionForm[itemForm.id]?.optionsText || '').split('\n').map((s, i) => s.trim() ? <option key={i} value={i}>{i + 1}. {s.trim()}</option> : null)}
               </select>
             </>
+          ) : selPracticeType === 'match' ? (
+            <>
+              <textarea className="admin-input" style={{ minHeight: 70, whiteSpace: 'pre-wrap' }} placeholder="Cột trái — các mục cần ghép (mỗi dòng 1 mục)" value={questionForm[itemForm.id]?.leftText || ''} onChange={e => setQuestionForm({ ...questionForm, [itemForm.id]: { ...(questionForm[itemForm.id] || {}), leftText: e.target.value } })} />
+              <textarea className="admin-input" style={{ minHeight: 70, whiteSpace: 'pre-wrap' }} placeholder="Cột phải — đáp án tương ứng (mỗi dòng 1 mục, ĐÚNG THỨ TỰ cột trái)" value={questionForm[itemForm.id]?.optionsText || ''} onChange={e => setQuestionForm({ ...questionForm, [itemForm.id]: { ...(questionForm[itemForm.id] || {}), optionsText: e.target.value } })} />
+            </>
           ) : (
             <>
-              <textarea className="admin-input" style={{ minHeight: 80, whiteSpace: 'pre-wrap' }} placeholder="Đoạn text gốc — điền chỗ trống bằng ____ / đoạn text cần chọn từ" value={questionForm[itemForm.id]?.text_content || ''} onChange={e => setQuestionForm({ ...questionForm, [itemForm.id]: { ...(questionForm[itemForm.id] || {}), text_content: e.target.value } })} />
+              <textarea className="admin-input" style={{ minHeight: 80, whiteSpace: 'pre-wrap' }} placeholder="Doạn text gốc — điền chỗ trống bằng ____ / đoạn text cần chọn từ" value={questionForm[itemForm.id]?.text_content || ''} onChange={e => setQuestionForm({ ...questionForm, [itemForm.id]: { ...(questionForm[itemForm.id] || {}), text_content: e.target.value } })} />
               <textarea className="admin-input" style={{ minHeight: 54, whiteSpace: 'pre-wrap' }} placeholder={selPracticeType === 'listen_fill' ? 'Đáp án điền (mỗi dòng 1 từ, theo thứ tự)' : 'Các từ đúng cần chọn (mỗi dòng 1 từ)'} value={questionForm[itemForm.id]?.correctText || ''} onChange={e => setQuestionForm({ ...questionForm, [itemForm.id]: { ...(questionForm[itemForm.id] || {}), correctText: e.target.value } })} />
             </>
           )}

@@ -11,7 +11,7 @@ import { useToast } from '../../components/ui/Toast';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import SpeakPractice from '../../components/ui/SpeakPractice';
-import { ListenChoose, ListenFill, ListenMark, VoiceRecorder } from '../../components/ui/PracticeExercises';
+import { ListenChoose, ListenFill, ListenMark, Match, VoiceRecorder } from '../../components/ui/PracticeExercises';
 import SlidesViewer from '../../components/ui/SlidesViewer';
 import { soundContext } from '../../lib/courseStructure';
 import { useAuth } from '../auth/AuthContext';
@@ -513,6 +513,7 @@ export default function LessonView() {
             if (pt === 'listen_choose') return <ListenChoose lesson={lesson} questions={lessonDetail?.practice_questions || []} answers={ansMap} onCompleted={done} />;
             if (pt === 'listen_fill') return <ListenFill lesson={lesson} questions={lessonDetail?.practice_questions || []} answers={ansMap} onCompleted={done} />;
             if (pt === 'listen_mark') return <ListenMark lesson={lesson} questions={lessonDetail?.practice_questions || []} answers={ansMap} onCompleted={done} />;
+            if (pt === 'match') return <Match lesson={lesson} questions={lessonDetail?.practice_questions || []} answers={ansMap} onCompleted={done} />;
             if (pt === 'voice_recorder') return <VoiceRecorder lesson={lesson} questions={lessonDetail?.practice_questions || []} answers={ansMap} onCompleted={done} />;
             return <SpeakPractice lesson={lesson} words={practiceWords} onCompleted={done} />;
           })()}
