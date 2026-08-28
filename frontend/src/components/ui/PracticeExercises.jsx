@@ -248,7 +248,7 @@ const shuffleArr = (arr) => { const a = [...arr]; for (let i = a.length - 1; i >
 
 function MatchItem({ q, result, onGraded, onRedo }) {
   const showToast = useToast();
-  const [pairs, setPairs] = useState({});      // { [leftIdx]: rightIdx }
+  const [pairs, setPairs] = useState({});      // { [leftIdx]: rightIdx[] }  (1 trái -> nhiều phải)
   const [shuffled, setShuffled] = useState([]); // cột phải đã xáo trộn
   const [selLeft, setSelLeft] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -268,16 +268,17 @@ function MatchItem({ q, result, onGraded, onRedo }) {
     const cb = cont.getBoundingClientRect();
     const arr = [];
     for (const li of Object.keys(pairs)) {
-      const ri = pairs[li];
-      const lEl = leftRefs.current[Number(li)];
-      const rEl = rightRefs.current[ri];
-      if (!lEl || !rEl) continue;
-      const lb = lEl.getBoundingClientRect();
-      const rb = rEl.getBoundingClientRect();
-      arr.push({
-        x1: lb.right - cb.left, y1: lb.top + lb.height / 2 - cb.top,
-        x2: rb.left - cb.left, y2: rb.top + rb.height / 2 - cb.top,
-      });
+      for (const ri of pairs[li]) {
+        const lEl = leftRefs.current[Number(li)];
+        const rEl = rightRefs.current[Number(ri)];
+        if (!lEl || !rEl) continue;
+        const lb = lEl.getBoundingClientRect();
+        const rb = rEl.getBoundingClientRect();
+        arr.push({
+          x1: lb.right - cb.left, y1: lb.top + lb.height / 2 - cb.top,
+          x2: rb.left - cb.left, y2: rb.top + rb.height / 2 - cb.top,
+        });
+      }
     }
     setLines(arr);
   }, [pairs]);
@@ -286,27 +287,44 @@ function MatchItem({ q, result, onGraded, onRedo }) {
   useEffect(() => { window.addEventListener('resize', measure); return () => window.removeEventListener('resize', measure); }, [measure]);
 
   const graded = !!result;
-  const assign = (leftIdx, rightIdx) => {
+  const connect = (leftIdx, rightIdx) => {
     setPairs(prev => {
-      const cur = { ...prev };
-      for (const k of Object.keys(cur)) if (Number(cur[k]) === rightIdx) delete cur[k];
-      cur[leftIdx] = rightIdx;
+      const cur = {};
+      for (const k of Object.keys(prev)) cur[k] = [...prev[k]];
+      for (const k of Object.keys(cur)) cur[k] = cur[k].filter(x => Number(x) !== rightIdx);
+      cur[leftIdx] = [...(cur[leftIdx] || []), rightIdx];
       return cur;
     });
   };
-  const unassignLeft = (leftIdx) => setPairs(prev => { const cur = { ...prev }; delete cur[leftIdx]; return cur; });
+  const disconnect = (rightIdx) => {
+    setPairs(prev => {
+      const cur = {};
+      for (const k of Object.keys(prev)) cur[k] = prev[k].filter(x => Number(x) !== rightIdx);
+      return cur;
+    });
+  };
+  const leftOfRight = (ri) => Object.keys(pairs).find(k => (pairs[k] || []).map(Number).includes(ri));
+
+  const normArr = (x) => (Array.isArray(x) ? x : (x == null || x === '' ? [] : [x])).map(s => String(s).trim().toLowerCase()).filter(Boolean);
 
   const submit = async () => {
     const rights = shuffled.length ? shuffled : rightOpts;
-    const given = leftItems.map((_, i) => (pairs[i] == null ? '' : (rights[pairs[i]] || '')));
-    if (given.every(g => !g)) { showToast('Hãy ghép ít nhất 1 cặp', 'error'); return; }
+    const given = leftItems.map((_, i) => (pairs[i] || []).map(ri => rights[ri]).filter(Boolean));
+    if (given.every(g => !g.length)) { showToast('Hãy ghép ít nhất 1 cặp', 'error'); return; }
     setBusy(true);
     try {
       const res = await api.practice.answer({ lesson_id: q.lesson_id, question_id: q.id, answer: JSON.stringify(given) });
       onGraded(q.id, res);
       const exp = res.correct || [];
-      const cc = given.filter((g, i) => (g || '').trim().toLowerCase() === (exp[i] || '').trim().toLowerCase()).length;
-      showToast(res.is_correct ? 'Chính xác!' : `Đúng ${cc}/${exp.length} cặp`, res.is_correct ? 'success' : 'error');
+      const total = exp.reduce((s, c) => s + normArr(c).length, 0);
+      let got = 0;
+      const ca = (() => { try { return JSON.parse(res.answer || '[]'); } catch { return []; } })();
+      for (let i = 0; i < Math.max(exp.length, ca.length); i++) {
+        const es = new Set(normArr(exp[i]));
+        const as = new Set(normArr(ca[i]));
+        for (const v of as) if (es.has(v)) got++;
+      }
+      showToast(res.is_correct ? 'Chính xác!' : `Đúng ${got}/${total} cặp`, res.is_correct ? 'success' : 'error');
     } catch (e) { showToast(e.message || 'Lỗi', 'error'); } finally { setBusy(false); }
   };
 
@@ -315,15 +333,24 @@ function MatchItem({ q, result, onGraded, onRedo }) {
     let given = [];
     try { given = JSON.parse(result.answer || '[]'); } catch { given = []; }
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {leftItems.map((l, i) => {
-          const chosen = given[i] || '';
-          const ok = (chosen || '').trim().toLowerCase() === (exp[i] || '').trim().toLowerCase();
+          const expSet = new Set(normArr(exp[i]));
+          const chosenArr = normArr(given[i]);
           return (
-            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, flexWrap: 'wrap' }}>
-              <span style={{ minWidth: 90 }}>{l}</span>
-              <span style={{ color: ok ? 'var(--green)' : 'var(--red)', fontWeight: 700 }}>{chosen || '—'} {ok ? '✓' : '✗'}</span>
-              {!ok && <span style={{ color: 'var(--muted)', fontSize: 12 }}>(đáp án: {exp[i]})</span>}
+            <div key={i} style={{ fontSize: 14 }}>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>{l}</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                {chosenArr.length ? chosenArr.map((c, ci) => {
+                  const ok = expSet.has(c);
+                  return (
+                    <span key={ci} style={{ color: ok ? 'var(--green)' : 'var(--red)', fontWeight: 700, border: `1px solid ${ok ? 'var(--green)' : 'var(--red)'}`, padding: '2px 6px', borderRadius: 8 }}>
+                      {c} {ok ? '✓' : '✗'}
+                    </span>
+                  );
+                }) : <span style={{ color: 'var(--muted)' }}>—</span>}
+                <span style={{ color: 'var(--muted)', fontSize: 12 }}>đáp án: {normArr(exp[i]).join(', ') || '—'}</span>
+              </div>
             </div>
           );
         })}
@@ -357,7 +384,7 @@ function MatchItem({ q, result, onGraded, onRedo }) {
         <div style={{ flex: 1, minWidth: 160 }}>
           {leftItems.map((l, li) => {
             const isSel = selLeft != null && selLeft === li;
-            const placed = pairs[li] != null;
+            const placed = (pairs[li] || []).length > 0;
             return (
               <div
                 key={li}
@@ -377,26 +404,26 @@ function MatchItem({ q, result, onGraded, onRedo }) {
         </div>
         <div style={{ flex: 1, minWidth: 160 }}>
           {shuffled.map((r, ri) => {
-            const li = Object.keys(pairs).find(k => Number(pairs[k]) === ri);
+            const li = leftOfRight(ri);
+            const owned = li != null;
             return (
               <div
                 key={ri}
                 ref={el => { rightRefs.current[ri] = el; }}
                 onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => { e.preventDefault(); const li2 = Number(e.dataTransfer.getData('text/plain')); if (!Number.isNaN(li2)) assign(li2, ri); }}
+                onDrop={(e) => { e.preventDefault(); const li2 = Number(e.dataTransfer.getData('text/plain')); if (!Number.isNaN(li2)) connect(li2, ri); }}
                 onClick={() => {
-                  if (selLeft != null) { assign(selLeft, ri); setSelLeft(null); }
-                  else if (li != null) { unassignLeft(Number(li)); }
+                  if (selLeft != null) { connect(selLeft, ri); setSelLeft(null); }
+                  else if (owned) { disconnect(ri); }
                 }}
-                style={{ padding: '8px 10px', marginBottom: 8, borderRadius: 10, border: '1px dashed var(--line)', background: 'var(--surface)', minHeight: 38, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+                style={{ padding: '8px 10px', marginBottom: 8, borderRadius: 10,
+                  border: `1px ${owned ? 'solid' : 'dashed'} ${owned ? 'var(--gold)' : 'var(--line)'}`,
+                  background: owned ? 'var(--surface-hover)' : 'var(--surface)', minHeight: 38, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
               >
-                {li != null && (
-                  <span style={{ background: 'var(--gold-bg)', color: 'var(--gold)', fontWeight: 800, padding: '2px 6px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    {leftItems[Number(li)]}
-                    <span style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); unassignLeft(Number(li)); }}>×</span>
-                  </span>
+                {owned && (
+                  <span style={{ cursor: 'pointer', color: 'var(--muted)', fontWeight: 700, fontSize: 14 }} title="Bỏ ghép" onClick={(e) => { e.stopPropagation(); disconnect(ri); }}>×</span>
                 )}
-                <span style={{ color: 'var(--muted)', fontSize: 12 }}>{r}</span>
+                <span style={{ color: owned ? 'var(--ink)' : 'var(--muted)', fontSize: 14 }}>{r}</span>
               </div>
             );
           })}

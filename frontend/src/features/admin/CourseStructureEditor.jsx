@@ -355,8 +355,10 @@ export default function CourseStructureEditor() {
       const lefts = (f.leftText || '').split('\n').map(s => s.trim()).filter(Boolean);
       options = (f.optionsText || '').split('\n').map(s => s.trim()).filter(Boolean);
       if (!lefts.length || !options.length) { showToast('Nhập cả cột trái và cột phải (mỗi dòng 1 mục)', 'error'); return; }
-      if (lefts.length !== options.length) { showToast('Số mục cột trái phải bằng số cột phải', 'error'); return; }
-      correct = options;
+      const pairs = lefts.map((_, i) => (f.matchPairs?.[i] || []).filter(ri => ri >= 0 && ri < options.length).map(ri => options[ri]));
+      const totalTicks = pairs.reduce((s, a) => s + a.length, 0);
+      if (!totalTicks) { showToast('Hãy tick ít nhất 1 cặp đúng', 'error'); return; }
+      correct = pairs;
       textContent = lefts.join('\n');
     } else {
       if (!f.text_content || !f.text_content.trim()) { showToast('Cần nhập đoạn text', 'error'); return; }
@@ -375,7 +377,7 @@ export default function CourseStructureEditor() {
         options,
         correct,
       });
-      setQuestionForm(prev => ({ ...prev, [lessonId]: { prompt: '', audio_url: '', optionsText: '', correctText: '', correctIdx: '', text_content: '', leftText: '' } }));
+        setQuestionForm(prev => ({ ...prev, [lessonId]: { prompt: '', audio_url: '', optionsText: '', correctText: '', correctIdx: '', text_content: '', leftText: '', matchPairs: {} } }));
       await loadQuestions(lessonId);
       showToast('Đã thêm câu hỏi', 'success');
     } catch (e) { showToast(e.message, 'error'); }
@@ -907,10 +909,41 @@ export default function CourseStructureEditor() {
               </select>
             </>
           ) : selPracticeType === 'match' ? (
-            <>
-              <textarea className="admin-input" style={{ minHeight: 70, whiteSpace: 'pre-wrap' }} placeholder="Cột trái — các mục cần ghép (mỗi dòng 1 mục)" value={questionForm[itemForm.id]?.leftText || ''} onChange={e => setQuestionForm({ ...questionForm, [itemForm.id]: { ...(questionForm[itemForm.id] || {}), leftText: e.target.value } })} />
-              <textarea className="admin-input" style={{ minHeight: 70, whiteSpace: 'pre-wrap' }} placeholder="Cột phải — đáp án tương ứng (mỗi dòng 1 mục, ĐÚNG THỨ TỰ cột trái)" value={questionForm[itemForm.id]?.optionsText || ''} onChange={e => setQuestionForm({ ...questionForm, [itemForm.id]: { ...(questionForm[itemForm.id] || {}), optionsText: e.target.value } })} />
-            </>
+            (() => {
+              const mf = questionForm[itemForm.id] || {};
+              const mL = (mf.leftText || '').split('\n').map(s => s.trim()).filter(Boolean);
+              const mR = (mf.optionsText || '').split('\n').map(s => s.trim()).filter(Boolean);
+              return (
+                <>
+                  <textarea className="admin-input" style={{ minHeight: 70, whiteSpace: 'pre-wrap' }} placeholder="Cột trái — các mục cần ghép (mỗi dòng 1 mục)" value={mf.leftText || ''} onChange={e => setQuestionForm({ ...questionForm, [itemForm.id]: { ...(questionForm[itemForm.id] || {}), leftText: e.target.value } })} />
+                  <textarea className="admin-input" style={{ minHeight: 70, whiteSpace: 'pre-wrap' }} placeholder="Cột phải — các đáp án (mỗi dòng 1 mục)" value={mf.optionsText || ''} onChange={e => setQuestionForm({ ...questionForm, [itemForm.id]: { ...(questionForm[itemForm.id] || {}), optionsText: e.target.value } })} />
+                  {mL.length > 0 && mR.length > 0 && (
+                    <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10, background: 'var(--surface)' }}>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>Tick ô phải đúng cho mỗi trái (1 trái có thể ghép nhiều phải):</div>
+                      {mL.map((lt, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 6 }}>
+                          <span style={{ minWidth: 110, fontSize: 13, fontWeight: 600 }}>{lt}</span>
+                          {mR.map((rt, ri) => {
+                            const on = (mf.matchPairs?.[i] || []).includes(ri);
+                            return (
+                              <button key={ri} type="button" className={`cs-seg-btn sm${on ? ' on' : ''}`}
+                                onClick={() => {
+                                  const cur = [...(mf.matchPairs?.[i] || [])];
+                                  const ix = cur.indexOf(ri);
+                                  if (ix >= 0) cur.splice(ix, 1); else cur.push(ri);
+                                  setQuestionForm({ ...questionForm, [itemForm.id]: { ...(questionForm[itemForm.id] || {}), matchPairs: { ...(mf.matchPairs || {}), [i]: cur } } });
+                                }}>
+                                {rt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()
           ) : (
             <>
               <textarea className="admin-input" style={{ minHeight: 80, whiteSpace: 'pre-wrap' }} placeholder="Doạn text gốc — điền chỗ trống bằng ____ / đoạn text cần chọn từ" value={questionForm[itemForm.id]?.text_content || ''} onChange={e => setQuestionForm({ ...questionForm, [itemForm.id]: { ...(questionForm[itemForm.id] || {}), text_content: e.target.value } })} />

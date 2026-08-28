@@ -193,6 +193,7 @@ router.post('/answer', authenticate, async (req, res) => {
     let isCorrect = false;
     let correctInfo = null;
     let correctCount = 0;
+    let totalPairs = 0;
     const correct = q.correct || [];
 
     if (q.qtype === 'choose') {
@@ -215,18 +216,25 @@ router.post('/answer', authenticate, async (req, res) => {
       isCorrect = given.length === expected.length && expected.every((e, i) => e === given[i]);
       correctInfo = correct || [];
     } else if (q.qtype === 'match') {
-      const expected = (correct || []).map(normalizeAnswer);
+      const normSet = (x) => {
+        const arr = Array.isArray(x) ? x : (x == null || x === '' ? [] : [x]);
+        return new Set(arr.map(s => String(s).trim().toLowerCase()).filter(Boolean));
+      };
+      const expected = (correct || []).map(normSet);
       let given;
       try { given = JSON.parse(answer || '[]'); } catch { given = []; }
-      given = given.map(normalizeAnswer);
-      for (let i = 0; i < expected.length; i++) {
-        if (given[i] && given[i] === expected[i]) correctCount++;
+      if (!Array.isArray(given)) given = [];
+      for (const s of expected) totalPairs += s.size;
+      for (let i = 0; i < Math.max(expected.length, given.length); i++) {
+        const es = expected[i] || new Set();
+        const gs = normSet(given[i]);
+        for (const v of gs) if (es.has(v)) correctCount++;
       }
-      isCorrect = expected.length > 0 && correctCount === expected.length;
+      isCorrect = totalPairs > 0 && correctCount === totalPairs;
       correctInfo = correct || [];
     }
 
-    const score = isCorrect ? 10 : (q.qtype === 'match' && (correct || []).length ? Math.round((10 * correctCount) / correct.length) : 0);
+    const score = isCorrect ? 10 : (q.qtype === 'match' && totalPairs ? Math.round((10 * correctCount) / totalPairs) : 0);
 
     // upsert giữ điểm cao nhất
     const { data: existing } = await supabaseAdmin
