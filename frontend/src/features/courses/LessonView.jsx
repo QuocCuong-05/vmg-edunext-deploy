@@ -210,7 +210,7 @@ export default function LessonView() {
   const ptType = lessonDetail?.practice_type || 'speak_passage';
   const practiceHasContent =
     ptType === 'voice_recorder' ||
-    (['listen_choose', 'listen_fill', 'listen_mark'].includes(ptType)
+    (['listen_choose', 'listen_fill', 'listen_mark', 'match'].includes(ptType)
       ? (lessonDetail?.practice_questions || []).length > 0
       : practiceWords.length > 0);
 
