@@ -349,7 +349,6 @@ function MatchItem({ q, result, onGraded, onRedo }) {
                     </span>
                   );
                 }) : <span style={{ color: 'var(--muted)' }}>—</span>}
-                <span style={{ color: 'var(--muted)', fontSize: 12 }}>đáp án: {normArr(exp[i]).join(', ') || '—'}</span>
               </div>
             </div>
           );
