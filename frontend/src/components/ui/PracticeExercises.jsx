@@ -370,7 +370,7 @@ function MatchItem({ q, result, onGraded, onRedo }) {
                   background: isSel ? 'var(--gold-bg)' : placed ? 'var(--surface-hover)' : 'var(--surface)',
                   fontWeight: placed ? 800 : 500 }}
               >
-                {l} {placed ? '🔗' : ''}
+                {l}
               </div>
             );
           })}
