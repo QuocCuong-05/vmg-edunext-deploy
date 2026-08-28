@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import { api } from '../../lib/api';
 import Button from './Button';
 import { useToast } from './Toast';
@@ -244,68 +244,79 @@ export function ListenMark({ lesson, questions, answers, onCompleted }) {
 }
 
 // ============ ⑥ Ghép đôi (matching) ============
-export function Match({ lesson, questions, answers, onCompleted }) {
+const shuffleArr = (arr) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+function MatchItem({ q, result, onGraded, onRedo }) {
   const showToast = useToast();
-  const [results, setResults] = useState(answers || {});
-  const [pairs, setPairs] = useState({});      // { [qid]: { [leftIdx]: rightIdx } }
-  const [shuffled, setShuffled] = useState({}); // { [qid]: string[] } (cột phải đã xáo trộn)
-  const [selLeft, setSelLeft] = useState(null); // { qid, leftIdx }
-  const [busyId, setBusyId] = useState(null);
+  const [pairs, setPairs] = useState({});      // { [leftIdx]: rightIdx }
+  const [shuffled, setShuffled] = useState([]); // cột phải đã xáo trộn
+  const [selLeft, setSelLeft] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [lines, setLines] = useState([]);
+  const leftRefs = useRef({});
+  const rightRefs = useRef({});
+  const contRef = useRef(null);
 
-  const leftItems = (q) => (q.text_content || '').split('\n').map(s => s.trim()).filter(Boolean);
-  const rightOpts = (q) => (q.options || []);
-  const shuffle = (arr) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const leftItems = (q.text_content || '').split('\n').map(s => s.trim()).filter(Boolean);
+  const rightOpts = (q.options || []);
 
-  useEffect(() => {
-    const init = {};
-    for (const q of questions) init[q.id] = shuffle(rightOpts(q));
-    setShuffled(init);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questions]);
+  useEffect(() => { setShuffled(shuffleArr(rightOpts)); }, [q.id]);
 
-  const answered = questions.length > 0 && questions.every(q => results[q.id]);
+  const measure = useCallback(() => {
+    const cont = contRef.current;
+    if (!cont) return;
+    const cb = cont.getBoundingClientRect();
+    const arr = [];
+    for (const li of Object.keys(pairs)) {
+      const ri = pairs[li];
+      const lEl = leftRefs.current[Number(li)];
+      const rEl = rightRefs.current[ri];
+      if (!lEl || !rEl) continue;
+      const lb = lEl.getBoundingClientRect();
+      const rb = rEl.getBoundingClientRect();
+      arr.push({
+        x1: lb.right - cb.left, y1: lb.top + lb.height / 2 - cb.top,
+        x2: rb.left - cb.left, y2: rb.top + rb.height / 2 - cb.top,
+      });
+    }
+    setLines(arr);
+  }, [pairs]);
 
-  const assign = (qid, leftIdx, rightIdx) => {
+  useLayoutEffect(() => { measure(); }, [measure, shuffled]);
+  useEffect(() => { window.addEventListener('resize', measure); return () => window.removeEventListener('resize', measure); }, [measure]);
+
+  const graded = !!result;
+  const assign = (leftIdx, rightIdx) => {
     setPairs(prev => {
-      const cur = { ...(prev[qid] || {}) };
+      const cur = { ...prev };
       for (const k of Object.keys(cur)) if (Number(cur[k]) === rightIdx) delete cur[k];
       cur[leftIdx] = rightIdx;
-      return { ...prev, [qid]: cur };
+      return cur;
     });
   };
-  const unassignLeft = (qid, leftIdx) => {
-    setPairs(prev => { const cur = { ...(prev[qid] || {}) }; delete cur[leftIdx]; return { ...prev, [qid]: cur }; });
-  };
-  const redo = (q) => {
-    setResults(prev => { const n = { ...prev }; delete n[q.id]; return n; });
-    setPairs(prev => { const n = { ...prev }; delete n[q.id]; return n; });
-    setSelLeft(null);
-  };
+  const unassignLeft = (leftIdx) => setPairs(prev => { const cur = { ...prev }; delete cur[leftIdx]; return cur; });
 
-  const submit = async (q) => {
-    const p = pairs[q.id] || {};
-    const lefts = leftItems(q);
-    const rights = shuffled[q.id] || rightOpts(q);
-    const given = lefts.map((_, i) => (p[i] == null ? '' : (rights[p[i]] || '')));
+  const submit = async () => {
+    const rights = shuffled.length ? shuffled : rightOpts;
+    const given = leftItems.map((_, i) => (pairs[i] == null ? '' : (rights[pairs[i]] || '')));
     if (given.every(g => !g)) { showToast('Hãy ghép ít nhất 1 cặp', 'error'); return; }
-    setBusyId(q.id);
+    setBusy(true);
     try {
-      const res = await api.practice.answer({ lesson_id: lesson.id, question_id: q.id, answer: JSON.stringify(given) });
-      setResults(prev => ({ ...prev, [q.id]: res }));
+      const res = await api.practice.answer({ lesson_id: q.lesson_id, question_id: q.id, answer: JSON.stringify(given) });
+      onGraded(q.id, res);
       const exp = res.correct || [];
       const cc = given.filter((g, i) => (g || '').trim().toLowerCase() === (exp[i] || '').trim().toLowerCase()).length;
       showToast(res.is_correct ? 'Chính xác!' : `Đúng ${cc}/${exp.length} cặp`, res.is_correct ? 'success' : 'error');
-    } catch (e) { showToast(e.message || 'Lỗi', 'error'); } finally { setBusyId(null); }
+    } catch (e) { showToast(e.message || 'Lỗi', 'error'); } finally { setBusy(false); }
   };
 
-  const renderFeedback = (q, res) => {
-    const lefts = leftItems(q);
-    const exp = (res && res.correct) ? res.correct : (q.correct || []);
+  const renderFeedback = () => {
+    const exp = (result && result.correct) ? result.correct : (q.correct || []);
     let given = [];
-    try { given = JSON.parse(res.answer || '[]'); } catch { given = []; }
+    try { given = JSON.parse(result.answer || '[]'); } catch { given = []; }
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {lefts.map((l, i) => {
+        {leftItems.map((l, i) => {
           const chosen = given[i] || '';
           const ok = (chosen || '').trim().toLowerCase() === (exp[i] || '').trim().toLowerCase();
           return (
@@ -320,76 +331,97 @@ export function Match({ lesson, questions, answers, onCompleted }) {
     );
   };
 
+  if (graded) {
+    return (
+      <div style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: BASE }}>
+        {q.prompt && <p style={{ fontSize: 13, margin: '0 0 8px' }}>{q.prompt}</p>}
+        <AudioRow src={q.audio_url} />
+        {renderFeedback()}
+        <div style={{ marginTop: 12 }}>
+          <Button size="sm" variant="ghost" onClick={() => onRedo(q.id)}>Làm lại</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: BASE }}>
+      {q.prompt && <p style={{ fontSize: 13, margin: '0 0 8px' }}>{q.prompt}</p>}
+      <AudioRow src={q.audio_url} />
+      <div ref={contRef} style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 12, position: 'relative' }}>
+        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'visible' }}>
+          {lines.map((l, i) => (
+            <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="var(--gold)" strokeWidth={2} />
+          ))}
+        </svg>
+        <div style={{ flex: 1, minWidth: 160 }}>
+          {leftItems.map((l, li) => {
+            const isSel = selLeft != null && selLeft === li;
+            const placed = pairs[li] != null;
+            return (
+              <div
+                key={li}
+                ref={el => { leftRefs.current[li] = el; }}
+                draggable
+                onDragStart={(e) => e.dataTransfer.setData('text/plain', String(li))}
+                onClick={() => setSelLeft(prev => (prev === li ? null : li))}
+                style={{ padding: '8px 10px', marginBottom: 8, borderRadius: 10, cursor: 'grab', userSelect: 'none',
+                  border: `1px solid ${isSel ? 'var(--gold)' : 'var(--line)'}`,
+                  background: isSel ? 'var(--gold-bg)' : placed ? 'var(--surface-hover)' : 'var(--surface)',
+                  fontWeight: placed ? 800 : 500 }}
+              >
+                {l} {placed ? '🔗' : ''}
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ flex: 1, minWidth: 160 }}>
+          {shuffled.map((r, ri) => {
+            const li = Object.keys(pairs).find(k => Number(pairs[k]) === ri);
+            return (
+              <div
+                key={ri}
+                ref={el => { rightRefs.current[ri] = el; }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => { e.preventDefault(); const li2 = Number(e.dataTransfer.getData('text/plain')); if (!Number.isNaN(li2)) assign(li2, ri); }}
+                onClick={() => {
+                  if (selLeft != null) { assign(selLeft, ri); setSelLeft(null); }
+                  else if (li != null) { unassignLeft(Number(li)); }
+                }}
+                style={{ padding: '8px 10px', marginBottom: 8, borderRadius: 10, border: '1px dashed var(--line)', background: 'var(--surface)', minHeight: 38, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+              >
+                {li != null && (
+                  <span style={{ background: 'var(--gold-bg)', color: 'var(--gold)', fontWeight: 800, padding: '2px 6px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    {leftItems[Number(li)]}
+                    <span style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); unassignLeft(Number(li)); }}>×</span>
+                  </span>
+                )}
+                <span style={{ color: 'var(--muted)', fontSize: 12 }}>{r}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div style={{ marginTop: 12 }}>
+        <Button size="sm" variant="primary" isDisabled={busy || !Object.keys(pairs).length} onClick={submit}>Kiểm tra</Button>
+      </div>
+    </div>
+  );
+}
+
+export function Match({ lesson, questions, answers, onCompleted }) {
+  const [results, setResults] = useState(answers || {});
+  const answered = questions.length > 0 && questions.every(q => results[q.id]);
+  const onGraded = (qid, res) => setResults(prev => ({ ...prev, [qid]: res }));
+  const onRedo = (qid) => setResults(prev => { const n = { ...prev }; delete n[qid]; return n; });
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {questions.map((q, qi) => {
-        const res = results[q.id];
-        const lefts = leftItems(q);
-        const rights = shuffled[q.id] || rightOpts(q);
-        const p = pairs[q.id] || {};
-        const leftAtRight = (ri) => Object.keys(p).find(li => Number(p[li]) === ri);
-        const graded = !!res;
-        return (
-          <div key={q.id} style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: BASE }}>
-            {questions.length > 1 && <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {qi + 1}</div>}
-            {q.prompt && <p style={{ fontSize: 13, margin: '0 0 8px' }}>{q.prompt}</p>}
-            <AudioRow src={q.audio_url} />
-            {graded ? renderFeedback(q, res) : (
-              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 12 }}>
-                <div style={{ flex: 1, minWidth: 160 }}>
-                  <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Cột trái (kéo / bấm chọn)</div>
-                  {lefts.map((l, li) => {
-                    const isSel = selLeft && selLeft.qid === q.id && selLeft.leftIdx === li;
-                    const placed = p[li] != null;
-                    return (
-                      <div
-                        key={li}
-                        draggable={!graded}
-                        onDragStart={(e) => e.dataTransfer.setData('text/plain', String(li))}
-                        onClick={() => !graded && setSelLeft(prev => (prev && prev.qid === q.id && prev.leftIdx === li) ? null : { qid: q.id, leftIdx: li })}
-                        style={{ padding: '8px 10px', marginBottom: 8, borderRadius: 10, cursor: graded ? 'default' : 'grab', userSelect: 'none',
-                          border: `1px solid ${isSel ? 'var(--gold)' : 'var(--line)'}`,
-                          background: isSel ? 'var(--gold-bg)' : placed ? 'var(--surface-hover)' : 'var(--surface)',
-                          fontWeight: placed ? 800 : 500 }}
-                      >
-                        {l} {placed ? '🔗' : ''}
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={{ flex: 1, minWidth: 160 }}>
-                  <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Cột phải (thả / bấm để ghép)</div>
-                  {rights.map((r, ri) => {
-                    const li = leftAtRight(ri);
-                    return (
-                      <div
-                        key={ri}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => { e.preventDefault(); const li2 = Number(e.dataTransfer.getData('text/plain')); if (!Number.isNaN(li2) && !graded) assign(q.id, li2, ri); }}
-                        onClick={() => { if (graded) return; if (selLeft && selLeft.qid === q.id) { assign(q.id, selLeft.leftIdx, ri); setSelLeft(null); } else if (li != null) { unassignLeft(q.id, Number(li)); } }}
-                        style={{ padding: '8px 10px', marginBottom: 8, borderRadius: 10, border: '1px dashed var(--line)', background: 'var(--surface)', minHeight: 38, display: 'flex', alignItems: 'center', gap: 6, cursor: graded ? 'default' : 'pointer' }}
-                      >
-                        {li != null && (
-                          <span style={{ background: 'var(--gold-bg)', color: 'var(--gold)', fontWeight: 800, padding: '2px 6px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                            {lefts[Number(li)]}
-                            <span style={{ cursor: graded ? 'default' : 'pointer' }} onClick={(e) => { e.stopPropagation(); if (!graded) unassignLeft(q.id, Number(li)); }}>×</span>
-                          </span>
-                        )}
-                        <span style={{ color: 'var(--muted)', fontSize: 12 }}>{r}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            <div style={{ marginTop: 12 }}>
-              <Button size="sm" variant={graded ? 'ghost' : 'primary'} isDisabled={busyId === q.id || (!graded && !Object.keys(p).length)} onClick={() => graded ? redo(q) : submit(q)}>
-                {graded ? 'Làm lại' : 'Kiểm tra'}
-              </Button>
-            </div>
-          </div>
-        );
-      })}
+      {questions.map((q, qi) => (
+        <div key={q.id}>
+          {questions.length > 1 && <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {qi + 1}</div>}
+          <MatchItem q={{ ...q, lesson_id: lesson.id }} result={results[q.id]} onGraded={onGraded} onRedo={onRedo} />
+        </div>
+      ))}
       {!questions.length && <div className="placeholder"><p>Chưa có câu hỏi.</p></div>}
       <div>
         <Button variant="primary" onClick={onCompleted} isDisabled={!answered}>
