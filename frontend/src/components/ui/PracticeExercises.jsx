@@ -26,7 +26,7 @@ function ResultBox({ res }) {
 }
 
 // ============ ③ Nghe → chọn đáp án ============
-export function ListenChoose({ lesson, questions, answers, onCompleted }) {
+export function ListenChoose({ lesson, questions, answers, onCompleted, startIndex = null, hideComplete = false, onAnswered = null }) {
   const showToast = useToast();
   const [results, setResults] = useState(answers || {});
   const [busyId, setBusyId] = useState(null);
@@ -36,6 +36,7 @@ export function ListenChoose({ lesson, questions, answers, onCompleted }) {
     try {
       const res = await api.practice.answer({ lesson_id: lesson.id, question_id: q.id, answer: String(idx) });
       setResults(prev => ({ ...prev, [q.id]: res }));
+      onAnswered?.(q.id, res);
       showToast(res.is_correct ? 'Chính xác!' : 'Chưa đúng', res.is_correct ? 'success' : 'error');
     } catch (e) { showToast(e.message || 'Lỗi', 'error'); } finally { setBusyId(null); }
   };
@@ -46,7 +47,7 @@ export function ListenChoose({ lesson, questions, answers, onCompleted }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {questions.map((q, i) => (
         <div key={q.id} style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: BASE }}>
-          {questions.length > 1 && <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {i + 1}</div>}
+          {(questions.length > 1 || startIndex != null) && <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {(startIndex ?? 0) + i + 1}</div>}
           {q.prompt && <p style={{ fontSize: 13, margin: '0 0 8px' }}>{q.prompt}</p>}
           <AudioRow src={q.audio_url} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
@@ -74,17 +75,19 @@ export function ListenChoose({ lesson, questions, answers, onCompleted }) {
         </div>
       ))}
       {!questions.length && <div className="placeholder"><p>Chưa có câu hỏi.</p></div>}
-      <div>
-        <Button variant="primary" onClick={onCompleted} isDisabled={!answered}>
-          {answered ? 'Hoàn thành bài tập ✓' : 'Trả lời hết câu hỏi để hoàn thành'}
-        </Button>
-      </div>
+      {!hideComplete && (
+        <div>
+          <Button variant="primary" onClick={onCompleted} isDisabled={!answered}>
+            {answered ? 'Hoàn thành bài tập ✓' : 'Trả lời hết câu hỏi để hoàn thành'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
 // ============ ⑤ Nghe → điền từ ============
-export function ListenFill({ lesson, questions, answers, onCompleted }) {
+export function ListenFill({ lesson, questions, answers, onCompleted, startIndex = null, hideComplete = false, onAnswered = null }) {
   const showToast = useToast();
   const [results, setResults] = useState(answers || {});
   const [values, setValues] = useState({});
@@ -97,6 +100,7 @@ export function ListenFill({ lesson, questions, answers, onCompleted }) {
     try {
       const res = await api.practice.answer({ lesson_id: lesson.id, question_id: q.id, answer: JSON.stringify(list.map(v => v.trim())) });
       setResults(prev => ({ ...prev, [q.id]: res }));
+      onAnswered?.(q.id, res);
       showToast(res.is_correct ? 'Chính xác!' : 'Chưa đúng', res.is_correct ? 'success' : 'error');
     } catch (e) { showToast(e.message || 'Lỗi', 'error'); } finally { setBusyId(null); }
   };
@@ -104,6 +108,7 @@ export function ListenFill({ lesson, questions, answers, onCompleted }) {
   const redo = (q) => {
     setResults(prev => { const n = { ...prev }; delete n[q.id]; return n; });
     setValues(prev => { const n = { ...prev }; delete n[q.id]; return n; });
+    onAnswered?.(q.id, undefined);
   };
 
   const blankCount = (q) => ((q.text_content || '').match(/____/g) || []).length;
@@ -142,7 +147,7 @@ export function ListenFill({ lesson, questions, answers, onCompleted }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {questions.map((q, i) => (
         <div key={q.id} style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: BASE }}>
-          {questions.length > 1 && <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {i + 1}</div>}
+          {(questions.length > 1 || startIndex != null) && <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {(startIndex ?? 0) + i + 1}</div>}
           {q.prompt && <p style={{ fontSize: 13, margin: '0 0 8px' }}>{q.prompt}</p>}
           <AudioRow src={q.audio_url} />
           <p style={{ fontSize: 15, lineHeight: 2, margin: '12px 0', whiteSpace: 'pre-wrap' }}>{renderText(q)}</p>
@@ -152,17 +157,19 @@ export function ListenFill({ lesson, questions, answers, onCompleted }) {
         </div>
       ))}
       {!questions.length && <div className="placeholder"><p>Chưa có câu hỏi.</p></div>}
-      <div>
-        <Button variant="primary" onClick={onCompleted} isDisabled={!answered}>
-          {answered ? 'Hoàn thành bài tập ✓' : 'Trả lời hết câu hỏi để hoàn thành'}
-        </Button>
-      </div>
+      {!hideComplete && (
+        <div>
+          <Button variant="primary" onClick={onCompleted} isDisabled={!answered}>
+            {answered ? 'Hoàn thành bài tập ✓' : 'Trả lời hết câu hỏi để hoàn thành'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
 // ============ ④ Nghe → đánh dấu từ ============
-export function ListenMark({ lesson, questions, answers, onCompleted }) {
+export function ListenMark({ lesson, questions, answers, onCompleted, startIndex = null, hideComplete = false, onAnswered = null }) {
   const showToast = useToast();
   const [results, setResults] = useState(answers || {});
   const [selected, setSelected] = useState({});
@@ -177,6 +184,7 @@ export function ListenMark({ lesson, questions, answers, onCompleted }) {
     try {
       const res = await api.practice.answer({ lesson_id: lesson.id, question_id: q.id, answer: JSON.stringify(sel) });
       setResults(prev => ({ ...prev, [q.id]: res }));
+      onAnswered?.(q.id, res);
       showToast(res.is_correct ? 'Chính xác!' : 'Chưa đúng', res.is_correct ? 'success' : 'error');
     } catch (e) { showToast(e.message || 'Lỗi', 'error'); } finally { setBusyId(null); }
   };
@@ -184,6 +192,7 @@ export function ListenMark({ lesson, questions, answers, onCompleted }) {
   const redo = (q) => {
     setResults(prev => { const n = { ...prev }; delete n[q.id]; return n; });
     setSelected(prev => { const n = { ...prev }; delete n[q.id]; return n; });
+    onAnswered?.(q.id, undefined);
   };
 
   const answered = questions.length > 0 && questions.every(q => results[q.id]);
@@ -195,7 +204,7 @@ export function ListenMark({ lesson, questions, answers, onCompleted }) {
         const correctWords = res && res.correct ? res.correct.map(w => w.toLowerCase()) : (q.correct || []).map(w => w.toLowerCase());
         return (
           <div key={q.id} style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: BASE }}>
-          {questions.length > 1 && <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {i + 1}</div>}
+          {questions.length > 1 || startIndex != null ? <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {(startIndex ?? 0) + i + 1}</div> : null}
             {q.prompt && <p style={{ fontSize: 13, margin: '0 0 8px' }}>{q.prompt}</p>}
             <AudioRow src={q.audio_url} />
             <p style={{ fontSize: 16, lineHeight: 2.2, margin: '12px 0', userSelect: 'none', whiteSpace: 'pre-wrap' }}>
@@ -234,11 +243,13 @@ export function ListenMark({ lesson, questions, answers, onCompleted }) {
         );
       })}
       {!questions.length && <div className="placeholder"><p>Chưa có câu hỏi.</p></div>}
-      <div>
-        <Button variant="primary" onClick={onCompleted} isDisabled={!answered}>
-          {answered ? 'Hoàn thành bài tập ✓' : 'Chọn và kiểm tra hết câu hỏi để hoàn thành'}
-        </Button>
-      </div>
+      {!hideComplete && (
+        <div>
+          <Button variant="primary" onClick={onCompleted} isDisabled={!answered}>
+            {answered ? 'Hoàn thành bài tập ✓' : 'Chọn và kiểm tra hết câu hỏi để hoàn thành'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -435,23 +446,106 @@ function MatchItem({ q, result, onGraded, onRedo }) {
   );
 }
 
-export function Match({ lesson, questions, answers, onCompleted }) {
+export function Match({ lesson, questions, answers, onCompleted, startIndex = null, hideComplete = false, onAnswered = null }) {
   const [results, setResults] = useState(answers || {});
   const answered = questions.length > 0 && questions.every(q => results[q.id]);
-  const onGraded = (qid, res) => setResults(prev => ({ ...prev, [qid]: res }));
-  const onRedo = (qid) => setResults(prev => { const n = { ...prev }; delete n[qid]; return n; });
+  const onGraded = (qid, res) => {
+    setResults(prev => ({ ...prev, [qid]: res }));
+    onAnswered?.(qid, res);
+  };
+  const onRedo = (qid) => {
+    setResults(prev => { const n = { ...prev }; delete n[qid]; return n; });
+    onAnswered?.(qid, undefined);
+  };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {questions.map((q, qi) => (
         <div key={q.id}>
-          {questions.length > 1 && <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {qi + 1}</div>}
+          {(questions.length > 1 || startIndex != null) && <div style={{ fontWeight: 800, marginBottom: 8 }}>Câu {(startIndex ?? 0) + qi + 1}</div>}
           <MatchItem q={{ ...q, lesson_id: lesson.id }} result={results[q.id]} onGraded={onGraded} onRedo={onRedo} />
         </div>
       ))}
       {!questions.length && <div className="placeholder"><p>Chưa có câu hỏi.</p></div>}
+      {!hideComplete && (
+        <div>
+          <Button variant="primary" onClick={onCompleted} isDisabled={!answered}>
+            {answered ? 'Hoàn thành bài tập ✓' : 'Ghép hết câu hỏi để hoàn thành'}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const MIXED_COMPONENTS = {
+  choose: ListenChoose,
+  fill: ListenFill,
+  mark: ListenMark,
+  match: Match,
+};
+
+const MIXED_LABELS = {
+  choose: 'Chọn đáp án đúng',
+  fill: 'Điền từ',
+  mark: 'Đánh dấu từ',
+  match: 'Ghép đôi',
+};
+
+// Một practice có thể chứa nhiều dạng câu hỏi.
+// Mỗi câu hỏi được render đúng renderer của q.qtype, giữ thứ tự gốc.
+export function MixedPractice({ lesson, questions, answers, onCompleted }) {
+  const [results, setResults] = useState(answers || {});
+
+  const notify = (qid, res) => {
+    setResults(prev => {
+      const next = { ...prev };
+      if (res == null) delete next[qid];
+      else next[qid] = res;
+      return next;
+    });
+  };
+
+  const renderable = (questions || []).filter(q => MIXED_COMPONENTS[q.qtype]);
+  const unsupported = (questions || []).filter(q => !MIXED_COMPONENTS[q.qtype]);
+  const answered = renderable.length > 0 && renderable.every(q => results[q.id]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {(questions || []).map((q, qi) => {
+        const Component = MIXED_COMPONENTS[q.qtype];
+        if (!Component) {
+          return (
+            <div key={q.id} className="placeholder">
+              <p>Câu {qi + 1}: loại câu hỏi “{q.qtype || 'chưa xác định'}” chưa được hỗ trợ.</p>
+            </div>
+          );
+        }
+        return (
+          <div key={q.id}>
+            {(questions || []).length > 1 && (
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--muted)', marginBottom: 8 }}>
+                Câu {qi + 1} · {MIXED_LABELS[q.qtype]}
+              </div>
+            )}
+            <Component
+              lesson={lesson}
+              questions={[q]}
+              answers={results}
+              startIndex={qi}
+              hideComplete
+              onAnswered={notify}
+              onCompleted={() => {}}
+            />
+          </div>
+        );
+      })}
       <div>
-        <Button variant="primary" onClick={onCompleted} isDisabled={!answered}>
-          {answered ? 'Hoàn thành bài tập ✓' : 'Ghép hết câu hỏi để hoàn thành'}
+        <Button variant="primary" onClick={onCompleted} isDisabled={!answered || unsupported.length > 0}>
+          {unsupported.length > 0
+            ? 'Còn câu hỏi chưa được hỗ trợ'
+            : answered
+              ? 'Hoàn thành bài tập ✓'
+              : 'Trả lời hết câu hỏi để hoàn thành'}
         </Button>
       </div>
     </div>

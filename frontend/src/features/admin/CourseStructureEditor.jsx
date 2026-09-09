@@ -888,6 +888,7 @@ export default function CourseStructureEditor() {
           <b style={{ fontSize: 13 }}>Câu hỏi nghe ({(questions[itemForm.id] || []).length})</b>
           {(questions[itemForm.id] || []).map(q => (
             <div key={q.id} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span className="admin-badge gray">{({ choose: 'Trắc nghiệm', fill: 'Điền từ', mark: 'Đánh dấu', match: 'Ghép đôi' })[q.qtype] || q.qtype}</span>
               <span style={{ fontSize: 12, flex: 1, minWidth: 120 }}>{q.prompt || q.text_content || `Câu ${q.position}`}</span>
               {q.audio_url && <audio controls src={q.audio_url} style={{ height: 26, maxWidth: 110 }} />}
               <button className="cs-icon-btn" title="Xóa câu hỏi" style={{ color: 'var(--red)' }} onClick={() => deleteQuestionDirect(q.id, itemForm.id)}>
@@ -895,6 +896,9 @@ export default function CourseStructureEditor() {
               </button>
             </div>
           ))}
+          {new Set((questions[itemForm.id] || []).map(q => q.qtype)).size > 1 && (
+            <div className="admin-note">Practice này đang chứa nhiều dạng câu hỏi; học viên sẽ thấy từng câu đúng loại.</div>
+          )}
           <label className="admin-btn" style={{ cursor: 'pointer', alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             {uploading === itemForm.id + ':qa' ? 'Đang upload...' : (questionForm[itemForm.id]?.audio_url ? '📁 Đổi audio câu hỏi' : '📁 Audio câu hỏi')}
             <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadQuestionAudio(e.target.files[0], itemForm.id)} />
