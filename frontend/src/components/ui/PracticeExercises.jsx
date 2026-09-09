@@ -484,13 +484,6 @@ const MIXED_COMPONENTS = {
   match: Match,
 };
 
-const MIXED_LABELS = {
-  choose: 'Chọn đáp án đúng',
-  fill: 'Điền từ',
-  mark: 'Đánh dấu từ',
-  match: 'Ghép đôi',
-};
-
 // Một practice có thể chứa nhiều dạng câu hỏi.
 // Mỗi câu hỏi được render đúng renderer của q.qtype, giữ thứ tự gốc.
 export function MixedPractice({ lesson, questions, answers, onCompleted }) {
@@ -521,22 +514,16 @@ export function MixedPractice({ lesson, questions, answers, onCompleted }) {
           );
         }
         return (
-          <div key={q.id}>
-            {(questions || []).length > 1 && (
-              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--muted)', marginBottom: 8 }}>
-                Câu {qi + 1} · {MIXED_LABELS[q.qtype]}
-              </div>
-            )}
-            <Component
-              lesson={lesson}
-              questions={[q]}
-              answers={results}
-              startIndex={qi}
-              hideComplete
-              onAnswered={notify}
-              onCompleted={() => {}}
-            />
-          </div>
+          <Component
+            key={q.id}
+            lesson={lesson}
+            questions={[q]}
+            answers={results}
+            startIndex={qi}
+            hideComplete
+            onAnswered={notify}
+            onCompleted={() => {}}
+          />
         );
       })}
       <div>
