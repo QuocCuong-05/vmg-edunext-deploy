@@ -601,12 +601,6 @@ export function VoiceRecorder({ lesson, questions, answers, onCompleted }) {
   return (
     <div style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 18, background: BASE }}>
       <h4 style={{ fontSize: 15, marginBottom: 10 }}>🎙️ Ghi âm bài nói</h4>
-      {(lesson.audio_url || (questions[0] && questions[0].audio_url)) && (
-        <div style={{ marginBottom: 12 }}>
-          <span style={{ fontSize: 12, color: 'var(--muted)' }}>Nghe mẫu:</span>
-          <audio controls src={lesson.audio_url || questions[0].audio_url} preload="none" style={{ height: 38, maxWidth: 240, marginLeft: 8 }} />
-        </div>
-      )}
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
         {!recording ? (
           <Button size="sm" variant={blobUrl ? 'ghost' : 'primary'} onClick={start}>{blobUrl ? '🎙️ Ghi lại' : '🎙️ Bắt đầu ghi âm'}</Button>

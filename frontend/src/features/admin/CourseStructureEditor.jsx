@@ -178,7 +178,6 @@ export default function CourseStructureEditor() {
   const [savingCourse, setSavingCourse] = useState(false);
 
   const [words, setWords] = useState({});
-  const [wordForm, setWordForm] = useState({});
   const [bulkText, setBulkText] = useState({});
   const [questions, setQuestions] = useState({});
   const [questionForm, setQuestionForm] = useState({});
@@ -253,16 +252,6 @@ export default function CourseStructureEditor() {
     } catch {}
   };
 
-  const addWord = async (lessonId) => {
-    const f = wordForm[lessonId];
-    if (!f || !f.word.trim()) return;
-    try {
-      await api.admin.createWord({ lesson_id: lessonId, word: f.word.trim(), audio_url: f.audio_url || null, image_url: f.image_url || null, position: (words[lessonId] || []).length + 1 });
-      setWordForm({ ...wordForm, [lessonId]: { word: '', audio_url: '', image_url: '' } });
-      await loadWords(lessonId);
-    } catch (e) { showToast(e.message, 'error'); }
-  };
-
   const addWordsBulk = async (lessonId) => {
     const raw = (bulkText[lessonId] || '').trim();
     if (!raw) return;
@@ -297,34 +286,12 @@ export default function CourseStructureEditor() {
     } catch (e) { showToast(e.message, 'error'); }
   };
 
-  const uploadAudio = async (file, lessonId) => {
-    setUploading(lessonId);
-    try {
-      const res = await api.admin.uploadAudio(file);
-      setWordForm(prev => ({ ...prev, [lessonId]: { ...(prev[lessonId] || {}), audio_url: res?.url } }));
-      showToast('Đã upload audio', 'success');
-    } catch (e) { showToast(e.message || 'Upload thất bại', 'error'); } finally {
-      setUploading(null);
-    }
-  };
-
   const uploadImage = async (file, target = 'item') => {
     setUploading(target);
     try {
       const res = await api.cms.upload(file);
       if (target === 'courseThumb') setCourseForm(prev => ({ ...prev, thumbnail: res?.url || '' }));
       else setItemForm(prev => ({ ...prev, image_url: res?.url || '' }));
-      showToast('Đã upload ảnh', 'success');
-    } catch (e) { showToast(e.message || 'Upload thất bại', 'error'); } finally {
-      setUploading(null);
-    }
-  };
-
-  const uploadWordImage = async (file, lessonId) => {
-    setUploading(lessonId + ':img');
-    try {
-      const res = await api.cms.upload(file);
-      setWordForm(prev => ({ ...prev, [lessonId]: { ...(prev[lessonId] || {}), image_url: res?.url } }));
       showToast('Đã upload ảnh', 'success');
     } catch (e) { showToast(e.message || 'Upload thất bại', 'error'); } finally {
       setUploading(null);
@@ -381,15 +348,6 @@ export default function CourseStructureEditor() {
       await loadQuestions(lessonId);
       showToast('Đã thêm câu hỏi', 'success');
     } catch (e) { showToast(e.message, 'error'); }
-  };
-
-  const uploadQuestionAudio = async (file, lessonId) => {
-    setUploading(lessonId + ':qa');
-    try {
-      const res = await api.admin.uploadAudio(file);
-      setQuestionForm(prev => ({ ...prev, [lessonId]: { ...(prev[lessonId] || {}), audio_url: res?.url } }));
-      showToast('Đã upload audio', 'success');
-    } catch (e) { showToast(e.message || 'Upload thất bại', 'error'); } finally { setUploading(null); }
   };
 
   /* ---------- Modules CRUD ---------- */
@@ -768,27 +726,6 @@ export default function CourseStructureEditor() {
         </>
       )}
 
-      {(itemForm.item_type === 'lesson' || itemForm.item_type === 'video_lesson' || itemForm.item_type === 'practice') && (
-        <>
-          <label className="admin-label">Audio bài nghe</label>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <label className="admin-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              {uploading === 'va' ? 'Đang upload...' : (itemForm.audio_url ? '📁 Đổi audio' : '📁 Chọn file audio')}
-              <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={e => {
-                const file = e.target.files[0];
-                if (!file) return;
-                setUploading('va');
-                api.admin.uploadAudio(file).then(res => {
-                  setItemForm(prev => ({ ...prev, audio_url: res?.url || '' }));
-                  showToast('Đã upload audio', 'success');
-                }).catch(err => showToast(err.message || 'Upload thất bại', 'error')).finally(() => setUploading(null));
-              }} />
-            </label>
-            {itemForm.audio_url && <audio controls src={itemForm.audio_url} style={{ height: 34, maxWidth: 220 }} />}
-          </div>
-        </>
-      )}
-
       {/* Cấu hình bài tập */}
       {itemForm.item_type === 'practice' && (
         <>
@@ -796,21 +733,6 @@ export default function CourseStructureEditor() {
           {renderPracticeManager()}
         </>
       )}
-
-      {/* Hiển thị */}
-      <div className="cs-sec-head">Hiển thị</div>
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-        <label className="admin-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          {uploading === 'img' ? 'Đang upload...' : (itemForm.image_url ? '📁 Đổi ảnh' : '📁 Chọn ảnh')}
-          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadImage(e.target.files[0])} />
-        </label>
-        {itemForm.image_url && (
-          <>
-            <img src={itemForm.image_url} alt="" style={{ height: 44, borderRadius: 8, border: '1px solid var(--line)' }} />
-            <button className="admin-btn-ghost" style={{ color: 'var(--red)' }} onClick={() => setItemForm({ ...itemForm, image_url: '' })}>Bỏ ảnh</button>
-          </>
-        )}
-      </div>
 
       {/* Xem trước — gập mặc định */}
       <details className="cs-preview">
@@ -857,18 +779,6 @@ export default function CourseStructureEditor() {
               </button>
             </div>
           ))}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input className="admin-input" style={{ width: 150 }} placeholder="Từ (vd: cheese)" value={wordForm[itemForm.id]?.word || ''} onChange={e => setWordForm({ ...wordForm, [itemForm.id]: { ...(wordForm[itemForm.id] || {}), word: e.target.value } })} />
-            <label className="admin-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              {uploading === itemForm.id ? 'Đang upload...' : (wordForm[itemForm.id]?.audio_url ? 'Đổi audio ✓' : '📁 Audio mẫu')}
-              <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadAudio(e.target.files[0], itemForm.id)} />
-            </label>
-            <label className="admin-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              {uploading === itemForm.id + ':img' ? 'Đang up...' : (wordForm[itemForm.id]?.image_url ? '📁 Đổi ảnh' : '📁 Ảnh từ')}
-              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadWordImage(e.target.files[0], itemForm.id)} />
-            </label>
-            <button className="admin-btn" onClick={() => addWord(itemForm.id)}>+ Thêm từ</button>
-          </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-start', marginTop: 10 }}>
             <textarea
               className="admin-input"
@@ -899,11 +809,6 @@ export default function CourseStructureEditor() {
           {new Set((questions[itemForm.id] || []).map(q => q.qtype)).size > 1 && (
             <div className="admin-note">Practice này đang chứa nhiều dạng câu hỏi; học viên sẽ thấy từng câu đúng loại.</div>
           )}
-          <label className="admin-btn" style={{ cursor: 'pointer', alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            {uploading === itemForm.id + ':qa' ? 'Đang upload...' : (questionForm[itemForm.id]?.audio_url ? '📁 Đổi audio câu hỏi' : '📁 Audio câu hỏi')}
-            <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadQuestionAudio(e.target.files[0], itemForm.id)} />
-          </label>
-          <input className="admin-input" placeholder="Hướng dẫn / câu hỏi (prompt)" value={questionForm[itemForm.id]?.prompt || ''} onChange={e => setQuestionForm({ ...questionForm, [itemForm.id]: { ...(questionForm[itemForm.id] || {}), prompt: e.target.value } })} />
           {selPracticeType === 'listen_choose' ? (
             <>
               <textarea className="admin-input" style={{ minHeight: 70, whiteSpace: 'pre-wrap' }} placeholder="Các đáp án (mỗi dòng 1 đáp án)" value={questionForm[itemForm.id]?.optionsText || ''} onChange={e => setQuestionForm({ ...questionForm, [itemForm.id]: { ...(questionForm[itemForm.id] || {}), optionsText: e.target.value } })} />
