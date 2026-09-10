@@ -51,8 +51,8 @@ router.post('/signup', signupLimiter, async (req, res) => {
         error: 'Mật khẩu yếu: cần tối thiểu 6 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt',
       });
     }
-    if (!full_name || !full_name.trim() || !ward || !school) {
-      return res.status(400).json({ error: 'Vui lòng nhập đầy đủ: Họ và tên, Phường/Xã và Trường học' });
+    if (!full_name || !full_name.trim()) {
+      return res.status(400).json({ error: 'Vui lòng nhập Họ và tên' });
     }
 
     const { data, error } = await supabase.auth.signUp({

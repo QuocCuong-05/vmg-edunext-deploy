@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Icon } from '../../lib/icons';
 import { updateStreak } from '../../lib/streak';
@@ -35,6 +35,7 @@ export default function Quiz() {
   const { slug } = useParams();
   const showToast = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
   const { isPlus } = useAuth();
   const isChallenge = location.pathname.startsWith('/level/quiz');
   const [quizSet, setQuizSet] = useState(null);
@@ -317,7 +318,12 @@ export default function Quiz() {
             ))}
           </div>
 
-          <Button variant="primary" label="Làm lại" onClick={handleRestart} style={{ marginTop: 20 }} />
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' }}>
+            {location.state?.from && (
+              <Button variant="primary" label="Về bài học" onClick={() => navigate(location.state.from)} />
+            )}
+            <Button variant={location.state?.from ? 'ghost' : 'primary'} label="Làm lại" onClick={handleRestart} />
+          </div>
         </Card>
       </div>
     );

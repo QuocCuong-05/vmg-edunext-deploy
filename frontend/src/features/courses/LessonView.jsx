@@ -65,6 +65,19 @@ export default function LessonView() {
   }, [slug, navigate]);
 
   useEffect(() => {
+    if (!slug || !lessonId) return;
+    const l = course?.lessons?.find(x => x.id === lessonId);
+    try {
+      localStorage.setItem('vmg_resume', JSON.stringify({
+        courseSlug: slug,
+        lessonId,
+        title: l?.title || '',
+        ts: Date.now(),
+      }));
+    } catch {}
+  }, [slug, lessonId, course]);
+
+  useEffect(() => {
     if ((course?.access_type === 'premium' || course?.access_type === 'paid') && user?.id) {
       api.unlock.courseIds(user.id).then(ids => setUnlocked(ids.has(course.id))).catch(() => {});
     }
@@ -551,7 +564,7 @@ export default function LessonView() {
           <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>
             Làm bài kiểm tra để ôn lại nội dung bài học.
           </p>
-          <Button variant="primary" onClick={() => navigate(`/quiz/${lesson.quiz_slug || lessonDetail?.quiz_slug}`)}>
+          <Button variant="primary" onClick={() => navigate(`/quiz/${lesson.quiz_slug || lessonDetail?.quiz_slug}`, { state: { from: `/courses/${slug}/lessons/${lessonId}` } })}>
             Vào làm bài kiểm tra
           </Button>
         </Card>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { supabase } from '../../lib/supabase';
 import { api } from '../../lib/api';
@@ -7,7 +7,6 @@ import Button from '../../components/ui/Button';
 import PasswordChecklist from '../../components/ui/PasswordChecklist';
 import { validatePassword } from '../../lib/password';
 import { getWards } from '../../mock/wards';
-import { getSchools } from '../../mock/schools';
 import PolicyModal from '../policy/PolicyModal';
 import { CONSENT_ITEMS } from '../../lib/consent';
 import { trackEvent } from '../../lib/ga';
@@ -26,28 +25,29 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [wards, setWards] = useState([]);
-  const [schools, setSchools] = useState([]);
   const [step, setStep] = useState(1);
   const [consents, setConsents] = useState({ service: false, support: false, security: false, quality: false, marketing: false });
   const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
   const { login, signup } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const returnTo = location.state?.from || '/dashboard';
+
+  useEffect(() => {
+    if (searchParams.get('signup') === '1') setIsLogin(false);
+  }, [searchParams]);
 
   useEffect(() => {
     setWards(getWards());
-    setSchools(getSchools());
   }, []);
-
-  const filteredSchools = ward ? schools.filter(s => s.ward === ward) : [];
-
-  useEffect(() => {
-    setSchool('');
-  }, [ward]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setInfo('');
+    setPendingEmail('');
     if (isForgot) {
       setBusy(true);
       try {
@@ -66,7 +66,7 @@ export default function Login() {
       setBusy(true);
       try {
         await login(email, password);
-        navigate('/dashboard');
+        navigate(returnTo);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -102,16 +102,32 @@ export default function Login() {
       } catch (consentErr) {
         console.error('[consent]', consentErr.message);
       }
-      navigate('/dashboard');
+      navigate(returnTo);
     } catch (err) {
       if (/kiểm tra email|xác nhận|confirm/i.test(err.message)) {
         localStorage.setItem('vmg_consent_pending', JSON.stringify(
           CONSENT_ITEMS.map(c => ({ key: c.key, version: 1, accepted: consents[c.key] }))
         ));
+        setPendingEmail(email);
         setInfo(err.message + ' Sau khi xác nhận và đăng nhập, lựa chọn của bạn sẽ được lưu tự động.');
       } else {
         setError(err.message);
       }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    if (!pendingEmail) return;
+    setBusy(true);
+    setError('');
+    try {
+      const { error } = await supabase.auth.resend({ type: 'signup', email: pendingEmail });
+      if (error) throw error;
+      setInfo('Đã gửi lại email xác nhận. Vui lòng kiểm tra hộp thư (cả mục Spam).');
+    } catch (err) {
+      setError(err.message);
     } finally {
       setBusy(false);
     }
@@ -158,6 +174,20 @@ export default function Login() {
               {info}
             </div>
           )}
+          {pendingEmail && !isLogin && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+              <Button size="sm" variant="primary" onClick={handleResendEmail} isDisabled={busy}>
+                Gửi lại email xác nhận
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => { setIsLogin(true); setStep(1); setError(''); setInfo(''); }}
+              >
+                Về đăng nhập
+              </Button>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             {!isForgot && !isLogin && (
@@ -184,22 +214,24 @@ export default function Login() {
                       <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>* Hóa đơn sẽ được xuất theo tên này</div>
                     </div>
                     <div className="form-group">
-                      <label>Phường/Xã</label>
-                      <select value={ward} onChange={e => setWard(e.target.value)} required>
-                        <option value="">Chọn phường/xã...</option>
-                        {wards.map(w => (
-                          <option key={w.id} value={w.name}>{w.name}</option>
-                        ))}
-                      </select>
+                      <label>Phường/Xã <span style={{ fontWeight: 400, color: 'var(--muted)' }}>(không bắt buộc)</span></label>
+                      <input
+                        value={ward}
+                        onChange={e => setWard(e.target.value)}
+                        placeholder="VD: Phường Bến Nghé, TP.HCM"
+                        list="vmg-ward-suggest"
+                      />
+                      <datalist id="vmg-ward-suggest">
+                        {wards.map(w => <option key={w.id} value={w.name} />)}
+                      </datalist>
                     </div>
                     <div className="form-group">
-                      <label>Trường học</label>
-                      <select value={school} onChange={e => setSchool(e.target.value)} disabled={!ward} required>
-                        <option value="">{ward ? 'Chọn trường...' : 'Chọn phường/xã trước'}</option>
-                        {filteredSchools.map(s => (
-                          <option key={s.id} value={s.name}>{s.name}</option>
-                        ))}
-                      </select>
+                      <label>Trường học <span style={{ fontWeight: 400, color: 'var(--muted)' }}>(không bắt buộc)</span></label>
+                      <input
+                        value={school}
+                        onChange={e => setSchool(e.target.value)}
+                        placeholder="VD: Trường THPT Nguyễn Thị Minh Khai"
+                      />
                     </div>
                   </>
                 )}

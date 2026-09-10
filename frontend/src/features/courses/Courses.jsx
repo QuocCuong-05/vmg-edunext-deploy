@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Icon } from '../../lib/icons';
+import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 
 const LEVELS = ['All', 'A2', 'B1', 'B2', 'C1'];
@@ -21,6 +22,10 @@ export default function Courses() {
   const [courses, setCourses] = useState([]);
   const [progMap, setProgMap] = useState({});
   const [loading, setLoading] = useState(true);
+  const [resume, setResume] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('vmg_resume') || 'null'); }
+    catch { return null; }
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -89,10 +94,21 @@ export default function Courses() {
                     )}
                     {(course.access_type === 'premium' || course.access_type === 'paid') && (
                       <span className="pill" style={{ background: 'var(--red)', color: '#fff', fontWeight: 800 }}>
-                        <Icon.Gem size={9} style={{ verticalAlign: 'middle', marginRight: 2 }} /> Gói Plus
+                        <Icon.Gem size={9} style={{ verticalAlign: 'middle', marginRight: 6 }} />&nbsp; Gói Plus
                       </span>
                     )}
                   </div>
+                  {resume?.courseSlug === course.slug && resume?.lessonId && (
+                    <div style={{ marginTop: 10 }}>
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/courses/${course.slug}/lessons/${resume.lessonId}`); }}
+                      >
+                        ▶ Tiếp tục{resume.title ? `: ${resume.title.length > 40 ? resume.title.slice(0, 40) + '…' : resume.title}` : ''}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </Card>
             );

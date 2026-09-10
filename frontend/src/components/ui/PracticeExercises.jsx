@@ -41,6 +41,11 @@ export function ListenChoose({ lesson, questions, answers, onCompleted, startInd
     } catch (e) { showToast(e.message || 'Lỗi', 'error'); } finally { setBusyId(null); }
   };
 
+  const redo = (q) => {
+    setResults(prev => { const n = { ...prev }; delete n[q.id]; return n; });
+    onAnswered?.(q.id, undefined);
+  };
+
   const answered = questions.length > 0 && questions.every(q => results[q.id]);
 
   return (
@@ -72,6 +77,11 @@ export function ListenChoose({ lesson, questions, answers, onCompleted, startInd
               );
             })}
           </div>
+          {results[q.id] && (
+            <div style={{ marginTop: 8 }}>
+              <Button size="sm" variant="ghost" onClick={() => redo(q)}>Thử lại</Button>
+            </div>
+          )}
         </div>
       ))}
       {!questions.length && <div className="placeholder"><p>Chưa có câu hỏi.</p></div>}

@@ -153,8 +153,8 @@ export function AuthProvider({ children }) {
     if (!v.ok) {
       throw new Error('Mật khẩu yếu — cần: ' + v.failed.join(', '));
     }
-    if (!full_name?.trim() || !ward || !school) {
-      throw new Error('Vui lòng nhập đầy đủ: Họ và tên, Phường/Xã và Trường học');
+    if (!full_name?.trim()) {
+      throw new Error('Vui lòng nhập Họ và tên');
     }
 
     const res = await fetch(`${API_BASE}/auth/signup`, {

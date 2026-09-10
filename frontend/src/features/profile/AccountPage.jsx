@@ -51,7 +51,6 @@ export default function AccountPage() {
   const setTab = (key) => setSearchParams({ tab: key }, { replace: true });
 
   const [wards, setWards] = useState([]);
-  const [schools, setSchools] = useState([]);
   const [form, setForm] = useState({ full_name: '', bio: '', ward: '', school: '' });
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -79,14 +78,6 @@ export default function AccountPage() {
   useEffect(() => {
     api.ranking.wards().then(setWards).catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (!form.ward) {
-      setSchools([]);
-      return;
-    }
-    api.ranking.schools(form.ward).then(setSchools).catch(() => setSchools([]));
-  }, [form.ward]);
 
   useEffect(() => {
     if (!user) return;
@@ -267,17 +258,23 @@ export default function AccountPage() {
           </div>
           <div className="form-group">
             <label>Phường / Xã</label>
-            <select value={form.ward} onChange={e => setForm({ ...form, ward: e.target.value, school: '' })}>
-              <option value="">— Chọn phường / xã —</option>
-              {wards.map(w => <option key={w.id} value={w.name}>{w.name}</option>)}
-            </select>
+            <input
+              value={form.ward}
+              onChange={e => setForm({ ...form, ward: e.target.value })}
+              placeholder="VD: Phường Bến Nghé, TP.HCM"
+              list="vmg-account-wards"
+            />
+            <datalist id="vmg-account-wards">
+              {wards.map(w => <option key={w.id} value={w.name} />)}
+            </datalist>
           </div>
           <div className="form-group">
             <label>Trường học</label>
-            <select value={form.school} onChange={e => setForm({ ...form, school: e.target.value })} disabled={!form.ward}>
-              <option value="">{form.ward ? '— Chọn trường —' : 'Chọn phường/xã trước'}</option>
-              {schools.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-            </select>
+            <input
+              value={form.school}
+              onChange={e => setForm({ ...form, school: e.target.value })}
+              placeholder="VD: Trường THPT Nguyễn Thị Minh Khai"
+            />
           </div>
           <Button variant="primary" isDisabled={saving} onClick={handleSave}>
             {saving ? 'Đang lưu...' : 'Lưu thay đổi'}

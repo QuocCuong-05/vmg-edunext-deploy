@@ -160,6 +160,23 @@ export default function CourseDetail() {
                 <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--gold)' }}>🏆 Điểm: {enroll.points_earned}/{enroll.points_total}</span>
               </div>
             )}
+            {(() => {
+              const ordered = (course.modules || []).flatMap(m => m.items || []);
+              const next = ordered.find(l => !completedIds.includes(l.id)) || ordered[0];
+              if (!next) return null;
+              const allDone = ordered.length > 0 && ordered.every(l => completedIds.includes(l.id));
+              return (
+                <div style={{ marginTop: 14 }}>
+                  <Button
+                    variant="primary"
+                    onClick={() => navigate(`/courses/${course.slug}/lessons/${next.id}`)}
+                    style={{ width: '100%', justifyContent: 'center' }}
+                  >
+                    ▶ {allDone ? 'Ôn lại từ đầu' : 'Tiếp tục'}: {next.title.length > 50 ? next.title.slice(0, 50) + '…' : next.title}
+                  </Button>
+                </div>
+              );
+            })()}
           </div>
         )}
       </Card>
