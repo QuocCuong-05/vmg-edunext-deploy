@@ -1,0 +1,27 @@
+# ---------- Stage 1: build frontend ----------
+FROM node:22-alpine AS build
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@9 --activate
+
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY frontend/ ./
+
+# pnpm-workspace.yaml (chỉ chứa allowBuilds) thiếu "packages" gây lỗi pnpm 9 khi build
+RUN rm -f pnpm-workspace.yaml
+
+ARG VITE_SUPABASE_URL
+ARG VITE_API_URL
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_API_URL=$VITE_API_URL
+
+RUN pnpm build
+
+# ---------- Stage 2: serve bằng Caddy ----------
+FROM caddy:2-alpine
+
+COPY --from=build /app/dist /srv/frontend
+COPY deploy/staging/Caddyfile /etc/caddy/Caddyfile

@@ -1,0 +1,21 @@
+{$SITE_ADDRESS:staging.edunext.vmgenglish.edu.vn} {
+	encode gzip zstd
+
+	# Supabase API (Auth / REST / Storage / Realtime / Functions)
+	@supabase path /auth/v1/* /rest/v1/* /storage/v1/* /realtime/v1/* /functions/v1/*
+	handle @supabase {
+		reverse_proxy api-gw:8000
+	}
+
+	# Backend Node API
+	handle /api/* {
+		reverse_proxy backend:3001
+	}
+
+	# SPA frontend
+	handle {
+		root * /srv/frontend
+		try_files {path} /index.html
+		file_server
+	}
+}

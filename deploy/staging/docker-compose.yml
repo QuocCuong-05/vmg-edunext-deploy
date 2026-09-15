@@ -1,0 +1,46 @@
+name: edunext-staging
+
+services:
+  backend:
+    build:
+      context: ./repo
+      dockerfile: deploy/staging/backend.Dockerfile
+    container_name: edunext-staging-backend
+    restart: unless-stopped
+    env_file: ./backend.env
+    networks:
+      - app
+      - supabase
+
+  frontend:
+    build:
+      context: ./repo
+      dockerfile: deploy/staging/frontend.Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-https://staging.edunext.vmgenglish.edu.vn}
+        VITE_API_URL: ${VITE_API_URL:-https://staging.edunext.vmgenglish.edu.vn/api}
+    container_name: edunext-staging-frontend
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-staging.edunext.vmgenglish.edu.vn}
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app
+      - supabase
+
+networks:
+  app:
+  supabase:
+    external: true
+    name: supabase-staging_default
+
+volumes:
+  caddy_data:
+  caddy_config:
