@@ -24,6 +24,10 @@ import { authenticate, requireAdmin } from './middleware/auth.js';
 
 const app = express();
 
+// Chạy sau reverse proxy (Caddy/Nginx) → cần trust proxy để
+// express-rate-limit đọc đúng IP từ X-Forwarded-For
+app.set('trust proxy', 1);
+
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '30mb' }));
 
