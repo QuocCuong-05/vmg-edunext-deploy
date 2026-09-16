@@ -1,0 +1,27 @@
+# Phục vụ nội bộ (HTTP) — TLS do Caddy dùng chung edunext-edge đảm nhiệm.
+# Giữ X-Forwarded-Proto từ edge để backend nhận đúng scheme https.
+http://{$SITE_ADDRESS:edunext.vmgenglish.edu.vn} {
+	encode gzip zstd
+
+	# Supabase API (Auth / REST / Storage / Realtime / Functions)
+	@supabase path /auth/v1/* /rest/v1/* /storage/v1/* /realtime/v1/* /functions/v1/*
+	handle @supabase {
+		reverse_proxy api-gw:8000 {
+			header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+		}
+	}
+
+	# Backend Node API
+	handle /api/* {
+		reverse_proxy backend:3001 {
+			header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+		}
+	}
+
+	# SPA frontend
+	handle {
+		root * /srv/frontend
+		try_files {path} /index.html
+		file_server
+	}
+}

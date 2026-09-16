@@ -1,0 +1,9 @@
+# Caddy dùng chung: TLS + điều phối theo domain về frontend từng môi trường.
+
+staging.edunext.vmgenglish.edu.vn {
+	reverse_proxy edunext-staging-frontend:80
+}
+
+edunext.vmgenglish.edu.vn {
+	reverse_proxy edunext-prod-frontend:80
+}

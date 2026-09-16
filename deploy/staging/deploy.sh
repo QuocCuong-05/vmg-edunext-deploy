@@ -18,8 +18,8 @@ rsync -az --delete \
   "$REPO_DIR/backend" "$REPO_DIR/frontend" "$REPO_DIR/deploy" \
   "$VPS:$APP_DIR/repo/"
 
-echo "== 2/4. đồng bộ compose file từ repo =="
-ssh -o BatchMode=yes "$VPS" "cp $APP_DIR/repo/deploy/staging/docker-compose.yml $APP_DIR/docker-compose.yml"
+echo "== 2/4. đồng bộ compose + Caddyfile từ repo =="
+ssh -o BatchMode=yes "$VPS" "cp $APP_DIR/repo/deploy/staging/docker-compose.yml $APP_DIR/docker-compose.yml && cp $APP_DIR/repo/deploy/staging/Caddyfile $APP_DIR/Caddyfile"
 
 echo "== 3/4. build + up =="
 ssh -o BatchMode=yes "$VPS" "cd $APP_DIR && docker compose build && docker compose up -d"

@@ -1,0 +1,59 @@
+name: edunext-prod
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  backend:
+    build:
+      context: ./repo
+      dockerfile: deploy/prod/backend.Dockerfile
+    container_name: edunext-prod-backend
+    restart: unless-stopped
+    logging: *default-logging
+    env_file: ./backend.env
+    networks:
+      - app
+      - supabase
+
+  frontend:
+    build:
+      context: ./repo
+      dockerfile: deploy/prod/frontend.Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-https://edunext.vmgenglish.edu.vn}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_API_URL: ${VITE_API_URL:-https://edunext.vmgenglish.edu.vn/api}
+        VITE_GA_MEASUREMENT_ID: ${VITE_GA_MEASUREMENT_ID:-}
+    container_name: edunext-prod-frontend
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-edunext.vmgenglish.edu.vn}
+    depends_on:
+      - backend
+    # 80/443 do Caddy dùng chung (edunext-edge) giữ; container này chỉ phục vụ nội bộ
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app
+      - supabase
+      - edge
+
+networks:
+  app:
+  supabase:
+    external: true
+    name: supabase-prod_default
+  edge:
+    external: true
+    name: edunext-edge
+
+volumes:
+  caddy_data:
+  caddy_config:

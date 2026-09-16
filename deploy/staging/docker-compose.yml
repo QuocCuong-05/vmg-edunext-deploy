@@ -1,5 +1,11 @@
 name: edunext-staging
 
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   backend:
     build:
@@ -7,6 +13,7 @@ services:
       dockerfile: deploy/staging/backend.Dockerfile
     container_name: edunext-staging-backend
     restart: unless-stopped
+    logging: *default-logging
     env_file: ./backend.env
     networks:
       - app
@@ -23,25 +30,29 @@ services:
         VITE_GA_MEASUREMENT_ID: ${VITE_GA_MEASUREMENT_ID:-}
     container_name: edunext-staging-frontend
     restart: unless-stopped
+    logging: *default-logging
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-staging.edunext.vmgenglish.edu.vn}
     depends_on:
       - backend
-    ports:
-      - "80:80"
-      - "443:443"
+    # 80/443 do Caddy dùng chung (edunext-edge) giữ; container này chỉ phục vụ nội bộ
     volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     networks:
       - app
       - supabase
+      - edge
 
 networks:
   app:
   supabase:
     external: true
     name: supabase-staging_default
+  edge:
+    external: true
+    name: edunext-edge
 
 volumes:
   caddy_data:
