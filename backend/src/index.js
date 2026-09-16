@@ -29,9 +29,9 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.use(cors({ origin: true, credentials: true }));
-// Video bài học tối đa 90MB (base64 ~120MB) — chỉ nới limit cho riêng route upload video.
+// Video bài học tối đa 90MB (base64 ~120MB + JSON) — chỉ nới limit cho riêng route upload video.
 // Đặt TRƯỚC parser toàn cục để parser sau bỏ qua (body đã được parse).
-app.use('/api/admin/video-upload', express.json({ limit: '120mb' }));
+app.use('/api/admin/video-upload', express.json({ limit: '140mb' }));
 app.use(express.json({ limit: '30mb' }));
 
 app.get('/api/health', (_req, res) => {
@@ -59,6 +59,10 @@ app.use('/api/admin', authenticate, requireAdmin, adminRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error('Unhandled error:', err);
+  // Body-parser chặn payload quá lớn (vd: upload video > ~105MB) → trả thông báo thân thiện
+  if (err?.type === 'entity.too.large') {
+    return res.status(400).json({ error: 'Video quá lớn — tối đa 90MB, hãy nén lại (720p, ~1-2 Mbps) rồi tải lại' });
+  }
   const status = typeof err?.status === 'number' ? err.status : 500;
   const body = { error: err?.message || 'Internal server error' };
   if (err?.code) body.code = err.code;

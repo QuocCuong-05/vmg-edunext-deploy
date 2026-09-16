@@ -139,6 +139,7 @@ bash deploy/prod/deploy.sh
   - Restore/load dump phải dùng `-U supabase_admin` — role `postgres` **không phải** superuser.
   - `frontend/src/lib/api.js` `request()` trả thẳng dữ liệu — đừng bọc thêm `.data`.
   - Storage: file nằm theo `<bucket>/<tên>/<version>` — sync DB và file phải đi cùng nhau.
+  - Upload video bài học: `POST /api/admin/video-upload` (mp4 ≤ 90MB; UI ở "Cấu trúc khóa" với nút ⬆️/🎬 và bộ lọc "Chỉ hiện bài thiếu video"). Giới hạn 3 nơi: guard backend, `FILE_SIZE_LIMIT` trong compose stack Supabase (100MB), `storage.buckets.file_size_limit` (100MB).
 
 ## 8. Vận hành (tóm tắt — chi tiết trong `RUNBOOK.md`)
 

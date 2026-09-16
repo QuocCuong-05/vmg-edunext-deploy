@@ -105,6 +105,7 @@ gunzip -c "$D" | grep -vE '^(CREATE SCHEMA public;|ALTER SCHEMA public OWNER TO)
 ## 7. Lưu ý vận hành
 
 - `backend.env` của prod: `SUPABASE_URL=https://edunext.vmgenglish.edu.vn` (bắt buộc để `getPublicUrl` trả link đúng). Khi đổi env → `docker compose up -d backend`.
+- Upload video bài học: Admin → Cấu trúc khóa → nút ⬆️ (tải) / 🎬 (thay video) — **mp4 ≤ 90MB**. Giới hạn nằm ở 3 nơi: guard trong `backend/src/routes/admin.js`, `FILE_SIZE_LIMIT` trong `supabase/docker-compose.yml` (hiện 100MB), và `storage.buckets.file_size_limit` (hiện 100MB). Muốn nâng: sửa cả 3 nơi rồi `docker compose up -d storage` (gián đoạn ~10s).
 - Storage là thứ phình nhanh nhất (video/audio) — theo dõi cùng cảnh báo disk.
 - Docker log limits (10MB × 3) đã khai báo trong compose app/edge — áp dụng tự nhiên ở lần recreate tiếp theo.
 - Nhánh git: `staging` (chứa toàn bộ hạ tầng). Push lên cả 2 remote: `origin` + `render`. **Không đụng `main`** (Render prod cũ).

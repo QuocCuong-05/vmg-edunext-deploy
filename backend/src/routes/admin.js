@@ -1189,7 +1189,14 @@ router.post('/video-upload', async (req, res, next) => {
     const { error: uErr } = await supabaseAdmin.storage
       .from('lesson-videos')
       .upload(path, buffer, { contentType: 'video/mp4', upsert: true, cacheControl: '3600' });
-    if (uErr) throw uErr;
+    if (uErr) {
+      const msg = String(uErr.message || '');
+      const tooLarge = uErr.statusCode === 413 || /maximum allowed size|too large|EntityTooLarge/i.test(msg);
+      if (tooLarge) {
+        return res.status(400).json({ error: 'Video vượt quá giới hạn lưu trữ (100MB) — hãy nén lại rồi tải lại' });
+      }
+      throw uErr;
+    }
 
     const patch = { video_url: path };
     const dur = Number(duration_seconds);
