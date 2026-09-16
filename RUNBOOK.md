@@ -72,11 +72,16 @@ gunzip -c "$D" | grep -vE '^(CREATE SCHEMA public;|ALTER SCHEMA public OWNER TO)
 - Luôn dùng `-U supabase_admin` (superuser) khi load dump — `postgres` không phải superuser.
 - Storage: copy ngược từ `backups/<env>/storage/<ngày>/` về `/opt/edunext/<env>/supabase/volumes/storage/stub/stub/`.
 
-## 4. Giám sát & cảnh báo
+## 4. Giám sát & cảnh báo (2 lớp)
 
-- Cron 5 phút/lần (`monitor.sh`): disk >80%/90%, container exited/unhealthy, HTTPS `/api/health` prod+staging, cert <14 ngày.
+**Lớp 1 — trong VPS:** cron 5 phút/lần (`monitor.sh`): disk >80%/90%, container exited/unhealthy, HTTPS `/api/health` prod+staging, cert <14 ngày.
 - Alert email tới `quoccuong.dni@vmg.edu.vn` (qua `notify.py`, Gmail SMTP `noreply@vmg.edu.vn`); chống spam 6h/lỗi; có email "đã ổn".
 - Log: `/opt/edunext/logs/{monitor,backup,restore}.log`.
+
+**Lớp 2 — ngoài VPS (UptimeRobot, free):** tài khoản `quoccuong.dni@vmg.edu.vn`, monitor HTTPS check 5 phút/lần:
+- `EduNext Production` → `https://edunext.vmgenglish.edu.vn/api/health`
+- Bắt được cả trường hợp VPS/mạng sập hoàn toàn (lớp 1 không gửi được).
+- ⚠️ Khi thêm/sửa monitor nhớ: alert contact phải **verified**; nếu UptimeRobot báo Down lúc web vẫn vào bình thường thì kiểm tra lại URL (đủ protocol + `/api/health`).
 
 ## 5. Cron hiện có (user `deployer`, CRON_TZ=Asia/Ho_Chi_Minh)
 
