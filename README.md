@@ -36,12 +36,12 @@ PAYMENT_APPROVE_SECRET=your-secret           # HMAC token duyệt đơn thanh to
 PORT=3001
 ```
 
-### Tài khoản staging
+### Tài khoản test
 
 | Tài khoản | Vai trò | Ghi chú |
 |---|---|---|
-| `habin05hqc@gmail.com` / `ngaongo` | Admin (staging) | Test, role admin, không có Plus |
-| `cuonghq.dev@gmail.com` | Admin (staging) | Có gói Plus 1 tháng — test paywall Premium |
+| `habin05hqc@gmail.com` | Admin (staging) | Mật khẩu: liên hệ quản trị viên (không lưu trong repo) |
+| `cuonghq.dev@gmail.com` | Admin (prod + staging) | Tài khoản vận hành chính |
 
 ---
 
@@ -65,7 +65,7 @@ PORT=3001
 ## Features
 
 ### Nội dung
-- **Khóa học — 7 khóa (84 bài):** 6 khóa cũ + **PRONUNCIATION ALL IN ONE** — 50 bài, 9 module (VOWELS 1-3, CONSONANTS 1-4, STRESS & INTONATION, ADVANCED PRONUNCIATION); VOWELS 1 miễn phí, 8 module còn lại Premium
+- **Khóa học — 3 khóa Pronunciation (9 module / 351 hoạt động):** Vowels, Consonants, Stress & Intonation — cấu trúc **Course → Module → Lesson/Practice**; mỗi bài practice thuộc 1 trong 5 loại (speak_words, speak_passage, listen_choose, listen_fill, listen_mark) + dạng match
 - **Video bảo mật:** `GET /api/videos/token/:lessonId` → signed URL TTL 60' · ẩn nút tải (`controlsList="nodownload"`) · chặn chuột phải · bài Premium đầu tiên là **teaser 2 phút** (overlay paywall khi hết)
 - **Hoàn thành bài học:** phải **xem hết video** (theo dõi `maxWatched`, chặn tua tới trước) — nút hoàn thành mở khi video chạy hết; ping server 10s + khôi phục tiến độ khi reload
 - **Từ vựng** — sổ từ cá nhân (Free: tối đa 100 từ)
@@ -125,12 +125,19 @@ vmg-edunext/
 │   ├── src/
 │   │   ├── routes/       # auth, courses, lessons, videos, quiz, orders,
 │   │   │                 #   vimi-ai, admin, community, vocabulary, ...
-│   │   ├── middleware/   # authenticate, requireAdmin, optionalAuth
-│   │   └── lib/          # plus.js (subscription + AI limits), seedData.js
+│   │   ├── middleware/   # authenticate, requireAdmin, requireTeacher
+│   │   └── lib/          # plus.js (subscription + AI limits), practiceGrade.js, ...
 │   └── supabase/
 │       ├── full_schema.sql
-│       └── migration_*.sql  # paid_courses, plus_enum, plus_subscriptions,
-│                             #   lessons_module, wards_schools, ...
+│       ├── schema_diagram.dbml
+│       └── migration_*.sql  # course_structure, practice_types, plus, cms, ...
+├── deploy/               # infra-as-code (VPS)
+│   ├── staging/          # compose + Dockerfiles + Caddyfile + deploy.sh
+│   ├── prod/             # bản tương ứng cho production
+│   ├── edge/             # Caddy dùng chung: TLS + định tuyến 2 domain
+│   └── scripts/          # backup.sh, monitor.sh, restore-test.sh, notify.py
+├── RUNBOOK.md            # vận hành: deploy, backup, sự cố
+├── HANDOVER.md           # tổng quan hệ thống + checklist bàn giao
 └── README.md
 ```
 
@@ -186,26 +193,25 @@ Plus: bỏ qua giới hạn — trả remaining qua /auth/me (aiUsage)
 
 ## Deployment
 
-| Môi trường | URL | Repo |
+Toàn bộ hệ thống chạy **self-hosted trên VPS Việt Nam** (Fast Byte, `deployer@103.195.237.150`).
+
+| Môi trường | URL | Deploy |
 |---|---|---|
-| Staging | https://vmg-edunext-frontend-mwtw.onrender.com · https://vmg-edunext-backend-5qh2.onrender.com | `QuocCuong-05/vmg-edunext-deploy` (branch `staging`) |
-| Production | https://vmg-edunext-frontend.onrender.com · https://vmg-edunext-backend-i469.onrender.com | `Viet-My-Group/vmg-edunext` (branch `main`) |
+| Production | https://edunext.vmgenglish.edu.vn | `bash deploy/prod/deploy.sh` |
+| Staging | https://staging.edunext.vmgenglish.edu.vn | `bash deploy/staging/deploy.sh` |
 
 **Quy trình:**
-1. Push staging: `git push render staging && git push origin staging` → Render deploy staging (auto/manual)
-2. Test trên staging web → OK → `git checkout main && git merge --ff-only staging && git push origin main`
-3. Production Supabase: dán lần lượt các migration trong `backend/supabase/` (enum trước → subscriptions → lessons module → wards/schools) + GRANT
-4. Import dữ liệu CSV (courses/lessons/wards/schools) qua tab Nhập CSV
+1. Code trên nhánh `staging`, push lên cả 2 remote: `git push origin staging && git push render staging`
+2. Deploy staging: `bash deploy/staging/deploy.sh` (rsync source → build → up → health check) → test trên staging
+3. OK → deploy prod: `bash deploy/prod/deploy.sh`
+4. Migration SQL mới: thêm file `backend/supabase/migration_*.sql` rồi chạy tay trên DB từng môi trường (xem `RUNBOOK.md`)
 
-**Deploy staging qua API (khi Render chưa nhận webhook):**
-```bash
-curl -X POST "https://api.render.com/v1/services/srv-d9lcq4fqj5pc738r5e9g/deploys" \
-  -H "Authorization: Bearer <RENDER_API_KEY>"
-# srv-d9lbgve7bikc738oevhg = backend
-```
+> ⚠️ Nhánh `main` + Render + Supabase Cloud chỉ còn là hệ thống **cũ (legacy)** — đang chờ tắt sau khi prod VPS ổn định. Không deploy lên đó nữa.
 
 ---
 
 ## Note
-- DB dữ liệu người dùng phải nằm **trong nước** (NĐ 13/2023) — kế hoạch nội địa hóa: VPS C6 (Fast Byte) + domain `vmgedunext.vn` (iNET) + Supabase self-hosted; video sẽ chuyển Cloudflare R2 (signed URL qua Worker) khi có thanh toán Cloudflare.
+- Dữ liệu người dùng nằm **trong nước** (NĐ 13/2023): Supabase self-hosted + app đã chạy hoàn toàn trên **VPS Fast Byte (Việt Nam)**, domain `edunext.vmgenglish.edu.vn`.
+- Tương lai (chưa làm): video chuyển Cloudflare R2 (signed URL qua Worker) khi cần.
 - UX/UI coding rules: xem `UXUI_RULES.md`.
+- Vận hành: `RUNBOOK.md` · Bàn giao & tổng quan hệ thống: `HANDOVER.md`.

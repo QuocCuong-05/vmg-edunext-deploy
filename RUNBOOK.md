@@ -1,6 +1,7 @@
 # RUNBOOK — VMG EduNext (VPS Việt Nam)
 
 Tài liệu vận hành hệ thống production/staging chạy trên VPS Fast Byte.
+Tổng quan hệ thống & checklist bàn giao: xem `HANDOVER.md`. Giới thiệu sản phẩm & quick start: `README.md`.
 
 ## 1. Tổng quan hạ tầng
 
