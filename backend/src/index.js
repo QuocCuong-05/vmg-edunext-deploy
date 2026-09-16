@@ -29,6 +29,9 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.use(cors({ origin: true, credentials: true }));
+// Video bài học tối đa 90MB (base64 ~120MB) — chỉ nới limit cho riêng route upload video.
+// Đặt TRƯỚC parser toàn cục để parser sau bỏ qua (body đã được parse).
+app.use('/api/admin/video-upload', express.json({ limit: '120mb' }));
 app.use(express.json({ limit: '30mb' }));
 
 app.get('/api/health', (_req, res) => {

@@ -571,6 +571,40 @@ export const api = {
         body: JSON.stringify({ file_b64: b64, filename: file.name, content_type: file.type || 'audio/mpeg' }),
       });
     },
+    // Tải video bài học (mp4 ≤ 90MB) — dùng XHR để có tiến trình upload
+    uploadVideo: (file, { lessonId, durationSeconds, onProgress } = {}) =>
+      new Promise(async (resolve, reject) => {
+        try {
+          const b64 = await new Promise((res, rej) => {
+            const reader = new FileReader();
+            reader.onload = () => res(String(reader.result).split(',')[1] || '');
+            reader.onerror = rej;
+            reader.readAsDataURL(file);
+          });
+          const { data: { session } } = await supabase.auth.getSession();
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', `${API_BASE}/admin/video-upload`);
+          xhr.setRequestHeader('Content-Type', 'application/json');
+          if (session?.access_token) xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+          xhr.upload.onprogress = e => {
+            if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+          };
+          xhr.onerror = () => reject(new Error('Lỗi kết nối khi tải video'));
+          xhr.onload = () => {
+            let json = {};
+            try { json = JSON.parse(xhr.responseText); } catch {}
+            if (xhr.status >= 200 && xhr.status < 300) resolve(json.data !== undefined ? json.data : json);
+            else reject(new Error(json.error || `HTTP ${xhr.status}`));
+          };
+          xhr.send(JSON.stringify({
+            file_b64: b64,
+            filename: file.name,
+            content_type: file.type || 'video/mp4',
+            lesson_id: lessonId,
+            duration_seconds: durationSeconds,
+          }));
+        } catch (e) { reject(e); }
+      }),
     users: async (params = {}) => {
       const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
       return request(`/admin/users${qs ? '?' + qs : ''}`);

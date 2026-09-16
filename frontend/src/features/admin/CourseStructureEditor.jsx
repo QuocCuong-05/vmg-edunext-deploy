@@ -52,13 +52,28 @@ const EMPTY_COURSE = {
 
 const LOOSE_KEY = '__loose__';
 const modKeyOf = (item) => item.module_id || LOOSE_KEY;
+const hasVideo = (it) => !!(it?.video_url && String(it.video_url).trim());
+
+// Đo thời lượng video phía trình duyệt (gửi kèm khi upload — phục vụ teaser sau này)
+function measureVideoDuration(file) {
+  return new Promise(resolve => {
+    try {
+      const url = URL.createObjectURL(file);
+      const v = document.createElement('video');
+      v.preload = 'metadata';
+      v.onloadedmetadata = () => { URL.revokeObjectURL(url); resolve(Number.isFinite(v.duration) ? v.duration : null); };
+      v.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+      v.src = url;
+    } catch { resolve(null); }
+  });
+}
 
 function typeMeta(t) {
   return TYPES.find(x => x.value === t) || { icon: '📄', label: t };
 }
 
 /* ---------- Draggable lesson row ---------- */
-function SortableItem({ item, active, onSelect, onDuplicate, onDelete, duplicating }) {
+function SortableItem({ item, active, onSelect, onDuplicate, onDelete, duplicating, onUploadVideo, videoUploading }) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.id, data: { type: 'item' } });
   const meta = typeMeta(item.item_type);
@@ -80,6 +95,22 @@ function SortableItem({ item, active, onSelect, onDuplicate, onDelete, duplicati
       </button>
       {!!item.is_free && <span className="cs-badge free">Free</span>}
       {item.points > 0 && <span className="cs-badge">{item.points}đ</span>}
+      {item.item_type === 'video_lesson' && !hasVideo(item) && (
+        <span className="cs-badge" style={{ background: 'var(--red-bg)', color: 'var(--red)' }}>Thiếu video</span>
+      )}
+      {item.item_type === 'video_lesson' && (
+        videoUploading != null ? (
+          <span className="cs-badge" style={{ minWidth: 46, textAlign: 'center' }}>{videoUploading}%</span>
+        ) : (
+          <button
+            type="button" className="cs-icon-btn"
+            title={hasVideo(item) ? 'Thay video' : 'Tải video lên'}
+            onClick={() => onUploadVideo(item)}
+          >
+            {hasVideo(item) ? '🎬' : '⬆️'}
+          </button>
+        )
+      )}
       <button type="button" className="cs-icon-btn" title="Sửa bài" onClick={() => onSelect(item)}>
         <Icon.Pen size={14} />
       </button>
@@ -187,6 +218,10 @@ export default function CourseStructureEditor() {
   const [uploading, setUploading] = useState(null);
   const [duplicating, setDuplicating] = useState(null);
   const [quickAdding, setQuickAdding] = useState(null);
+  const [onlyMissingVideo, setOnlyMissingVideo] = useState(false);
+  const [videoBusy, setVideoBusy] = useState(null); // { itemId, percent }
+  const [videoTarget, setVideoTarget] = useState(null);
+  const videoInputRef = useRef(null);
 
   // Đóng editor, quay lại cấu trúc khóa
   const closePanel = () => {
@@ -295,6 +330,45 @@ export default function CourseStructureEditor() {
       showToast('Đã upload ảnh', 'success');
     } catch (e) { showToast(e.message || 'Upload thất bại', 'error'); } finally {
       setUploading(null);
+    }
+  };
+
+  /* ---------- Upload video bài học ---------- */
+  const startVideoUpload = (item) => {
+    setVideoTarget(item);
+    videoInputRef.current?.click();
+  };
+
+  const handleVideoFile = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (file && videoTarget) uploadLessonVideo(videoTarget, file);
+  };
+
+  const uploadLessonVideo = async (item, file) => {
+    const isMp4 = file.type === 'video/mp4' || /\.mp4$/i.test(file.name);
+    if (!isMp4) { showToast('Chỉ nhận file MP4', 'error'); return; }
+    if (file.size > 90 * 1024 * 1024) {
+      showToast('Video tối đa 90MB — hãy nén lại (720p, ~1-2 Mbps) rồi tải lại', 'error');
+      return;
+    }
+    setVideoBusy({ itemId: item.id, percent: 0 });
+    try {
+      const duration = await measureVideoDuration(file);
+      const res = await api.admin.uploadVideo(file, {
+        lessonId: item.id,
+        durationSeconds: duration,
+        onProgress: p => setVideoBusy({ itemId: item.id, percent: p }),
+      });
+      const newPath = res?.path || item.video_url;
+      setItemForm(prev => (prev && prev.id === item.id ? { ...prev, video_url: newPath } : prev));
+      await loadStructure(courseId);
+      showToast(hasVideo(item) ? 'Đã thay video' : 'Đã tải video lên', 'success');
+    } catch (e) {
+      showToast(e.message || 'Tải video thất bại', 'error');
+    } finally {
+      setVideoBusy(null);
+      setVideoTarget(null);
     }
   };
 
@@ -520,7 +594,8 @@ export default function CourseStructureEditor() {
 
   /* ================= DRAG & DROP ================= */
   const moduleKeys = useMemo(() => modules.map(m => m.id), [modules]);
-  const hasLoose = !!groups[LOOSE_KEY]?.length;
+  const looseList = (groups[LOOSE_KEY] || []).filter(it => !onlyMissingVideo || (it.item_type === 'video_lesson' && !hasVideo(it)));
+  const hasLoose = looseList.length > 0;
 
   const findContainer = useCallback((id) => {
     if (id === LOOSE_KEY) return LOOSE_KEY;
@@ -706,9 +781,35 @@ export default function CourseStructureEditor() {
 
       {itemForm.item_type === 'video_lesson' && (
         <>
-          <label className="admin-label">Video URL</label>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <label className="admin-label" style={{ marginBottom: 0 }}>Video URL</label>
+            <span
+              className="cs-badge"
+              style={hasVideo(itemForm)
+                ? { background: 'var(--green-bg)', color: 'var(--green)' }
+                : { background: 'var(--red-bg)', color: 'var(--red)' }}
+            >
+              {hasVideo(itemForm) ? 'Đã có video' : 'Chưa có video'}
+            </span>
+          </div>
           <input className="admin-input" placeholder="https://..." value={itemForm.video_url} onChange={e => setItemForm({ ...itemForm, video_url: e.target.value })} />
           <div className="admin-note" style={{ marginTop: 4 }}>Link YouTube embed hoặc đường dẫn file video</div>
+          {itemForm.id ? (
+            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                type="button" className="admin-btn"
+                onClick={() => startVideoUpload(itemForm)}
+                disabled={!!videoBusy}
+              >
+                {videoBusy?.itemId === itemForm.id
+                  ? `Đang tải... ${videoBusy.percent}%`
+                  : (hasVideo(itemForm) ? '🎬 Thay video' : '📁 Tải video lên')}
+              </button>
+              <span className="admin-note" style={{ margin: 0 }}>MP4, tối đa 90MB — nên nén 720p (~1-2 Mbps)</span>
+            </div>
+          ) : (
+            <div className="admin-note" style={{ marginTop: 6 }}>Lưu bài trước, sau đó quay lại để tải video lên.</div>
+          )}
         </>
       )}
 
@@ -931,12 +1032,17 @@ export default function CourseStructureEditor() {
     </>
   );
 
+  const missingVideoCount = items.filter(i => i.item_type === 'video_lesson' && !hasVideo(i)).length;
+
   return (
     <div className="admin-panel">
       <h3>Cấu trúc khóa học</h3>
       <p className="admin-note" style={{ marginBottom: 14 }}>
         Kéo thả ⠿ để sắp xếp module và bài học · ＋ Thêm bài học tạo nhanh bản nháp · ⧉ nhân bản bài (kèm từ vựng/câu hỏi)
       </p>
+
+      {/* Input chọn file video dùng chung */}
+      <input ref={videoInputRef} type="file" accept="video/mp4,.mp4" style={{ display: 'none' }} onChange={handleVideoFile} />
 
       {/* Toolbar */}
       <div className="cs-toolbar">
@@ -957,6 +1063,13 @@ export default function CourseStructureEditor() {
               <button className="admin-btn" onClick={addModule}>+ Module</button>
             </div>
 
+            {missingVideoCount > 0 && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--muted)', cursor: 'pointer', userSelect: 'none' }}>
+                <input type="checkbox" checked={onlyMissingVideo} onChange={e => setOnlyMissingVideo(e.target.checked)} />
+                Chỉ hiện bài thiếu video ({missingVideoCount})
+              </label>
+            )}
+
             {modules.length === 0 && items.length === 0 && (
               <div className="cs-empty">
                 <div style={{ fontSize: 34, marginBottom: 8 }}>📚</div>
@@ -976,7 +1089,8 @@ export default function CourseStructureEditor() {
               <SortableContext items={moduleKeys} strategy={verticalListSortingStrategy}>
                 {modules.map(mod => {
                   const key = mod.id;
-                  const list = groups[key] || [];
+                  const list = (groups[key] || []).filter(it => !onlyMissingVideo || (it.item_type === 'video_lesson' && !hasVideo(it)));
+                  if (onlyMissingVideo && list.length === 0) return null;
                   return (
                     <SortableModule
                       key={key}
@@ -1003,12 +1117,16 @@ export default function CourseStructureEditor() {
                             onDuplicate={duplicateItem}
                             onDelete={(x) => setConfirmDel({ type: 'item', id: x.id })}
                             duplicating={duplicating === it.id}
+                            onUploadVideo={startVideoUpload}
+                            videoUploading={videoBusy?.itemId === it.id ? videoBusy.percent : null}
                           />
                         ))}
                       </SortableContext>
-                      <button className="cs-add" disabled={quickAdding === key} onClick={() => quickAdd(key)}>
-                        {quickAdding === key ? 'Đang tạo...' : '＋ Thêm bài học'}
-                      </button>
+                      {!onlyMissingVideo && (
+                        <button className="cs-add" disabled={quickAdding === key} onClick={() => quickAdd(key)}>
+                          {quickAdding === key ? 'Đang tạo...' : '＋ Thêm bài học'}
+                        </button>
+                      )}
                     </SortableModule>
                   );
                 })}
@@ -1018,11 +1136,11 @@ export default function CourseStructureEditor() {
                 <div className="cs-mod">
                   <div className="cs-mod-head" style={{ cursor: 'default' }}>
                     <span style={{ fontSize: 13, color: 'var(--muted)', flex: 1 }}>📦 Chưa phân nhóm</span>
-                    <span style={{ fontSize: 11, color: 'var(--muted)' }}>{groups[LOOSE_KEY].length} bài</span>
+                    <span style={{ fontSize: 11, color: 'var(--muted)' }}>{looseList.length} bài</span>
                   </div>
                   <div className="cs-items">
-                    <SortableContext items={groups[LOOSE_KEY].map(i => i.id)} strategy={verticalListSortingStrategy}>
-                      {groups[LOOSE_KEY].map(it => (
+                    <SortableContext items={looseList.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                      {looseList.map(it => (
                         <SortableItem
                           key={it.id}
                           item={it}
@@ -1031,6 +1149,8 @@ export default function CourseStructureEditor() {
                           onDuplicate={duplicateItem}
                           onDelete={(x) => setConfirmDel({ type: 'item', id: x.id })}
                           duplicating={duplicating === it.id}
+                          onUploadVideo={startVideoUpload}
+                          videoUploading={videoBusy?.itemId === it.id ? videoBusy.percent : null}
                         />
                       ))}
                     </SortableContext>

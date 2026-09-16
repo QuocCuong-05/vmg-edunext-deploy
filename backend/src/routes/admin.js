@@ -1157,6 +1157,50 @@ router.post('/audio-upload', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/admin/video-upload — tải video bài học (mp4, tối đa 90MB) → bucket private lesson-videos
+router.post('/video-upload', async (req, res, next) => {
+  try {
+    const { file_b64, filename, content_type, lesson_id, duration_seconds } = req.body;
+    if (!file_b64 || !lesson_id) return res.status(400).json({ error: 'file_b64 và lesson_id là bắt buộc' });
+
+    const isMp4 = String(content_type || '').includes('mp4') || /\.mp4$/i.test(filename || '');
+    if (!isMp4) return res.status(400).json({ error: 'Chỉ nhận file MP4' });
+
+    const buffer = Buffer.from(file_b64, 'base64');
+    if (buffer.length > 90 * 1024 * 1024) {
+      return res.status(400).json({ error: 'Video tối đa 90MB — hãy nén lại (720p, ~1-2 Mbps) rồi tải lại' });
+    }
+
+    const { data: lesson, error: lErr } = await supabaseAdmin
+      .from('lessons')
+      .select('id, slug, video_url')
+      .eq('id', lesson_id)
+      .maybeSingle();
+    if (lErr) throw lErr;
+    if (!lesson) return res.status(404).json({ error: 'Bài học không tồn tại' });
+
+    // Thay thế video cũ nếu đang là file storage; ngược lại sinh path theo slug bài học
+    let path = lesson.video_url && !lesson.video_url.startsWith('http') ? lesson.video_url : null;
+    if (!path) {
+      const slug = String(lesson.slug || lesson.id).replace(/[^a-zA-Z0-9._-]/g, '-').toLowerCase();
+      path = `Pronunciation/${slug}.mp4`;
+    }
+
+    const { error: uErr } = await supabaseAdmin.storage
+      .from('lesson-videos')
+      .upload(path, buffer, { contentType: 'video/mp4', upsert: true, cacheControl: '3600' });
+    if (uErr) throw uErr;
+
+    const patch = { video_url: path };
+    const dur = Number(duration_seconds);
+    if (Number.isFinite(dur) && dur > 0) patch.video_duration_seconds = Math.round(dur);
+    const { error: pErr } = await supabaseAdmin.from('lessons').update(patch).eq('id', lesson.id);
+    if (pErr) throw pErr;
+
+    res.json({ data: { path, duration: patch.video_duration_seconds || null } });
+  } catch (err) { next(err); }
+});
+
 // --- Practice questions (choose/fill/mark) ---
 router.get('/practice-questions', async (req, res, next) => {
   try {
