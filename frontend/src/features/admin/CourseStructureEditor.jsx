@@ -279,6 +279,17 @@ export default function CourseStructureEditor() {
     if (courseId) loadStructure(courseId);
   }, [courseId, loadStructure]);
 
+  // Khóa đã đủ video → tự bỏ lọc + thông báo (tránh danh sách trắng gây khó hiểu)
+  useEffect(() => {
+    if (!onlyMissingVideo) return;
+    const total = items.filter(i => i.item_type === 'video_lesson').length;
+    const missing = items.filter(i => i.item_type === 'video_lesson' && !hasVideo(i)).length;
+    if (items.length > 0 && total > 0 && missing === 0) {
+      setOnlyMissingVideo(false);
+      showToast('Đã đủ video cho tất cả bài trong khóa', 'success');
+    }
+  }, [items, onlyMissingVideo, showToast]);
+
   /* ---------- Practice words / questions (giữ logic cũ) ---------- */
   const loadWords = async (lessonId) => {
     try {
@@ -1032,6 +1043,7 @@ export default function CourseStructureEditor() {
     </>
   );
 
+  const videoLessonCount = items.filter(i => i.item_type === 'video_lesson').length;
   const missingVideoCount = items.filter(i => i.item_type === 'video_lesson' && !hasVideo(i)).length;
 
   return (
@@ -1063,11 +1075,22 @@ export default function CourseStructureEditor() {
               <button className="admin-btn" onClick={addModule}>+ Module</button>
             </div>
 
-            {missingVideoCount > 0 && (
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--muted)', cursor: 'pointer', userSelect: 'none' }}>
-                <input type="checkbox" checked={onlyMissingVideo} onChange={e => setOnlyMissingVideo(e.target.checked)} />
-                Chỉ hiện bài thiếu video ({missingVideoCount})
-              </label>
+            {videoLessonCount > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                <label style={{
+                  display: 'flex', alignItems: 'center', gap: 6, fontSize: 12,
+                  color: 'var(--muted)', cursor: missingVideoCount ? 'pointer' : 'default', userSelect: 'none',
+                }}>
+                  <input
+                    type="checkbox" checked={onlyMissingVideo} disabled={missingVideoCount === 0}
+                    onChange={e => setOnlyMissingVideo(e.target.checked)}
+                  />
+                  Chỉ hiện bài thiếu video ({missingVideoCount})
+                </label>
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+                  Đã có video: <b style={{ color: missingVideoCount === 0 ? 'var(--green)' : 'var(--ink)' }}>{videoLessonCount - missingVideoCount}/{videoLessonCount}</b> bài
+                </span>
+              </div>
             )}
 
             {modules.length === 0 && items.length === 0 && (
@@ -1174,6 +1197,15 @@ export default function CourseStructureEditor() {
                 ) : null}
               </DragOverlay>
             </DndContext>
+
+            {onlyMissingVideo && missingVideoCount === 0 && (
+              <div className="cs-empty">
+                <div style={{ fontSize: 30, marginBottom: 6 }}>🎉</div>
+                <b>Không còn bài nào thiếu video</b>
+                <p style={{ fontSize: 13, margin: '6px 0 12px' }}>Tất cả bài trong khóa đã có video.</p>
+                <button className="admin-btn" onClick={() => setOnlyMissingVideo(false)}>Bỏ lọc</button>
+              </div>
+            )}
           </div>
 
           {/* ===== Editor panel — focus mode chiếm toàn bộ chiều ngang ===== */}
