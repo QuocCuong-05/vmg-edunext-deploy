@@ -39,7 +39,7 @@ Supabase self-hosted (mỗi môi trường 1 stack, 11 container):
   - Đã bật `app.set('trust proxy', 1)` — cần thiết vì chạy sau 2 lớp Caddy (rate-limit đọc IP đúng).
 - **Storage backend:** file, layout trên đĩa `/opt/edunext/<env>/supabase/volumes/storage/stub/stub/<bucket>/<tên-object>/<version-uuid>`.
   - Object bị đổi tên/version khi re-upload — nhớ điều này khi backup/restore storage.
-- **Video bảo mật:** bucket `lesson-videos` **private**, phát qua signed URL TTL 15' (`GET /api/videos/token/:lessonId` sau khi kiểm tra quyền; frontend tự gia hạn ở ~80% hạn; rate limit 40 lần/15'/IP).
+- **Video bảo mật:** bucket `lesson-videos` **private**, phát qua signed URL TTL 15' (`GET /api/videos/token/:lessonId` sau khi kiểm tra quyền; frontend tự gia hạn ở ~80% hạn; rate limit 40 lần/15'/user, login 20 lần/10'/email).
 - **Tài liệu thiết kế chi tiết:** xem `README.md` mục Architecture (auth flow, video, progress, Plus, AI limits).
 
 ## 3. Hạ tầng & môi trường

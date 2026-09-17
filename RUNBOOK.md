@@ -106,7 +106,8 @@ gunzip -c "$D" | grep -vE '^(CREATE SCHEMA public;|ALTER SCHEMA public OWNER TO)
 
 - `backend.env` của prod: `SUPABASE_URL=https://edunext.vmgenglish.edu.vn` (bắt buộc để `getPublicUrl` trả link đúng). Khi đổi env → `docker compose up -d backend`.
 - Upload video bài học: Admin → Cấu trúc khóa → nút ⬆️ (tải) / 🎬 (thay video) — **mp4 ≤ 90MB**. Giới hạn nằm ở 3 nơi: guard trong `backend/src/routes/admin.js`, `FILE_SIZE_LIMIT` trong `supabase/docker-compose.yml` (hiện 100MB), và `storage.buckets.file_size_limit` (hiện 100MB). Muốn nâng: sửa cả 3 nơi rồi `docker compose up -d storage` (gián đoạn ~10s).
-- Cấp link video: signed URL hạn **`VIDEO_URL_TTL_SECONDS`** (mặc định 900s = 15 phút, đặt trong `backend.env`); frontend tự gia hạn ở ~80% hạn nên người xem không bị gián đoạn. Rate limit **40 lần/15 phút/IP** (`videoTokenLimiter`) — muốn chỉnh thì sửa `backend/src/middleware/rateLimit.js` rồi deploy lại.
+- Cấp link video: signed URL hạn **`VIDEO_URL_TTL_SECONDS`** (mặc định 900s = 15 phút, đặt trong `backend.env`); frontend tự gia hạn ở ~80% hạn nên người xem không bị gián đoạn. Rate limit **40 lần/15 phút/user id** (`videoTokenLimiter`); đăng nhập limit **20 lần/10 phút/email** — muốn chỉnh thì sửa `backend/src/middleware/rateLimit.js` rồi deploy lại.
+- Backend chạy sau **2 lớp Caddy** (chung + nội bộ) → `app.set('trust proxy', 2)` trong `backend/src/index.js`. Nếu đổi kiến trúc proxy (thêm/bớt 1 lớp), phải cập nhật số này, nếu không rate-limit sẽ gộp chung một "xô" cho mọi người.
 - Storage là thứ phình nhanh nhất (video/audio) — theo dõi cùng cảnh báo disk.
 - Docker log limits (10MB × 3) đã khai báo trong compose app/edge — áp dụng tự nhiên ở lần recreate tiếp theo.
 - Nhánh git: `staging` (chứa toàn bộ hạ tầng). Push lên cả 2 remote: `origin` + `render`. **Không đụng `main`** (Render prod cũ).

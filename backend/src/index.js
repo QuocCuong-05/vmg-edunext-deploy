@@ -24,9 +24,10 @@ import { authenticate, requireAdmin } from './middleware/auth.js';
 
 const app = express();
 
-// Chạy sau reverse proxy (Caddy/Nginx) → cần trust proxy để
-// express-rate-limit đọc đúng IP từ X-Forwarded-For
-app.set('trust proxy', 1);
+// Chạy sau 2 lớp reverse proxy (Caddy chung → Caddy nội bộ) → cần trust proxy = 2
+// để express-rate-limit đọc đúng IP người dùng từ X-Forwarded-For.
+// (trust = 1 sẽ khiến mọi user bị quy về IP container dùng chung → rate limit chặn nhầm nhau)
+app.set('trust proxy', 2);
 
 app.use(cors({ origin: true, credentials: true }));
 // Video bài học tối đa 90MB (base64 ~120MB + JSON) — chỉ nới limit cho riêng route upload video.
