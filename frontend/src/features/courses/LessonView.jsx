@@ -46,6 +46,8 @@ export default function LessonView() {
   const completedIdsRef = useRef(completedIds);
   completedIdsRef.current = completedIds;
   const saveProgressRef = useRef(() => {});
+  const pendingResumeRef = useRef(null);   // { time, play } — khôi phục sau khi đổi link video
+  const refreshingRef = useRef(false);     // chống gọi gia hạn chồng nhau
 
   useEffect(() => {
     if (!slug) return;
@@ -125,6 +127,15 @@ export default function LessonView() {
       .catch(err => { if (!cancelled) setVideoError(err.message); });
     return () => { cancelled = true; };
   }, [lessonId, course, isPlus, unlocked]);
+
+  // Tự gia hạn signed URL ở ~80% hạn — người xem không thấy gián đoạn
+  useEffect(() => {
+    if (!videoInfo?.url || videoInfo.legacy || !videoInfo.expiresIn) return;
+    const delay = Math.max(30, Math.floor(videoInfo.expiresIn * 0.8)) * 1000;
+    const timer = setTimeout(() => { refreshVideoToken(); }, delay);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoInfo?.url, videoInfo?.expiresIn, lessonId]);
 
   // Hàm lưu vị trí hiện tại lên server (dùng cho ping 10s, pause, beforeunload)
   useEffect(() => {
@@ -247,6 +258,30 @@ export default function LessonView() {
 
   const teaserLimit = videoInfo?.previewSeconds ?? previewSeconds;
 
+  // Xin link mới, giữ nguyên vị trí đang xem + trạng thái play/pause
+  async function refreshVideoToken() {
+    if (refreshingRef.current) return;
+    const v = videoRef.current;
+    if (!v || !videoInfo?.url || videoInfo.legacy) return;
+    refreshingRef.current = true;
+    try {
+      const info = await api.videos.token(lessonId);
+      if (info?.url) {
+        pendingResumeRef.current = { time: v.currentTime || 0, play: !v.paused && !teaserEnded };
+        setVideoInfo(info);
+      }
+    } catch {
+      // giữ nguyên link cũ; nếu lỗi thật player sẽ báo và người dùng tải lại trang
+    } finally {
+      refreshingRef.current = false;
+    }
+  }
+
+  // Link có thể hết hạn khi pause lâu — thử gia hạn rồi phát tiếp
+  function handleVideoError() {
+    if (videoInfo?.url && !videoInfo.legacy) refreshVideoToken();
+  }
+
   function handleTimeUpdate() {
     if (videoRef.current && !videoRef.current.seeking) {
       maxWatchedRef.current = Math.max(maxWatchedRef.current, videoRef.current.currentTime);
@@ -280,6 +315,15 @@ export default function LessonView() {
   }
 
   function handleLoadedMetadata() {
+    // Vừa gia hạn link → khôi phục đúng vị trí và trạng thái phát
+    const pending = pendingResumeRef.current;
+    if (videoRef.current && pending) {
+      pendingResumeRef.current = null;
+      if (pending.time > 0) videoRef.current.currentTime = pending.time;
+      if (pending.play) videoRef.current.play().catch(() => {});
+      restoredRef.current = true;
+      return;
+    }
     if (videoRef.current && maxWatchedRef.current > 0 && !restoredRef.current) {
       const dur = videoRef.current.duration || 0;
       const target = safeResumeTarget(maxWatchedRef.current, dur);
@@ -431,6 +475,7 @@ export default function LessonView() {
               disablePictureInPicture
               playsInline
               onContextMenu={e => e.preventDefault()}
+              onError={handleVideoError}
               onTimeUpdate={handleTimeUpdate}
               onPause={() => saveProgressRef.current()}
               onSeeking={handleSeeking}

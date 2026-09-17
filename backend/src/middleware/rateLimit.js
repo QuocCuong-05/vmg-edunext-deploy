@@ -15,3 +15,12 @@ export const loginLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Đăng nhập quá nhiều lần. Vui lòng thử lại sau 10 phút.' },
 });
+
+// Cấp link video: người học bình thường ~5-15 lần/buổi; chặn thu thập link hàng loạt
+export const videoTokenLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 40,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'Bạn yêu cầu quá nhiều liên kết video. Vui lòng thử lại sau 15 phút.' },
+});

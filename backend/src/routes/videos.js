@@ -1,12 +1,16 @@
 import { Router } from 'express';
 import { supabase, supabaseAdmin } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
+import { videoTokenLimiter } from '../middleware/rateLimit.js';
 import { hasActivePlus } from '../lib/plus.js';
 
 const router = Router();
 
+// Hạn của signed URL (giây) — mặc định 15 phút; frontend tự gia hạn khi gần hết hạn
+const VIDEO_TTL = Number(process.env.VIDEO_URL_TTL_SECONDS) || 900;
+
 // GET /api/videos/token/:lessonId — signed URL để phát video (bảo vệ khỏi tải trực tiếp)
-router.get('/token/:lessonId', authenticate, async (req, res, next) => {
+router.get('/token/:lessonId', authenticate, videoTokenLimiter, async (req, res, next) => {
   try {
     const { data: lesson, error } = await supabase
       .from('lessons')
@@ -47,7 +51,7 @@ router.get('/token/:lessonId', authenticate, async (req, res, next) => {
     // Storage path (Supabase Storage / sau này R2) — ký URL tạm thời
     const { data, error: signError } = await supabaseAdmin.storage
       .from('lesson-videos')
-      .createSignedUrl(lesson.video_url, 3600);
+      .createSignedUrl(lesson.video_url, VIDEO_TTL);
     if (signError || !data?.signedUrl) throw signError || new Error('Không thể tạo signed URL');
 
     const { data: ps } = await supabaseAdmin
@@ -62,6 +66,7 @@ router.get('/token/:lessonId', authenticate, async (req, res, next) => {
       legacy: false,
       canAccessFull,
       previewSeconds: !canAccessFull && isPreviewLesson ? previewSeconds : null,
+      expiresIn: VIDEO_TTL,
     });
   } catch (err) {
     next(err);
