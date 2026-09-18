@@ -46,8 +46,10 @@ export default function LessonView() {
   const completedIdsRef = useRef(completedIds);
   completedIdsRef.current = completedIds;
   const saveProgressRef = useRef(() => {});
-  const pendingResumeRef = useRef(null);   // { time, play } — khôi phục sau khi đổi link video
-  const refreshingRef = useRef(false);     // chống gọi gia hạn chồng nhau
+  const pendingResumeRef = useRef(null);        // { time, play } — khôi phục sau khi đổi link video
+  const refreshingRef = useRef(false);          // chống gọi gia hạn chồng nhau
+  const pendingRefreshOnPlayRef = useRef(false); // hoãn refresh khi đang pause
+  const [videoDuration, setVideoDuration] = useState(0);
 
   useEffect(() => {
     if (!slug) return;
@@ -91,6 +93,8 @@ export default function LessonView() {
     maxWatchedRef.current = 0;
     setVideoComplete(false);
     restoredRef.current = false;
+    pendingRefreshOnPlayRef.current = false;
+    setVideoDuration(0);
     setLessonDetail(null);
     if (lessonId) {
       api.lessons.get(lessonId)
@@ -128,14 +132,20 @@ export default function LessonView() {
     return () => { cancelled = true; };
   }, [lessonId, course, isPlus, unlocked]);
 
-  // Tự gia hạn signed URL ở ~80% hạn — người xem không thấy gián đoạn
+  // Tự gia hạn signed URL — CHỈ khi link hết hạn trước lúc video kết thúc.
+  // Video ngắn hơn TTL (nội dung hiện tại) → không đổi src giữa chừng → không khựng.
   useEffect(() => {
     if (!videoInfo?.url || videoInfo.legacy || !videoInfo.expiresIn) return;
+    if (!videoDuration || videoDuration + 120 < videoInfo.expiresIn) return; // không cần refresh
     const delay = Math.max(30, Math.floor(videoInfo.expiresIn * 0.8)) * 1000;
-    const timer = setTimeout(() => { refreshVideoToken(); }, delay);
+    const timer = setTimeout(() => {
+      const v = videoRef.current;
+      if (v && v.paused) pendingRefreshOnPlayRef.current = true; // hoãn tới lúc bấm play
+      else refreshVideoToken();
+    }, delay);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoInfo?.url, videoInfo?.expiresIn, lessonId]);
+  }, [videoInfo?.url, videoInfo?.expiresIn, lessonId, videoDuration]);
 
   // Hàm lưu vị trí hiện tại lên server (dùng cho ping 10s, pause, beforeunload)
   useEffect(() => {
@@ -282,6 +292,14 @@ export default function LessonView() {
     if (videoInfo?.url && !videoInfo.legacy) refreshVideoToken();
   }
 
+  // Refresh đã bị hoãn lúc pause → thực hiện khi người dùng bấm play lại
+  function handleVideoPlay() {
+    if (pendingRefreshOnPlayRef.current) {
+      pendingRefreshOnPlayRef.current = false;
+      refreshVideoToken();
+    }
+  }
+
   function handleTimeUpdate() {
     if (videoRef.current && !videoRef.current.seeking) {
       maxWatchedRef.current = Math.max(maxWatchedRef.current, videoRef.current.currentTime);
@@ -315,6 +333,7 @@ export default function LessonView() {
   }
 
   function handleLoadedMetadata() {
+    if (videoRef.current) setVideoDuration(videoRef.current.duration || 0);
     // Vừa gia hạn link → khôi phục đúng vị trí và trạng thái phát
     const pending = pendingResumeRef.current;
     if (videoRef.current && pending) {
@@ -476,6 +495,7 @@ export default function LessonView() {
               playsInline
               onContextMenu={e => e.preventDefault()}
               onError={handleVideoError}
+              onPlay={handleVideoPlay}
               onTimeUpdate={handleTimeUpdate}
               onPause={() => saveProgressRef.current()}
               onSeeking={handleSeeking}
