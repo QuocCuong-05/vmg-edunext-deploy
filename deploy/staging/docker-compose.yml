@@ -14,6 +14,10 @@ services:
     container_name: edunext-staging-backend
     restart: unless-stopped
     logging: *default-logging
+    # Backend gọi Supabase qua domain của chính nó → trỏ thẳng về host (Caddy),
+    # miễn nhiễm khi DNS công khai của VPS chập chờn
+    extra_hosts:
+      - "staging.edunext.vmgenglish.edu.vn:host-gateway"
     env_file: ./backend.env
     networks:
       - app

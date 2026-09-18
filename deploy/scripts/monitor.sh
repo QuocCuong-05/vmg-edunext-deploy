@@ -75,9 +75,11 @@ else
   recovered containers "[EduNext] Container da on dinh tro lai"
 fi
 
-# 3) HTTPS health
+# 3) HTTPS health — dùng --resolve để không phụ thuộc DNS công khai (tránh báo động giả khi DNS VPS chập chờn)
 for url in https://edunext.vmgenglish.edu.vn/api/health https://staging.edunext.vmgenglish.edu.vn/api/health; do
-  code=$(curl -s -o /dev/null -m 15 -w '%{http_code}' "$url" 2>/dev/null || echo 000)
+  host=${url#https://}; host=${host%%/*}
+  code=$(curl -s -o /dev/null -m 15 -w '%{http_code}' --resolve "$host:443:103.195.237.150" "$url" 2>/dev/null)
+  code=${code:-000}
   key="url_$(printf '%s' "$url" | md5sum | cut -c1-8)"
   log "$url -> $code"
   if [ "$code" != "200" ]; then
@@ -89,9 +91,9 @@ Goi y: docker logs edunext-edge-caddy --tail 50 ; docker ps"
   fi
 done
 
-# 4) Cert TLS (< 14 ngày)
+# 4) Cert TLS (< 14 ngày) — kết nối thẳng 127.0.0.1 + SNI domain để không phụ thuộc DNS
 for host in edunext.vmgenglish.edu.vn staging.edunext.vmgenglish.edu.vn; do
-  if echo | timeout 15 openssl s_client -connect "$host:443" -servername "$host" 2>/dev/null \
+  if echo | timeout 15 openssl s_client -connect 127.0.0.1:443 -servername "$host" 2>/dev/null \
       | openssl x509 -checkend 1209600 -noout >/dev/null 2>&1; then
     recovered "cert_$host" "[EduNext] Cert $host da on dinh"
   else
