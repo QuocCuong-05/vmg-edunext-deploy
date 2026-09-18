@@ -2,9 +2,13 @@
 # Giám sát VPS (chạy cron mỗi 5 phút):
 #   - Disk > 80% (cảnh báo) / > 90% (khẩn)
 #   - Container exited/unhealthy
-#   - HTTPS /api/health của prod + staging
-#   - Cert TLS còn < 14 ngày
-# Chống spam: mỗi lỗi chỉ gửi lại sau 6 giờ; khi hết lỗi gửi email "đã ổn".
+#   - HTTPS /api/health của prod + staging (dùng --resolve, không phụ thuộc DNS công khai)
+#   - Cert TLS còn < 14 ngày (kết nối 127.0.0.1 + SNI, không phụ thuộc DNS)
+#
+# Chống spam thông minh:
+#   - Chỉ alert sau FAIL_THRESHOLD lần fail LIÊN TIẾP (bỏ qua blip ngắn, ví dụ DNS chập chờn)
+#   - Tối đa 1 alert / ALERT_MIN_INTERVAL giây cho mỗi key — kể cả sau khi đã hồi phục
+#   - Email "đã ổn" giữ lại nhưng cũng giới hạn RECOVER_MIN_INTERVAL giây/key
 set -uo pipefail
 
 BASE=/opt/edunext
@@ -14,36 +18,66 @@ SCRIPTS=$BASE/scripts
 mkdir -p "$LOG"
 touch "$STATE"
 
+FAIL_THRESHOLD=2          # số lần fail liên tiếp mới gửi alert (~10 phút với cron 5')
+ALERT_MIN_INTERVAL=3600   # giây — tối thiểu giữa 2 alert cùng key
+RECOVER_MIN_INTERVAL=3600 # giây — tối thiểu giữa 2 email "đã ổn" cùng key
+
 log() { echo "[$(date '+%F %T %Z')] $*"; }
 
 notify() {
   printf '%s\n' "$2" | python3 "$SCRIPTS/notify.py" "$1" >/dev/null 2>&1 || log "khong gui duoc email: $1"
 }
 
-alert_once() {
-  local key="$1" subject="$2" body="$3" now last
-  now=$(date +%s)
-  last=$(grep "^$key=" "$STATE" 2>/dev/null | cut -d= -f2 || true)
-  last=${last:-0}
-  if [ $((now - last)) -ge 21600 ]; then
-    notify "$subject" "$body"
-    grep -v "^$key=" "$STATE" > "$STATE.tmp" 2>/dev/null || true
-    echo "$key=$now" >> "$STATE.tmp"
-    mv "$STATE.tmp" "$STATE"
-    log "ALERT: $subject"
-  else
-    log "bo qua (chong spam): $key"
-  fi
+# ---- state helpers (mỗi dòng: key=value) ----
+state_get() { grep "^$1=" "$STATE" 2>/dev/null | tail -1 | cut -d= -f2 || true; }
+state_set() {
+  grep -v "^$1=" "$STATE" > "$STATE.tmp" 2>/dev/null || true
+  echo "$1=$2" >> "$STATE.tmp"
+  mv "$STATE.tmp" "$STATE"
+}
+state_del() {
+  grep -v "^$1=" "$STATE" > "$STATE.tmp" 2>/dev/null || true
+  mv "$STATE.tmp" "$STATE"
 }
 
+# Gọi khi check FAIL: đếm liên tiếp, chỉ gửi alert khi đủ ngưỡng + chưa gửi trong ALERT_MIN_INTERVAL
+alert_once() {
+  local key="$1" subject="$2" body="$3" now fails last
+  now=$(date +%s)
+  fails=$(( $(state_get "fail_$key" || echo 0) + 1 ))
+  state_set "fail_$key" "$fails"
+
+  if [ "$fails" -lt "$FAIL_THRESHOLD" ]; then
+    log "fail lan $fails/$FAIL_THRESHOLD ($key) — chua gui alert"
+    return
+  fi
+
+  last=$(state_get "alert_$key" || echo 0); last=${last:-0}
+  if [ $((now - last)) -lt "$ALERT_MIN_INTERVAL" ]; then
+    log "bo qua (rate-limit alert): $key"
+  else
+    notify "$subject" "$body"
+    state_set "alert_$key" "$now"
+    log "ALERT: $subject"
+  fi
+  state_set "problem_$key" "1"
+}
+
+# Gọi khi check OK: xoá đếm fail; nếu đang có vấn đề thì gửi email "đã ổn" (giới hạn tần suất)
 recovered() {
-  local key="$1" subject="$2"
-  if grep -q "^$key=" "$STATE" 2>/dev/null; then
+  local key="$1" subject="$2" now last
+  state_del "fail_$key"
+  [ "$(state_get "problem_$key")" = "1" ] || return 0
+  now=$(date +%s)
+  last=$(state_get "recover_$key" || echo 0); last=${last:-0}
+  if [ $((now - last)) -lt "$RECOVER_MIN_INTERVAL" ]; then
+    log "bo qua (rate-limit recovered): $key"
+  else
     notify "$subject" "Tinh trang da tro lai binh thuong luc $(date '+%F %T %Z')."
-    grep -v "^$key=" "$STATE" > "$STATE.tmp" 2>/dev/null || true
-    mv "$STATE.tmp" "$STATE"
+    state_set "recover_$key" "$now"
     log "RECOVERED: $key"
   fi
+  state_del "problem_$key"
 }
 
 # 1) Disk
