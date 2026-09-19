@@ -245,20 +245,20 @@ export default function Landing() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
                 <button onClick={() => navigate('/help')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.75)', cursor: 'pointer', textAlign: 'left', padding: 0 }}>Trung tâm trợ giúp</button>
                 <button onClick={() => navigate('/policy/chinh-sach-bao-mat')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.75)', cursor: 'pointer', textAlign: 'left', padding: 0 }}>Chính sách bảo mật</button>
+                <a href="https://www.facebook.com/AnhNguVietMyTuyenDung" target="_blank" rel="noopener noreferrer" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.75)', cursor: 'pointer', textAlign: 'left', padding: 0, textDecoration: 'none' }}>Liên hệ hợp tác</a>
               </div>
             </div>
             <div>
               <b style={{ fontSize: 14, color: '#fff', display: 'block', marginBottom: 12 }}>Liên hệ</b>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5, color: 'rgba(255,255,255,.75)', lineHeight: 1.6 }}>
-                <div><b style={{ color: '#fff' }}>Trụ sở chính</b><br />Phòng L17-11, Tầng 17, <span style={{ whiteSpace: 'nowrap' }}>Vincom Center</span><br />72 Lê Thánh Tôn, P. Bến Nghé, Q.1, TP.HCM</div>
-                <div><b style={{ color: '#fff' }}>Văn phòng đại diện</b><br />E99 Đường Võ Thị Sáu, Khu phố 7<br />Phường Trấn Biên, TP. Biên Hòa, Đồng Nai</div>
-                <div><b style={{ color: '#fff' }}>Điện thoại</b> · 090 697 88 98</div>
-                <div><b style={{ color: '#fff' }}>Email</b> · hotro@vmg.edu.vn</div>
+                <div><b style={{ color: '#fff' }}>Trụ sở chính</b><br />1209 Phạm Văn Thuận, Khu phố Thống Nhất<br />Phường Trấn Biên, TP Đồng Nai, Việt Nam</div>
+                <div><b style={{ color: '#fff' }}>Điện thoại</b> · <a href="tel:1900636838" style={{ color: 'rgba(255,255,255,.85)', textDecoration: 'none' }}>1900 636 838</a> · <a href="tel:0906978898" style={{ color: 'rgba(255,255,255,.85)', textDecoration: 'none' }}>090 697 88 98</a></div>
+                <div><b style={{ color: '#fff' }}>Email</b> · <a href="mailto:info@vmg.edu.vn" style={{ color: 'rgba(255,255,255,.85)', textDecoration: 'none' }}>info@vmg.edu.vn</a></div>
               </div>
             </div>
           </div>
           <div style={{ borderTop: '1px solid rgba(255,255,255,.15)', paddingTop: 16, fontSize: 12, color: 'rgba(255,255,255,.5)' }}>
-            © 2026 VMG EduNext – Nền tảng phát triển năng lực song ngữ & STEM cho giáo viên.
+            © 2026 VMG EduNext. Bản quyền thuộc về Công ty TNHH Một Thành Viên Giáo dục Việt Mỹ, mã số thuế 3601987957.
           </div>
         </div>
       </footer>

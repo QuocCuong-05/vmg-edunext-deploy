@@ -359,11 +359,26 @@ export default function Layout() {
               <a onClick={() => navigate('/booking')}>Đặt lịch chuyên gia</a>
               <a onClick={() => navigate('/vimi')}>Hỏi ViMi</a>
               <a style={{ cursor: 'pointer' }} onClick={() => navigate('/help')}>Trung tâm trợ giúp</a>
+              <a href="https://www.facebook.com/AnhNguVietMyTuyenDung" target="_blank" rel="noopener noreferrer">Liên hệ hợp tác</a>
             </div>
             <div>
-              <b>VMG English</b>
-              <p>Đồng hành cùng giáo viên trên hành trình nâng cao năng lực ngoại ngữ và hội nhập <span style={{ whiteSpace: 'nowrap' }}>giáo dục</span>.</p>
-              <small>&copy; 2026 VMG English. All rights reserved.</small>
+              <b>Liên hệ</b>
+              <p style={{ marginBottom: 10 }}>
+                <b style={{ display: 'block', color: '#fff', marginBottom: 2 }}>Trụ sở chính</b>
+                1209 Phạm Văn Thuận, Khu phố Thống Nhất, Phường Trấn Biên, TP Đồng Nai, Việt Nam
+              </p>
+              <p style={{ marginBottom: 10 }}>
+                <b style={{ display: 'block', color: '#fff', marginBottom: 2 }}>Điện thoại</b>
+                <a href="tel:1900636838">1900 636 838</a>
+                <a href="tel:0906978898">090 697 88 98</a>
+              </p>
+              <p style={{ marginBottom: 10 }}>
+                <b style={{ display: 'block', color: '#fff', marginBottom: 2 }}>Email</b>
+                <a href="mailto:info@vmg.edu.vn">info@vmg.edu.vn</a>
+              </p>
+            </div>
+            <div className="footer-legal">
+              &copy; 2026 VMG EduNext. Bản quyền thuộc về Công ty TNHH Một Thành Viên Giáo dục Việt Mỹ, mã số thuế 3601987957.
             </div>
           </footer>
         </div>
