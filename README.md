@@ -54,7 +54,7 @@ PORT=3001
 | Backend | Node.js, Express 4 (ESM) |
 | Database | Supabase (PostgreSQL + Auth + Storage) |
 | Auth | Supabase Auth — JWT qua supabase-js (session tươi, tự refresh) |
-| Video | Supabase Storage — **signed URL TTL 60 phút** (chống tải trực tiếp) |
+| Video | Supabase Storage — **signed URL TTL 15 phút, tự gia hạn khi phát** (chống tải trực tiếp) |
 | QR thanh toán | `qrcode` (chuyển khoản thủ công + admin duyệt) |
 | AI Chat | FPT Cloud AI — DeepSeek-V4-Flash (streaming) |
 | TTS / STT | Deepgram / browser SpeechSynthesis / Web Speech API |
@@ -66,7 +66,7 @@ PORT=3001
 
 ### Nội dung
 - **Khóa học — 3 khóa Pronunciation (9 module / 351 hoạt động):** Vowels, Consonants, Stress & Intonation — cấu trúc **Course → Module → Lesson/Practice**; mỗi bài practice thuộc 1 trong 5 loại (speak_words, speak_passage, listen_choose, listen_fill, listen_mark) + dạng match
-- **Video bảo mật:** `GET /api/videos/token/:lessonId` → signed URL TTL 60' · ẩn nút tải (`controlsList="nodownload"`) · chặn chuột phải · bài Premium đầu tiên là **teaser 2 phút** (overlay paywall khi hết)
+- **Video bảo mật:** `GET /api/videos/token/:lessonId` → signed URL TTL 15' (frontend tự gia hạn khi cần, không khựng) · ẩn nút tải (`controlsList="nodownload"`) · chặn chuột phải · bài Premium đầu tiên là **teaser 2 phút** (overlay paywall khi hết)
 - **Hoàn thành bài học:** phải **xem hết video** (theo dõi `maxWatched`, chặn tua tới trước) — nút hoàn thành mở khi video chạy hết; ping server 10s + khôi phục tiến độ khi reload
 - **Từ vựng** — sổ từ cá nhân (Free: tối đa 100 từ)
 - **Classroom Phrases** — câu lệnh song ngữ
@@ -158,7 +158,7 @@ AdminRoute: role admin/super_admin → /admin/*
 ```
 LessonView → video_url là storage path → GET /api/videos/token/:lessonId
   → backend kiểm tra quyền (bài free / Plus / enrolled; bài có preview_text = teaser)
-  → tạo signed URL Supabase Storage TTL 60 phút → <video> phát
+  → tạo signed URL Supabase Storage TTL 15 phút (tự gia hạn) → <video> phát
   → teaser: dừng sau preview_seconds + overlay "Nâng cấp Plus"
   → bài premium thường không teaser → 403
 Chống tải: controlsList="nodownload" + chặn contextmenu + URL hết hạn

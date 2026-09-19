@@ -76,7 +76,8 @@ gunzip -c "$D" | grep -vE '^(CREATE SCHEMA public;|ALTER SCHEMA public OWNER TO)
 ## 4. Giám sát & cảnh báo (2 lớp)
 
 **Lớp 1 — trong VPS:** cron 5 phút/lần (`monitor.sh`): disk >80%/90%, container exited/unhealthy, HTTPS `/api/health` prod+staging, cert <14 ngày.
-- Alert email tới `quoccuong.dni@vmg.edu.vn` (qua `notify.py`, Gmail SMTP `noreply@vmg.edu.vn`); chống spam 6h/lỗi; có email "đã ổn".
+- Alert email tới `quoccuong.dni@vmg.edu.vn` (qua `notify.py`, Gmail SMTP `noreply@vmg.edu.vn`).
+- **Chống spam (từ 18/09):** chỉ alert sau **2 lần fail liên tiếp** (≈10 phút — bỏ qua blip ngắn); tối đa **1 alert + 1 email "đã ổn" mỗi giờ/key**; health check qua `--resolve`, cert check qua `127.0.0.1` → **không còn báo động giả khi DNS chập chờn**.
 - Log: `/opt/edunext/logs/{monitor,backup,restore}.log`.
 
 **Lớp 2 — ngoài VPS (UptimeRobot, free):** tài khoản `quoccuong.dni@vmg.edu.vn`, monitor HTTPS check 5 phút/lần:
@@ -100,6 +101,7 @@ gunzip -c "$D" | grep -vE '^(CREATE SCHEMA public;|ALTER SCHEMA public OWNER TO)
 | Cert lỗi/hết hạn | `docker logs edunext-edge-caddy --tail 100` — Caddy tự gia hạn; kiểm tra DNS còn trỏ `103.195.237.150` |
 | Hết đĩa | `df -h /` · `docker system df` · xoá backup cũ trong `/opt/edunext/backups` |
 | Sai cấu hình Caddy | `docker exec edunext-edge-caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile` rồi `reload` |
+| Login/API báo `fetch failed` | Kiểm tra DNS VPS (`getent hosts <domain>` — lỗi `EAI_AGAIN` = DNS chập chờn); backend phải có `extra_hosts: host-gateway` trong compose; `/etc/resolv.conf` dùng `8.8.8.8 + 1.1.1.1` |
 | Rollback DNS (khẩn cấp) | MatBao: đổi bản ghi `edunext` về `CNAME vmg-edunext-frontend.onrender.com` (Render + Supabase Cloud vẫn còn nguyên) |
 
 ## 7. Lưu ý vận hành
@@ -109,6 +111,7 @@ gunzip -c "$D" | grep -vE '^(CREATE SCHEMA public;|ALTER SCHEMA public OWNER TO)
 - Cấp link video: signed URL hạn **`VIDEO_URL_TTL_SECONDS`** (mặc định 900s = 15 phút, đặt trong `backend.env`). **Chính sách gia hạn:** frontend đo thời lượng video sau khi load metadata và **chỉ hẹn đổi link khi link hết hạn TRƯỚC lúc video kết thúc** (`thời lượng + 120s > TTL`) → video ngắn hơn TTL không bao giờ đổi `src` giữa chừng (không khựng); nếu buộc phải đổi mà đang pause thì hoãn đến lúc bấm play; player lỗi (link hết hạn khi pause lâu) → tự gia hạn 1 lần. Rate limit **40 lần/15 phút/user id** (`videoTokenLimiter`); đăng nhập limit **20 lần/10 phút/email** — muốn chỉnh thì sửa `backend/src/middleware/rateLimit.js` rồi deploy lại.
 - Backend chạy sau **2 lớp Caddy** (chung + nội bộ) → `app.set('trust proxy', 2)` trong `backend/src/index.js`. Nếu đổi kiến trúc proxy (thêm/bớt 1 lớp), phải cập nhật số này, nếu không rate-limit sẽ gộp chung một "xô" cho mọi người.
 - Storage là thứ phình nhanh nhất (video/audio) — theo dõi cùng cảnh báo disk.
-- Docker log limits (10MB × 3) đã khai báo trong compose app/edge — áp dụng tự nhiên ở lần recreate tiếp theo.
+- Docker log limits (10MB × 3) **đã áp đủ cho app + edge** (kiểm tra: `docker inspect -f '{{.HostConfig.LogConfig.Config}}' <container>`); riêng stack Supabase chưa áp.
+- **DNS phòng thủ (từ 18/09):** backend có `extra_hosts` trỏ domain → `host-gateway` (không phụ thuộc DNS công khai); VPS `/etc/resolv.conf` = `8.8.8.8` + `1.1.1.1` kèm `options timeout:2 attempts:3 rotate` (8.8.4.4/9.9.9.9/OpenDNS bị chặn từ VPS). Sự cố 18/09 gây login `fetch failed` khi DNS chập chờn — nay đã miễn nhiễm.
 - Nhánh git: `staging` (chứa toàn bộ hạ tầng). Push lên cả 2 remote: `origin` + `render`. **Không đụng `main`** (Render prod cũ).
 - Sau khi ổn định 3–7 ngày: tắt Render + Supabase Cloud (lưu dump cuối), xoay secrets đã từng lộ.

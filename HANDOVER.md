@@ -1,7 +1,7 @@
 # HANDOVER — Hệ thống VMG EduNext
 
 > Tài liệu bàn giao cho **dev tiếp nhận**. Đọc theo thứ tự: file này (tổng quan) → `RUNBOOK.md` (vận hành) → `README.md` (sản phẩm & quick start) → `UXUI_RULES.md` (quy ước UI).
-> Cập nhật lần cuối: 16/09/2026 (sau khi hoàn tất di trú lên VPS Việt Nam).
+> Cập nhật lần cuối: 19/09/2026.
 
 ---
 
@@ -9,8 +9,9 @@
 
 - **Là gì:** nền tảng phát triển năng lực tiếng Anh cho giáo viên (VMG) — khóa Pronunciation, ViMi AI (chat/luyện nói/sinh giáo án), quiz, XP/quest, cộng đồng, CMS blog, chứng chỉ.
 - **Mô hình:** tài khoản **Plus** (4 gói: 59k/147k/264k/399k) — thanh toán chuyển khoản thủ công, admin duyệt đơn; paywall Free/Plus xem chi tiết trong `README.md`.
-- **Người dùng hiện tại:** 1 tài khoản admin `cuonghq.dev@gmail.com` (role admin, Plus đến 13/02/2027).
-- **Nội dung hiện có:** 3 khóa / **9 module / 351 hoạt động** (299 bài có nội dung HTML, 43 video_lesson, 258 practice, 1 slides), **466 từ luyện nói**, **280 câu hỏi practice**, 366 file storage (~337 MB).
+- **Người dùng hiện tại:** 1 tài khoản admin `cuonghq.dev@gmail.com` (role admin; subscription Plus mới nhất đã hủy → hiện **không có Plus active**).
+- **Nội dung hiện có:** 3 khóa / **9 module / 351 hoạt động** (299 bài có nội dung HTML, **50 video_lesson — đủ 50/50 video**, 258 practice, 1 slides), **466 từ luyện nói**, **280 câu hỏi practice**, **412 file storage (~2,7 GB)**.
+- **Số thứ tự AP:** ngày 18/09 đã đổi **AP4→AP3, AP5→AP4** (liền mạch 1–4). Lưu ý: LMS cũ (lms.vmg.edu.vn) vẫn đánh số 4/5 — đừng nhầm khi đối chiếu.
 - **URL:** prod `https://edunext.vmgenglish.edu.vn` · staging `https://staging.edunext.vmgenglish.edu.vn`.
 
 ## 2. Kiến trúc hệ thống
@@ -36,7 +37,8 @@ Supabase self-hosted (mỗi môi trường 1 stack, 11 container):
 - **Frontend:** React 18 + Vite 5, SPA tĩnh, gọi API qua `/api` cùng domain; session JWT lấy từ `supabase-js`.
 - **Backend:** Node 22 + Express (ESM), dùng `SERVICE_ROLE_KEY` (legacy JWT) để gọi Supabase.
   - `SUPABASE_URL` phải là **domain công khai** của môi trường (vì `storage.getPublicUrl()` sinh URL từ đó).
-  - Đã bật `app.set('trust proxy', 1)` — cần thiết vì chạy sau 2 lớp Caddy (rate-limit đọc IP đúng).
+  - Đã bật `app.set('trust proxy', 2)` — đúng **2 lớp Caddy** (chung + nội bộ). Nếu sửa thành 1, rate-limit sẽ gộp chung một "xô" cho mọi người (từng bị lỗi này 17/09).
+  - Backend có `extra_hosts: "<domain>:host-gateway"` (trong compose) → gọi Supabase qua domain của chính nó **không phụ thuộc DNS công khai**.
 - **Storage backend:** file, layout trên đĩa `/opt/edunext/<env>/supabase/volumes/storage/stub/stub/<bucket>/<tên-object>/<version-uuid>`.
   - Object bị đổi tên/version khi re-upload — nhớ điều này khi backup/restore storage.
 - **Video bảo mật:** bucket `lesson-videos` **private**, phát qua signed URL TTL 15' (`GET /api/videos/token/:lessonId` sau khi kiểm tra quyền; frontend tự gia hạn ở ~80% hạn; rate limit 40 lần/15'/user, login 20 lần/10'/email).
@@ -140,6 +142,7 @@ bash deploy/prod/deploy.sh
   - `frontend/src/lib/api.js` `request()` trả thẳng dữ liệu — đừng bọc thêm `.data`.
   - Storage: file nằm theo `<bucket>/<tên>/<version>` — sync DB và file phải đi cùng nhau.
   - Upload video bài học: `POST /api/admin/video-upload` (mp4 ≤ 90MB; UI ở "Cấu trúc khóa" với nút ⬆️/🎬 và bộ lọc "Chỉ hiện bài thiếu video"). Giới hạn 3 nơi: guard backend, `FILE_SIZE_LIMIT` trong compose stack Supabase (100MB), `storage.buckets.file_size_limit` (100MB).
+  - Ngày 18/09 gặp sự cố **DNS VPS chập chờn** → login/API báo `fetch failed`. Đã xử lý: backend `extra_hosts` trỏ domain về `host-gateway` (miễn nhiễm DNS), `/etc/resolv.conf` chỉ dùng `8.8.8.8 + 1.1.1.1` (+`rotate`, retries — các resolver khác như 8.8.4.4/9.9.9.9 bị chặn từ VPS), `monitor.sh` không còn phụ thuộc DNS.
 
 ## 8. Vận hành (tóm tắt — chi tiết trong `RUNBOOK.md`)
 
@@ -161,7 +164,7 @@ bash deploy/prod/deploy.sh
 4. **Backup chưa off-site**: bản backup đang nằm cùng VPS — nên đẩy thêm ra S3/Backblaze/ổ ngoài khi có điều kiện.
 5. **Log limits toàn cục**: app + edge đã có (10MB×3); stack Supabase chưa — chỉnh `daemon.json` trong cửa sổ bảo trì.
 6. **Supabase Studio** (giao diện quản trị DB) chưa mở truy cập — cần thì thêm SSH tunnel/mở port tạm.
-7. Nội dung: mới có **4 video thật** (monophthong), 260 file `practice-audio` chưa gắn vào bài; nhiều practice chưa có audio.
+7. Nội dung: **video đã đủ 50/50 bài** (18/09); còn **260 file `practice-audio` chưa gắn vào bài**; nhiều practice chưa có audio.
 8. TTS xịn (Deepgram) chưa bật — hiện trả mock, browser tự đọc.
 9. Video R2/Cloudflare: kế hoạch tương lai, chưa cần.
 
