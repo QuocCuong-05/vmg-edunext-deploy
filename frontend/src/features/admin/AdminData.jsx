@@ -6,6 +6,7 @@ import { Icon } from '../../lib/icons';
 import CmsManager from './CmsManager';
 import CourseStructureEditor from './CourseStructureEditor';
 import usePersistedState from '../../lib/usePersistedState';
+import { useToast } from '../../components/ui/Toast';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -112,6 +113,7 @@ const ADMIN_GROUPS = [
     key: 'system',
     label: 'Hệ thống',
     items: [
+      { key: 'users', label: 'Người dùng', icon: Icon.User },
       { key: 'trace', label: 'Truy vết', icon: Icon.Globe },
       { key: 'settings', label: 'Cấu hình', icon: Icon.Cog },
     ],
@@ -130,6 +132,7 @@ const badge = (status) => {
 
 export default function AdminData() {
   const { user } = useAuth();
+  const showToast = useToast();
   const [tab, setTab] = usePersistedState('vmg_admin_tab', 'overview');
   const [openGroup, setOpenGroup] = usePersistedState('vmg_admin_group', 'activity');
 
@@ -161,6 +164,14 @@ export default function AdminData() {
   const [traceData, setTraceData] = useState(null);
   const [traceStats, setTraceStats] = useState(null);
   const [traceLoading, setTraceLoading] = useState(false);
+
+  const [userRows, setUserRows] = useState([]);
+  const [usersMeta, setUsersMeta] = useState(null);
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersQ, setUsersQ] = useState('');
+  const [usersRole, setUsersRole] = useState('all');
+  const [usersQuick, setUsersQuick] = useState('all');
+  const [usersBusy, setUsersBusy] = useState(null);
 
   function handleFileChange(e) {
     const file = e.target.files[0];
@@ -248,20 +259,50 @@ export default function AdminData() {
   async function loadDashboard() {
     try { setDashboard(await api.admin.dashboardStats()); } catch {}
   }
+  async function loadUsers() {
+    try {
+      const data = await api.admin.users({
+        search: usersQ, role: usersRole, filter: usersQuick, page: usersPage, limit: 30,
+      });
+      setUserRows(data?.rows || []);
+      setUsersMeta(data || null);
+    } catch {
+      setUserRows([]);
+      setUsersMeta(null);
+    }
+  }
+  async function changeUserRole(u, role) {
+    if (role === u.role) return;
+    const label = u.full_name || u.email || u.id.slice(0, 8);
+    if (!window.confirm(`Đổi vai trò của "${label}" → ${role}?`)) { loadUsers(); return; }
+    setUsersBusy(u.id);
+    try {
+      const updated = await api.admin.setRole(u.id, role);
+      setUserRows(prev => prev.map(x => x.id === u.id ? { ...x, role: updated?.role || role } : x));
+      showToast(`Đã đổi vai trò "${label}" → ${role}`, 'success');
+    } catch (e) {
+      showToast(e.message || 'Đổi vai trò thất bại', 'error');
+      loadUsers();
+    } finally {
+      setUsersBusy(null);
+    }
+  }
 
   useEffect(() => {
     if (tab === 'overview') loadDashboard();
     if (tab === 'orders') loadOrders();
     if (tab === 'plus') loadSubscriptions();
     if (tab === 'courses') loadCourses();
+    if (tab === 'users') loadUsers();
     if (tab === 'settings') loadSettings();
     if (tab === 'trace') loadTrace();
   }, [tab]);
 
   useEffect(() => {
     if (tab === 'trace') loadTrace();
+    if (tab === 'users') loadUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [traceSub, tracePage]);
+  }, [traceSub, tracePage, usersPage, usersRole, usersQuick]);
 
   useEffect(() => {
     if (tab === 'orders') loadOrders();
@@ -1075,6 +1116,115 @@ async function exportCsv(columns) {
 
       {tab === 'content' && <CmsManager />}
       {tab === 'structure' && <CourseStructureEditor />}
+
+      {tab === 'users' && (
+        <div className="admin-panel">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 10, flexWrap: 'wrap' }}>
+            <h3 style={{ margin: 0 }}>Người dùng {usersMeta?.total != null ? `(${usersMeta.total})` : ''}</h3>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                className="admin-input" style={{ width: 210, padding: '6px 10px', fontSize: 12 }}
+                placeholder="Tìm tên / email… (Enter)"
+                value={usersQ}
+                onChange={e => setUsersQ(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { setUsersPage(1); loadUsers(); } }}
+              />
+              <select
+                className="admin-input" style={{ width: 'auto', padding: '6px 10px', fontSize: 12 }}
+                value={usersRole}
+                onChange={e => { setUsersRole(e.target.value); setUsersPage(1); }}
+              >
+                <option value="all">Tất cả vai trò</option>
+                <option value="learner">Học viên</option>
+                <option value="teacher">Giáo viên</option>
+                <option value="admin">Admin</option>
+                <option value="super_admin">Super admin</option>
+              </select>
+              <button
+                className="admin-btn-ghost"
+                style={usersQuick === 'unconfirmed' ? { borderColor: 'var(--red)', color: 'var(--red)' } : undefined}
+                onClick={() => { setUsersQuick(q => q === 'unconfirmed' ? 'all' : 'unconfirmed'); setUsersPage(1); }}
+              >
+                Chưa xác nhận email
+              </button>
+              <button
+                className="admin-btn-ghost"
+                style={usersQuick === 'plus' ? { borderColor: 'var(--red)', color: 'var(--red)' } : undefined}
+                onClick={() => { setUsersQuick(q => q === 'plus' ? 'all' : 'plus'); setUsersPage(1); }}
+              >
+                Có Plus
+              </button>
+              <button className="admin-btn-ghost" onClick={loadUsers}>Làm mới</button>
+            </div>
+          </div>
+
+          {userRows.length === 0 ? (
+            <p className="admin-note">Không có người dùng phù hợp.</p>
+          ) : (
+            <div className="admin-table-wrap">
+              <table className="admin-table" style={{ minWidth: 920 }}>
+                <thead>
+                  <tr>
+                    <th>Người dùng</th>
+                    <th>Vai trò</th>
+                    <th>Email</th>
+                    <th>Plus</th>
+                    <th>XP</th>
+                    <th>Ngày tạo</th>
+                    <th>Đăng nhập cuối</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {userRows.map(u => (
+                    <tr key={u.id}>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{u.full_name || '—'}</div>
+                        <div style={{ fontSize: 11, color: 'var(--muted)' }}>{u.email || u.id.slice(0, 8)}</div>
+                      </td>
+                      <td>
+                        <select
+                          className="admin-input"
+                          style={{ width: 130, padding: '5px 8px', fontSize: 12 }}
+                          value={u.role || 'learner'}
+                          disabled={usersBusy === u.id}
+                          onChange={e => changeUserRole(u, e.target.value)}
+                        >
+                          <option value="learner">Học viên</option>
+                          <option value="teacher">Giáo viên</option>
+                          <option value="admin">Admin</option>
+                          <option value="super_admin">Super admin</option>
+                        </select>
+                      </td>
+                      <td>
+                        {u.confirmed === true
+                          ? <span className="admin-badge green">Đã xác nhận</span>
+                          : u.confirmed === false
+                            ? <span className="admin-badge gold">Chưa xác nhận</span>
+                            : <span className="admin-badge gray">—</span>}
+                      </td>
+                      <td>
+                        {u.plus_end_at
+                          ? <span className="admin-badge gold">Plus đến {new Date(u.plus_end_at).toLocaleDateString('vi-VN')}</span>
+                          : <span className="admin-badge gray">Free</span>}
+                      </td>
+                      <td>{(u.xp || 0).toLocaleString('vi-VN')}</td>
+                      <td style={{ fontSize: 12, color: 'var(--muted)' }}>{u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : ''}</td>
+                      <td style={{ fontSize: 12, color: 'var(--muted)' }}>{u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleString('vi-VN') : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {usersMeta?.pages > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 14 }}>
+              <button className="admin-btn-ghost" disabled={usersPage <= 1} onClick={() => setUsersPage(p => Math.max(1, p - 1))}>← Trước</button>
+              <span style={{ fontSize: 12, color: 'var(--muted)' }}>Trang {usersPage}/{usersMeta.pages}</span>
+              <button className="admin-btn-ghost" disabled={usersPage >= usersMeta.pages} onClick={() => setUsersPage(p => p + 1)}>Sau →</button>
+            </div>
+          )}
+        </div>
+      )}
 
       {tab === 'settings' && (
         <div className="admin-panel" style={{ maxWidth: 520 }}>

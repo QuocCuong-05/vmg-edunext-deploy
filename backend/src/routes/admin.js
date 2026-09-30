@@ -1271,17 +1271,80 @@ router.delete('/practice-questions/:id', async (req, res, next) => {
 // --- Gán role (giáo viên/admin) ---
 router.get('/users', async (req, res, next) => {
   try {
-    const { search, role } = req.query;
-    let q = supabaseAdmin.from('profiles').select('id, full_name, email, role').order('created_at', { ascending: false }).limit(100);
-    if (role) q = q.eq('role', role);
-    const { data, error } = await q;
-    if (error) throw error;
-    let rows = data || [];
-    if (search) {
-      const s = search.toLowerCase();
-      rows = rows.filter(r => (r.full_name || '').toLowerCase().includes(s) || (r.email || '').toLowerCase().includes(s));
+    const search = String(req.query.search || '').trim().replace(/[%,]/g, '');
+    const role = req.query.role || 'all';
+    const filter = req.query.filter || 'all';
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(10, Number(req.query.limit) || 30));
+
+    // Thông tin từ GoTrue (xác nhận email, đăng nhập cuối) — quét tối đa 1000 user
+    const authMap = {};
+    try {
+      for (let p = 1; p <= 10; p++) {
+        const { data: au } = await supabaseAdmin.auth.admin.listUsers({ page: p, perPage: 100 });
+        const list = au?.users || [];
+        list.forEach(u => {
+          authMap[u.id] = { confirmed: !!u.email_confirmed_at, last_sign_in_at: u.last_sign_in_at || null };
+        });
+        if (list.length < 100) break;
+      }
+    } catch {}
+
+    // Lọc nhanh theo dữ liệu phái sinh
+    let idFilter = null;
+    if (filter === 'unconfirmed') {
+      idFilter = Object.entries(authMap).filter(([, v]) => !v.confirmed).map(([id]) => id);
+    } else if (filter === 'plus') {
+      const { data: subs } = await supabaseAdmin
+        .from('subscriptions')
+        .select('user_id')
+        .eq('status', 'active')
+        .gt('end_at', new Date().toISOString());
+      idFilter = [...new Set((subs || []).map(s => s.user_id))];
     }
-    res.json({ data: rows });
+
+    let query = supabaseAdmin
+      .from('profiles')
+      .select('id, full_name, email, role, xp, created_at, last_active_at', { count: 'exact' });
+    if (role !== 'all') query = query.eq('role', role);
+    if (search) query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
+    if (idFilter) {
+      if (!idFilter.length) return res.json({ rows: [], total: 0, page, limit, pages: 1 });
+      query = query.in('id', idFilter);
+    }
+    query = query.order('created_at', { ascending: false }).range((page - 1) * limit, page * limit - 1);
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+    const rows = data || [];
+
+    // Plus đang hoạt động (hạn xa nhất) cho các user trong trang
+    const ids = rows.map(r => r.id);
+    const plusMap = {};
+    if (ids.length) {
+      const { data: subs } = await supabaseAdmin
+        .from('subscriptions')
+        .select('user_id, end_at')
+        .in('user_id', ids)
+        .eq('status', 'active')
+        .gt('end_at', new Date().toISOString());
+      (subs || []).forEach(s => {
+        if (!plusMap[s.user_id] || new Date(s.end_at) > new Date(plusMap[s.user_id])) plusMap[s.user_id] = s.end_at;
+      });
+    }
+
+    res.json({
+      rows: rows.map(r => ({
+        ...r,
+        confirmed: authMap[r.id]?.confirmed ?? null,
+        last_sign_in_at: authMap[r.id]?.last_sign_in_at || null,
+        plus_end_at: plusMap[r.id] || null,
+      })),
+      total: count || 0,
+      page,
+      limit,
+      pages: Math.max(1, Math.ceil((count || 0) / limit)),
+    });
   } catch (err) { next(err); }
 });
 

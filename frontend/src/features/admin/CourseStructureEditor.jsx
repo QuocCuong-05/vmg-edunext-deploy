@@ -249,7 +249,7 @@ export default function CourseStructureEditor() {
 
   useEffect(() => {
     api.courses.list().then(d => setCourses(d || [])).catch(() => {});
-    api.admin.users({ role: 'teacher' }).then(d => setUsers(d || [])).catch(() => {});
+    api.admin.users({ role: 'teacher' }).then(d => setUsers(d?.rows || [])).catch(() => {});
   }, []);
 
   const rebuildGroups = useCallback((moduleList, itemList) => {
@@ -710,7 +710,7 @@ export default function CourseStructureEditor() {
 
   const searchUsers = async () => {
     const d = await api.admin.users({ search: userSearch });
-    setUsers(d || []);
+    setUsers(d?.rows || []);
   };
 
   const activeItem = items.find(i => i.id === selectedItemId);
