@@ -72,6 +72,10 @@ gunzip -c "$D" | grep -vE '^(CREATE SCHEMA public;|ALTER SCHEMA public OWNER TO)
 
 - Luôn dùng `-U supabase_admin` (superuser) khi load dump — `postgres` không phải superuser.
 - Storage: copy ngược từ `backups/<env>/storage/<ngày>/` về `/opt/edunext/<env>/supabase/volumes/storage/stub/stub/`.
+- ⚠️ **Sau khi restore, kiểm tra 2 trigger trên `auth.users`** (dump public-only KHÔNG mang theo):
+  - `on_auth_user_created` (AFTER INSERT) → `public.handle_new_user()` — thiếu trigger này thì **user mới đăng ký sẽ không được tạo profile**
+  - `trg_anonymize_on_user_delete` (BEFORE DELETE) → `public.handle_user_anonymize()`
+  - Kiểm tra: `docker exec <db> psql -U supabase_admin -d postgres -c "select tgname from pg_trigger where tgrelid=(select oid from pg_class where relname='users' and relnamespace=(select oid from pg_namespace where nspname='auth')) and not tgisinternal"` (đã từng bị mất và khôi phục ngày 19/09)
 
 ## 4. Giám sát & cảnh báo (2 lớp)
 
